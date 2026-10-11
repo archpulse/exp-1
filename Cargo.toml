@@ -1,0 +1,26 @@
+[package]
+name = "exp1-agent"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "exp-1 agent — a minimal Rust TUI coding agent authenticated with Codex (ChatGPT OAuth)"
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.8", features = ["json", "http1", "tokio"] }
+base64 = "0.23"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+crossterm = "0.29"
+futures-util = "0.3"
+libc = "0.2"
+ratatui = "0.30"
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "form", "rustls", "webpki-roots", "charset", "http2"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+titler = { path = "../mygame/titler" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "process"] }
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+opt-level = 2
+strip = true
