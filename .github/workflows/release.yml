@@ -1,0 +1,44 @@
+name: release
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: exp1-agent-linux-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: exp1-agent-macos-arm64
+          - os: macos-13
+            target: x86_64-apple-darwin
+            artifact: exp1-agent-macos-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: exp1-agent-windows-x86_64.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      # `--no-default-features` drops the bundled titler: it is a sibling path
+      # dependency, so a checkout of this repository alone cannot see it. The
+      # agent is complete without it — session titles then come from the model.
+      - run: cargo build --release --target ${{ matrix.target }} --no-default-features
+      # A macOS binary from CI is unsigned; the ad-hoc signature is what lets
+      # it start on Apple Silicon.
+      - name: Sign (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: codesign -s - --force target/${{ matrix.target }}/release/exp1-agent
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: target/${{ matrix.target }}/release/exp1-agent${{ contains(matrix.target, 'windows') && '.exe' || '' }}

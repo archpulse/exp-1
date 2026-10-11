@@ -59,6 +59,42 @@ The Unix and Windows branches of the daemon and the clipboard were compile-check
 activating them on Linux; `creation_flags` is the one Windows-only call that cannot be checked
 without a Windows target, and nothing here has been run on a real Windows or macOS machine.
 
+### Cross-building from Linux
+
+A Windows binary builds on Arch with the mingw toolchain (this needs root once):
+
+```sh
+sudo pacman -S --needed mingw-w64-binutils mingw-w64-gcc
+rustup target add x86_64-pc-windows-gnu
+cargo build --release --target x86_64-pc-windows-gnu
+```
+
+`dlltool` from `mingw-w64-binutils` is what the import libraries need; without it the build stops at
+`windows-sys`.
+
+A macOS binary needs no root either, but it cannot be finished on Linux as things stand: `reqwest`
+0.13's `rustls` feature pulls `rustls-platform-verifier`, which needs `Security.framework`,
+`SystemConfiguration` and `CoreFoundation` at link time, and those live only in the Apple SDK. Zig
+links Mach-O and libSystem happily; it does not ship the frameworks. Build the macOS binaries on a
+Mac or in CI (`.github/workflows/release.yml` does all four targets). The recipe below is the one
+that gets as far as the link:
+
+```sh
+mkdir -p ~/.local/zig && curl -L https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz \
+  | tar -xJ -C ~/.local/zig --strip-components=1
+cargo install cargo-zigbuild
+rustup target add aarch64-apple-darwin
+PATH="$HOME/.local/zig:$PATH" cargo zigbuild --release --target aarch64-apple-darwin
+```
+
+The result is unsigned. On Apple Silicon an unsigned binary is killed on launch, so it has to be
+signed once on the Mac itself:
+
+```sh
+codesign -s - --force ./exp1-agent        # ad-hoc signature
+xattr -cr ./exp1-agent                    # if it arrived by download
+```
+
 ## Requirements
 
 - Rust 1.85+ (edition 2024)
@@ -571,6 +607,10 @@ State lives in `~/.config/exp-1/sessions/` (or `$XDG_CONFIG_HOME/exp-1/sessions`
 
 Settings are written when the app exits; a session is written after every completed turn, so a
 crash costs at most the turn in flight.
+
+The bundled titler is an optional feature: `cargo build --release --no-default-features` leaves it
+out and takes the whole Candle dependency with it, and session titles then come from the model
+alone. CI builds that way, because the titler is a sibling path dependency.
 
 The prompts are files, not constants: `~/.config/exp-1/prompts/system.md` (the agent's own
 instructions), `subagent.md`, `compaction.md` and `title.md` are written out on first launch and

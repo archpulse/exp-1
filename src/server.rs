@@ -2299,8 +2299,12 @@ async fn events(
 
 // ------------------------------------------------------------------ titles
 
+/// The bundled T5, loaded at most once. Compiled in only with the `titler`
+/// feature; without it, titles come from the model or not at all.
+#[cfg(feature = "titler")]
 static TITLER: std::sync::OnceLock<Mutex<Option<titler::Titler>>> = std::sync::OnceLock::new();
 
+#[cfg(feature = "titler")]
 fn local_title(prompt: &str) -> Option<String> {
     let cell = TITLER
         .get_or_init(|| Mutex::new(titler::Titler::from_hub("Cyronius/titler", None).ok()));
@@ -2311,6 +2315,11 @@ fn local_title(prompt: &str) -> Option<String> {
         .ok()
         .map(|title| title.trim().to_string())
         .filter(|title| !title.is_empty())
+}
+
+#[cfg(not(feature = "titler"))]
+fn local_title(_prompt: &str) -> Option<String> {
+    None
 }
 
 /// The model that names sessions. opencode asks the provider for its small
