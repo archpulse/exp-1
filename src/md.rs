@@ -170,8 +170,17 @@ fn split_row(line: &str) -> Vec<String> {
     let trimmed = line.trim().trim_start_matches('|').trim_end_matches('|');
     trimmed
         .split('|')
-        .map(|cell| cell.trim().to_string())
+        .map(|cell| plain_inline(cell.trim()))
         .collect()
+}
+
+/// The visible text of an inline markdown string. A table cell is drawn as one
+/// run, so its markers have to go even though its styling cannot be kept.
+fn plain_inline(text: &str) -> String {
+    inline(text)
+        .into_iter()
+        .map(|run| run.text)
+        .collect::<String>()
 }
 
 /// True when the line is the `|---|---|` separator row.
@@ -420,11 +429,9 @@ pub fn render(source: &str) -> Vec<Vec<Run>> {
         if trimmed.starts_with('#') {
             let level = trimmed.chars().take_while(|c| *c == '#').count().min(6);
             let content = trimmed[level..].trim();
-            lines.push(vec![
-                Run::new(Style::Bullet, "#".repeat(level)),
-                Run::new(Style::Bullet, " "),
-                Run::new(Style::Heading, content),
-            ]);
+            // The hashes are markdown's syntax, not its content: a heading is
+            // shown by its style, so the markers are not printed at all.
+            lines.push(vec![Run::new(Style::Heading, content)]);
             lines.push(Vec::new());
             index += 1;
             continue;
@@ -452,11 +459,11 @@ pub fn render(source: &str) -> Vec<Vec<Run>> {
         let mut handled = false;
         for marker in ["- ", "* ", "+ "] {
             if let Some(rest) = trimmed.strip_prefix(marker) {
-                lines.push(vec![
-                    Run::new(Style::Bullet, "  • "),
-                    Run::new(Style::Text, " "),
-                    Run::new(Style::Text, rest.to_string()),
-                ]);
+                // The item's own text is markdown like any other: bold, code
+                // and links inside a bullet have to be parsed, not printed.
+                let mut runs = vec![Run::new(Style::Bullet, "  • ")];
+                runs.extend(inline(rest));
+                lines.push(runs);
                 handled = true;
                 break;
             }
@@ -465,11 +472,9 @@ pub fn render(source: &str) -> Vec<Vec<Run>> {
             let digits: String = trimmed.chars().take_while(char::is_ascii_digit).collect();
             if !digits.is_empty() && trimmed[digits.len()..].starts_with(". ") {
                 let rest = &trimmed[digits.len() + 2..];
-                lines.push(vec![
-                    Run::new(Style::Bullet, format!("  {digits}. ")),
-                    Run::new(Style::Text, " "),
-                    Run::new(Style::Text, rest.to_string()),
-                ]);
+                let mut runs = vec![Run::new(Style::Bullet, format!("  {digits}. "))];
+                runs.extend(inline(rest));
+                lines.push(runs);
                 handled = true;
             }
         }
@@ -498,6 +503,39 @@ mod tests {
             .filter(|run| run.style == Style::Math)
             .map(|run| run.text.clone())
             .collect()
+    }
+
+    /// Markers are the parser's job to remove: a heading must arrive without
+    /// its `##`, and bold without its `**`.
+    #[test]
+    fn heading_and_bold_markers_are_stripped() {
+        let out = render("## Итог\n\n- **важно**: тест");
+        let text: String = out
+            .iter()
+            .flatten()
+            .map(|run| run.text.clone())
+            .collect::<Vec<_>>()
+            .join("|");
+        assert!(!text.contains("##"), "heading marker survived: {text}");
+        assert!(!text.contains("**"), "bold marker survived: {text}");
+        assert!(text.contains("Итог"), "{text}");
+        assert!(text.contains("важно"), "{text}");
+    }
+
+    /// A table cell is one run, so its inline markers are stripped rather than
+    /// printed: `**День**` must read as `День`.
+    #[test]
+    fn table_cells_lose_their_markers() {
+        let out = render("| **День** | `код` |\n| --- | --- |\n| утро | `x` |");
+        let text: String = out
+            .iter()
+            .flatten()
+            .map(|run| run.text.clone())
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(!text.contains("**"), "{text}");
+        assert!(!text.contains('`'), "{text}");
+        assert!(text.contains("День"), "{text}");
     }
 
     #[test]

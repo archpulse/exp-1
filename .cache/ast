@@ -1,6 +1,7 @@
 /home/user/projects/exp1-agent/.
 ├── .cache
-│   └── ast
+│   ├── ast
+│   └── count
 ├── .github
 │   └── workflows
 │       └── release.yml
@@ -1998,7 +1999,6 @@
 │   │   │   │   │   ├── out
 │   │   │   │   │   │   ├── a445302c6d3dcb51-ascii.o
 │   │   │   │   │   │   ├── a445302c6d3dcb51-big5.o
-│   │   │   │   │   │   ├── a445302c6d3dcb51-cp1251.o
 │   │   │   │   │   │   └── … (listing truncated)
 │   │   │   │   │   └── … (listing truncated)
 │   │   │   │   └── … (listing truncated)

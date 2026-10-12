@@ -1284,19 +1284,6 @@ impl App {
                         }
                     } else {
                         for run_line in &msg.runs {
-                            let mut spans: Vec<Span> = Vec::new();
-                            for run in run_line {
-                                if run.style == md::Style::CodeBlock {
-                                    spans.push(Span::styled(
-                                        "│ ",
-                                        Style::default().fg(theme.dim),
-                                    ));
-                                }
-                                spans.push(Span::styled(
-                                    run.text.clone(),
-                                    md_style(run.style, theme),
-                                ));
-                            }
                             for part in wrap_runs(run_line, width) {
                                 let mut spans: Vec<Span> = Vec::new();
                                 for run in &part {
