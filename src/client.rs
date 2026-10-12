@@ -121,14 +121,14 @@ impl Connection {
         &self,
         session: &str,
         text: &str,
-        image: Option<WireImage>,
+        images: Vec<WireImage>,
         files: Vec<String>,
     ) -> Result<()> {
         let response = self
             .auth(self.http.post(format!("{}/sessions/{session}/prompt", self.url)))
             .json(&PromptBody {
                 text: text.to_string(),
-                image,
+                images,
                 files,
             })
             .send()

@@ -147,8 +147,10 @@ pub struct Settings {
     /// Who names a session: "auto" (the Codex model first, the bundled titler
     /// as a fallback), "local" (the bundled titler only) or "remote".
     pub titler: String,
-    /// A model of the same provider to try when the current one keeps failing
-    /// with server-side or transport errors. Empty means no fallback.
+    /// Number of attempts for each model when a request fails.
+    pub retry_attempts: usize,
+    /// A model of the same provider to try when the current one keeps failing.
+    /// Empty means no fallback.
     pub fallback_model: String,
 }
 
@@ -161,6 +163,7 @@ impl Default for Settings {
             theme: "default".to_string(),
             scoped_models: Vec::new(),
             titler: String::new(),
+            retry_attempts: 5,
             fallback_model: String::new(),
         }
     }

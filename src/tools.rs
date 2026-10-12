@@ -19,6 +19,10 @@ const SHELL_TIMEOUT: Duration = Duration::from_secs(120);
 const FOREGROUND_LIMIT: Duration = Duration::from_secs(60);
 /// Hard cap on anything handed back to the model.
 const MAX_OUTPUT: usize = 30_000;
+/// Lines a `read` returns when the caller gives no `limit`: enough to see the
+/// shape of a file, small enough that a few reads do not eat the conversation.
+/// The answer says how to continue, so a large file is walked, not swallowed.
+const READ_DEFAULT_LINES: usize = 400;
 /// Default line cap when the caller passes no `limit`.
 const DEFAULT_LINES: usize = 200;
 /// Directory-tree entries before we stop descending.
@@ -424,10 +428,13 @@ pub async fn read(cwd: &Path, args: &Value) -> Outcome {
         ));
     }
 
+    // No `limit` no longer means "the whole file": a 3000-line source file is
+    // tens of thousands of tokens, and the model rarely needs all of it at once.
+    let wanted = limit.unwrap_or(READ_DEFAULT_LINES);
     let taken: Vec<String> = text
         .lines()
         .skip(start - 1)
-        .take(limit.unwrap_or(total))
+        .take(wanted)
         .enumerate()
         .map(|(offset, line)| format!("{:>5} | {}", start + offset, line))
         .collect();
@@ -439,7 +446,7 @@ pub async fn read(cwd: &Path, args: &Value) -> Outcome {
         body.push_str("\n... [output truncated by exp-1 agent; read again with pos]");
     }
     let mut output = format!("{header}\n{body}");
-    if limit.is_some_and(|l| start - 1 + l < total) {
+    if start - 1 + taken.len() < total {
         output.push_str(&format!(
             "\n... showing {l} of {total} lines from {start}; call read again with a larger limit or pos to continue",
             l = taken.len()
@@ -557,10 +564,23 @@ pub async fn edit(cwd: &Path, undo: &Arc<StdMutex<UndoLog>>, args: &Value) -> Ou
     }
     let removed = old.lines().count();
     let added = new.lines().count();
+    // A short window around the change, so the model can see what it did
+    // instead of reading the file back — those re-reads cost far more than the
+    // edit itself, and they were most of what filled the conversation.
+    let at = text.find(old).map(|offset| text[..offset].lines().count() + 1).unwrap_or(1);
+    let from = at.saturating_sub(2).max(1);
+    let window: Vec<String> = updated
+        .lines()
+        .skip(from - 1)
+        .take(added + 4)
+        .enumerate()
+        .map(|(index, body)| format!("{:>5} | {body}", from + index))
+        .collect();
     Outcome {
         output: format!(
-            "edited {raw}: replaced {removed} line(s) with {added}; file is now {} lines",
-            updated.lines().count()
+            "edited {raw}: replaced {removed} line(s) with {added}; file is now {} lines\n{}",
+            updated.lines().count(),
+            window.join("\n")
         ),
         background_id: None,
     }
@@ -1802,6 +1822,51 @@ pub fn specs() -> Vec<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A read with no limit must not swallow a large file: it returns a window
+    /// and says how to continue.
+    #[test]
+    fn a_read_without_a_limit_is_bounded() {
+        let dir = std::env::temp_dir().join(format!("exp1-read-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        let file = dir.join("big.txt");
+        let body: String = (1..=1000).map(|n| format!("line {n}\n")).collect();
+        std::fs::write(&file, body).expect("write");
+
+        let runtime = tokio::runtime::Runtime::new().expect("runtime");
+        let outcome = runtime.block_on(read(&dir, &json!({ "path": "big.txt" })));
+        assert!(outcome.output.contains("big.txt (1000 lines)"), "{}", &outcome.output[..80.min(outcome.output.len())]);
+        assert!(outcome.output.contains("showing 400 of 1000"), "{}", outcome.output);
+        assert!(outcome.output.contains("line 400"), "the window should end at line 400");
+        assert!(!outcome.output.contains("line 401"), "and not go past it");
+        assert!(outcome.output.contains("pos to continue"), "{}", outcome.output);
+
+        // An explicit limit still wins.
+        let outcome = runtime.block_on(read(&dir, &json!({ "path": "big.txt", "limit": 10 })));
+        assert!(outcome.output.contains("showing 10 of 1000"), "{}", outcome.output);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The edit result carries the changed lines, so the model does not read
+    /// the file back just to see what it did.
+    #[test]
+    fn an_edit_shows_the_changed_lines() {
+        let dir = std::env::temp_dir().join(format!("exp1-edit-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        let file = dir.join("code.rs");
+        std::fs::write(&file, "one\ntwo\nthree\nfour\n").expect("write");
+
+        let undo = Arc::new(StdMutex::new(UndoLog::default()));
+        let runtime = tokio::runtime::Runtime::new().expect("runtime");
+        let outcome = runtime.block_on(edit(
+            &dir,
+            &undo,
+            &json!({ "path": "code.rs", "old": "three", "new": "THREE" }),
+        ));
+        assert!(outcome.output.contains("THREE"), "{}", outcome.output);
+        assert!(outcome.output.contains("3 | THREE"), "the window is numbered: {}", outcome.output);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn counts_lines_and_recounts_when_the_file_changes() {

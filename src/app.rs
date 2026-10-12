@@ -106,7 +106,7 @@ pub const COMMANDS: [(&str, &str); 18] = [
     ("/undo", "put back the files the last turn changed"),
     ("/diff", "show what the last turn changed"),
     ("/fork", "continue this conversation as a new session"),
-    ("/clear", "clear the conversation"),
+    ("/retry", "configure request attempts"),
     ("/help", "show keyboard shortcuts"),
 ];
 
@@ -250,6 +250,7 @@ pub enum Role {
 pub struct Msg {
     pub role: Role,
     pub text: String,
+    pub images: usize,
     /// Markdown parsed once, at push time. Empty for roles that are not rich text.
     pub runs: Vec<Vec<md::Run>>,
 }
@@ -395,14 +396,19 @@ impl Thread {
         }
     }
 
+    pub fn push_user(&mut self, text: impl Into<String>, images: usize) {
+        let text = text.into();
+        self.transcript.push(Msg { role: Role::User, text, images, runs: Vec::new() });
+        self.scroll = 0;
+    }
+
     pub fn push(&mut self, role: Role, text: impl Into<String>) {
         let text = text.into();
-        // Parse markdown once; drawing only maps the cached runs to colours.
         let runs = match role {
             Role::Assistant => md::render(&text),
             _ => Vec::new(),
         };
-        self.transcript.push(Msg { role, text, runs });
+        self.transcript.push(Msg { role, text, images: 0, runs });
         self.scroll = 0;
     }
 
@@ -471,9 +477,8 @@ pub struct App {
     pub scoped: std::collections::BTreeSet<String>,
     /// Set while an API key is being typed: (provider id, label).
     pub entering_key: Option<(String, String)>,
-    /// An image taken off the clipboard with ctrl+v: (media type, base64). It
-    /// rides along with the next prompt and is then dropped.
-    pub pending_image: Option<(String, String)>,
+    /// Images queued from the clipboard for the next prompt: (media type, base64).
+    pub pending_images: Vec<(String, String)>,
     /// Set once the namer has been started for this session.
     pub title_started: bool,
     /// Installed skills, as `("/name", description)`, so they sit beside the
@@ -567,7 +572,7 @@ impl App {
             all_models: Vec::new(),
             scoped: std::collections::BTreeSet::new(),
             entering_key: None,
-            pending_image: None,
+            pending_images: Vec::new(),
             title_started: false,
             skills: Vec::new(),
             attention: false,
@@ -672,6 +677,18 @@ impl App {
                     description: "colour scheme".to_string(),
                 })
                 .collect(),
+            "retry" => {
+                let needle = needle.trim_start_matches('<').to_ascii_lowercase();
+                (1..=10)
+                    .map(|attempts| attempts.to_string())
+                    .filter(|attempts| attempts.starts_with(&needle))
+                    .map(|attempts| Suggestion {
+                        label: attempts.clone(),
+                        insert: attempts,
+                        description: "number of request attempts".to_string(),
+                    })
+                    .collect()
+            },
             _ => Vec::new(),
         }
     }
@@ -923,7 +940,7 @@ impl App {
         // A prompt written over several lines (shift+enter) takes the rows it
         // needs; the transcript gives them up.
         let typed_lines = self.thread().input.iter().filter(|ch| **ch == '\n').count() as u16;
-        let attached = u16::from(self.pending_image.is_some());
+        let attached = u16::from(!self.pending_images.is_empty());
         let input = (INPUT_HEIGHT + typed_lines + attached).min(area.height.saturating_sub(footer));
         let mut spare = area.height.saturating_sub(footer + input);
 
@@ -1200,36 +1217,24 @@ impl App {
         if thread.transcript.is_empty() {
             lines.push(Line::raw(""));
             if self.first_run {
-                // The command list is for someone who has never run this
-                // before; after that it is noise on every launch.
+                // First run shows command names only; descriptions are available
+                // through the completion popup and /help.
                 lines.push(Line::styled(
                     "  To get started, describe a task or try one of these commands:",
                     Style::default().fg(theme.dim),
                 ));
                 lines.push(Line::raw(""));
-                for (name, description) in COMMANDS {
+                for (name, _) in COMMANDS {
                     lines.push(Line::from(vec![
                         Span::raw("  "),
                         Span::styled(name, Style::default().fg(theme.accent)),
-                        Span::styled(format!(" - {description}"), Style::default().fg(theme.dim)),
                     ]));
                 }
-                if !self.skills.is_empty() {
-                    lines.push(Line::raw(""));
-                    lines.push(Line::styled(
-                        "  Installed skills:",
-                        Style::default().fg(theme.dim),
-                    ));
-                    for (name, description) in &self.skills {
-                        lines.push(Line::from(vec![
-                            Span::raw("  "),
-                            Span::styled(name.clone(), Style::default().fg(theme.accent)),
-                            Span::styled(
-                                format!(" - {description}"),
-                                Style::default().fg(theme.dim),
-                            ),
-                        ]));
-                    }
+                for (name, _) in &self.skills {
+                    lines.push(Line::from(vec![
+                        Span::raw("  "),
+                        Span::styled(name.clone(), Style::default().fg(theme.accent)),
+                    ]));
                 }
             } else {
                 lines.push(Line::styled(
@@ -1241,8 +1246,14 @@ impl App {
 
         for msg in &thread.transcript {
             match msg.role {
-                // A submitted prompt is drawn as a full-width band, like Codex.
                 Role::User => {
+                    if msg.images > 0 {
+                        lines.push(pad_line(
+                            &format!("  ▣ {} image{} attached", msg.images, if msg.images == 1 { "" } else { "s" }),
+                            width,
+                            theme.input_bg,
+                        ));
+                    }
                     let mut first = true;
                     for body in msg.text.split('\n') {
                         let room = width.saturating_sub(2);
@@ -1490,16 +1501,15 @@ impl App {
         // caret at the cursor's own line and column.
         let mut lines: Vec<Line> = vec![Line::raw("")];
         // An attached picture shows as a filled chip above the prompt, the way
-        // the interface marks everything else it is holding.
-        if self.pending_image.is_some() {
+        if !self.pending_images.is_empty() {
             lines.push(Line::from(vec![
                 Span::styled("  ", Style::default()),
                 Span::styled(
-                    " Image 1 ",
+                    format!("{} image{} queued", self.pending_images.len(), if self.pending_images.len() == 1 { "" } else { "s" }),
                     Style::default().bg(theme.accent).fg(theme.input_bg),
                 ),
                 Span::styled(
-                    "  ctrl-v replaces it · enter sends it",
+                    "  ctrl-v adds another · enter sends",
                     Style::default().fg(theme.dim),
                 ),
             ]));

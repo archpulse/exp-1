@@ -246,6 +246,7 @@ fn print_help() {
          \x20 /compact       summarise the conversation now\n\
          \x20 /undo /diff     restore or inspect what the last turn changed\n\
          \x20 /fork          continue as a new session\n\
+         \x20 /retry <1-10>   configure request attempts\n\
          \x20 /model /themes /status /init /clear /btw /help\n\n\
          KEYS:\n\
          \x20 ctrl + /   switch between the main thread and the side thread\n\
@@ -722,7 +723,7 @@ fn start_side_question(app: &mut App, ctx: &Ctx, question: String) {
     let conn = ctx.conn.clone();
     let session = ctx.session(1);
     tokio::spawn(async move {
-        if let Err(err) = conn.prompt(&session, &question, None, Vec::new()).await {
+        if let Err(err) = conn.prompt(&session, &question, Vec::new(), Vec::new()).await {
             eprintln!("exp-1: side question failed: {err:#}");
         }
     });
@@ -1302,13 +1303,18 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
             }
 
             // Sending is now a request to the server, not a local turn.
+            let images = std::mem::take(&mut app.pending_images)
+                .into_iter()
+                .map(|(media_type, data)| proto::WireImage { media_type, data })
+                .collect::<Vec<_>>();
+            let image_count = images.len();
             let index = app.active;
             let thread = app.thread_mut();
             thread.remember(&text);
             if thread.name.is_empty() {
                 thread.name = thread_name(&text);
             }
-            thread.push(Role::User, text.clone());
+            thread.push_user(&text, image_count);
             thread.clear_input();
             thread.error = None;
             thread.scroll = 0;
@@ -1316,15 +1322,11 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
             thread.phase = Phase::Streaming;
             let conn = ctx.conn.clone();
             let session = ctx.session(index);
-            let image = app.pending_image.take().map(|(media_type, data)| proto::WireImage {
-                media_type,
-                data,
-            });
             // `@file` mentions travel as paths; the server decides what to
             // attach and what to hand over to be read.
             let files = mentions(&text, &ctx.cwd());
             tokio::spawn(async move {
-                if let Err(err) = conn.prompt(&session, &text, image, files).await {
+                if let Err(err) = conn.prompt(&session, &text, images, files).await {
                     eprintln!("exp-1: prompt failed: {err:#}");
                 }
             });
@@ -1577,7 +1579,11 @@ fn apply(app: &mut App, message: AgentMsg) {
                     "tool" => Role::Tool,
                     _ => Role::System,
                 };
-                thread.push(role, message.text.clone());
+                if role == Role::User {
+                    thread.push_user(message.text.clone(), message.images);
+                } else {
+                    thread.push(role, message.text.clone());
+                }
             }
             if !snapshot.name.is_empty() {
                 thread.name = snapshot.name.clone();
@@ -1984,10 +1990,11 @@ fn attach_clipboard_image(app: &mut App) {
                 format!("{} bytes", bytes.len())
             };
             let data = base64::engine::general_purpose::STANDARD.encode(&bytes);
-            app.pending_image = Some((media_type.clone(), data));
+            app.pending_images.push((media_type.clone(), data));
+            let queued = app.pending_images.len();
             app.thread_mut().push(
                 Role::System,
-                format!("image attached: {media_type}, {size} — it goes with the next prompt"),
+                format!("image attached: {media_type}, {size} — {queued} queued for the next prompt"),
             );
         }
         None => app.thread_mut().push(

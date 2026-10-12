@@ -18,9 +18,9 @@ Codex CLI does** — ChatGPT OAuth against `auth.openai.com`, with model request
 
 | Tool | Arguments | Notes |
 | --- | --- | --- |
-| `read` | `path`, `limit?`, `pos?` | Whole file by default; `limit` caps lines, `pos` is the first line, 1-based. Output is numbered. |
+| `read` | `path`, `limit?`, `pos?` | At most 400 lines by default; `limit` changes that, `pos` is the first line, 1-based. Output is numbered and a cut read says how to continue. A 3000-line file is walked in pieces on purpose: swallowing one costs tens of thousands of tokens. |
 | `write` | `path`, `content` | Creates parent directories; overwrites an existing file. |
-| `edit` | `path`, `old`, `new` | Exact replacement. Fails when `old` is absent or matches more than once. |
+| `edit` | `path`, `old`, `new` | Exact replacement. Fails when `old` is absent or matches more than once. The result shows the lines around the change, so the file does not have to be read back. |
 | `fetch` | `url`, `limit?`, `pos?` | One page as plain text, paged like a file: `limit` lines (default 400) from `pos` (1-based). Scripts and styles are dropped, entities decoded. |
 | `count` | `path`, `refresh?` | Lines in a file, or across every file under a directory, without reading the contents. Cached per file in `.cache/count`, keyed by size and mtime. |
 | `delete` | `path` | Removes a file. Directories are refused — emptying a tree belongs in `shell`, where the whole command is visible. |
@@ -702,6 +702,11 @@ file entirely.
 | `src/tools.rs` | `read`, `write`, `edit`, `shell`, `ast`, `ask_question`, plus the background/output registry |
 | `src/app.rs` | Threads, TUI state, rendering, session snapshot/restore |
 | `src/main.rs` | CLI, key handling, agent loop |
+
+## Limits
+
+A turn runs at most 200 tool rounds; if it ever gets there the transcript says so instead of
+stopping in silence.
 
 ## Limits
 

@@ -29,7 +29,9 @@ use crate::tools;
 use crate::tools::AskSlot;
 use crate::store;
 
-const MAX_ITERATIONS: usize = 40;
+/// Tool rounds in one turn. Real work on a large project runs into the dozens;
+/// the limit is a guard against a loop that never converges, not a budget.
+const MAX_ITERATIONS: usize = 200;
 /// How deep `task` may recurse before subagents stop being offered.
 const MAX_SUBAGENT_DEPTH: usize = 2;
 
@@ -160,30 +162,64 @@ async fn run_subagent(
         let active = shared.agent.provider();
         let provider = crate::providers::by_id(&active);
         let model = shared.agent.model();
-        let streamed = match provider {
-            Some(entry) if entry.wire_for(&model) == crate::providers::Wire::CodexResponses => {
-                match shared.agent.codex() {
-                    Ok(client) => client.stream(&request).await,
-                    Err(err) => Err(err),
+        let effort = shared.agent.effort();
+        let request = ResponsesRequest {
+            model: model.clone(),
+            reasoning: Reasoning { effort: effort.clone(), summary: "auto" },
+            ..request
+        };
+
+        let model = shared.agent.model();
+
+        // Refresh subagent defaults from the current parent settings/model on
+        // each tool invocation; setting edits take effect without a restart.
+        let fallback = store::load_settings().fallback_model;
+        let max_attempts = store::load_settings().retry_attempts.clamp(1, 10);
+        let mut candidates = vec![model.clone()];
+        if !fallback.is_empty() && fallback != model {
+            candidates.push(fallback.clone());
+        }
+        let mut streamed = None;
+        let mut last_error = String::new();
+        for candidate in &candidates {
+            for attempt in 0..max_attempts {
+                let mut attempt_request = request.clone();
+                attempt_request.model = candidate.clone();
+                attempt_request.reasoning.effort = shared.agent.effort();
+                let tried = match provider {
+                    Some(entry) if entry.wire_for(candidate) == crate::providers::Wire::CodexResponses => {
+                        match shared.agent.codex() {
+                            Ok(client) => client.stream(&attempt_request).await,
+                            Err(err) => Err(err),
+                        }
+                    }
+                    Some(entry) => match request_target(entry, candidate).await {
+                        Ok(target) => crate::backends::stream(
+                            target,
+                            store::prompt("subagent", SUBAGENT_INSTRUCTIONS),
+                            history.clone(),
+                            specs.clone(),
+                        ).await,
+                        Err(message) => Err(anyhow::anyhow!("{message}")),
+                    },
+                    None => Err(anyhow::anyhow!("unknown provider '{active}'")),
+                };
+                match tried {
+                    Ok(stream) => { streamed = Some(stream); break; }
+                    Err(err) => {
+                        last_error = format!("{err:#}");
+                        if attempt + 1 < max_attempts {
+                            tokio::time::sleep(std::time::Duration::from_secs(1u64 << attempt.min(5))).await;
+                        }
+                    }
                 }
             }
-            Some(entry) => match request_target(entry, &model).await {
-                Ok(target) => {
-                    crate::backends::stream(
-                        target,
-                        store::prompt("subagent", SUBAGENT_INSTRUCTIONS),
-                        history.clone(),
-                        specs.clone(),
-                    )
-                    .await
-                }
-                Err(message) => Err(anyhow::anyhow!("{message}")),
-            },
-            None => Err(anyhow::anyhow!("unknown provider '{active}'")),
-        };
+            if streamed.is_some() { break; }
+        }
+        let streamed = streamed.ok_or_else(|| anyhow::anyhow!(last_error.clone()));
         let Ok(mut stream) = streamed else {
             return tools::Outcome {
-                output: "the subagent could not start".to_string(),
+                output: format!("the subagent could not start: {last_error}"),
                 background_id: None,
             };
         };
@@ -500,7 +536,7 @@ const INSTRUCTIONS: &str = r#"You are exp-1 agent, a coding assistant operating 
 
 ## Tools
 
-- `read` — read a text file. `path` (required) is relative to the working directory. By default it returns the whole file; pass `limit` for a maximum number of lines and `pos` for a 1-based first line to start at. Output is prefixed with `path (N lines)` and every line is numbered. If a `limit` cut the read short, a trailing line tells you to re-read with a larger `limit` or a further `pos`; a very large read is capped and also tells you to continue with `pos`.
+- `read` — read a text file. `path` (required) is relative to the working directory. It returns **at most 400 lines** by default: pass `limit` for a different number and `pos` for a 1-based first line to start at. Output is prefixed with `path (N lines)` and every line is numbered. When the read was cut short, a trailing line says how many lines were shown and tells you to continue with a further `pos` — a whole 3000-line file is walked in pieces on purpose, because swallowing it costs tens of thousands of tokens of context. Read the part you need, not the file.
 - `write` — create a file or overwrite it entirely. `path`, `content`.
 - `delete` — delete a file. `path`. Directories are refused (use shell for those) and there is no undo, so delete only what you are sure about.
 - `edit` — replace an exact snippet in a file. `path`, `old`, `new`. `old` must match the file exactly and only once: the edit fails if `old` is missing or matches more than once, so include enough surrounding context to make it unique. `old` and `new` must differ. It reports how many lines were replaced and the new line count.
@@ -519,7 +555,7 @@ const INSTRUCTIONS: &str = r#"You are exp-1 agent, a coding assistant operating 
 ## How to work
 
 - Prefer the dedicated tools for file work: `read` to look, `edit` for a precise change, `write` for a new file, `delete` to remove one. Use `shell` for building, testing, running, and anything with no dedicated tool (git, moving files, removing directories).
-- Read a file before editing it, and copy `old` from what you actually read. For `edit`, put in `old` the smallest snippet that uniquely identifies what to change.
+- Read a file before editing it, and copy `old` from what you actually read. For `edit`, put in `old` the smallest snippet that uniquely identifies what to change. The result shows the lines around the change, so there is no need to read the file back to see what you did.
 - Run `shell` commands in the foreground unless you genuinely need to keep working while one runs; then use `background` and poll `output_id`. Re-read long output with a larger `limit` instead of guessing at it.
 - Reach for `count` when the question is how big a file or a tree is in lines — never read a file just to count it.
 - Reach for `fetch` when you have the URL and `websearch` when you only have the question.
@@ -652,7 +688,7 @@ impl Session {
         })
     }
 
-    /// `build` or `plan`.
+    /// Subagent picks up provider/model/effort changes from the parent each time.
     fn mode(&self) -> String {
         self.state
             .lock()
@@ -707,6 +743,7 @@ impl Session {
             state.transcript.push(WireMsg {
                 role: role.to_string(),
                 text: text.into(),
+                images: 0,
             });
         }
     }
@@ -844,6 +881,7 @@ async fn run_turn(
         text
     };
 
+    let mut finished = false;
     for _iteration in 0..MAX_ITERATIONS {
         session.set_phase(WirePhase::Streaming);
 
@@ -894,8 +932,9 @@ async fn run_turn(
         let mut streamed: Option<mpsc::Receiver<ApiEvent>> = None;
         let mut last_error = String::new();
         for (index, candidate) in candidates.iter().enumerate() {
-            let attempts = if index == 0 { 2 } else { 1 };
-            for attempt in 0..attempts {
+            // Retry every request failure; configuration controls total attempts.
+            let max_attempts = store::load_settings().retry_attempts.clamp(1, 10);
+            for attempt in 0..max_attempts {
                 let mut attempt_request = request.clone();
                 attempt_request.model = candidate.clone();
                 let tried = match provider {
@@ -930,16 +969,15 @@ async fn run_turn(
                     }
                     Err(err) => {
                         last_error = format!("{err:#}");
-                        if !transient(&last_error) {
-                            break;
-                        }
-                        if attempt + 1 < attempts {
-                            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                        if attempt + 1 < max_attempts {
+                            // Capped exponential backoff between attempts.
+                            let delay = std::time::Duration::from_secs(1u64 << attempt.min(5));
+                            tokio::time::sleep(delay).await;
                         }
                     }
                 }
             }
-            if streamed.is_some() || !transient(&last_error) {
+            if streamed.is_some() || index + 1 >= candidates.len() {
                 break;
             }
             if index + 1 < candidates.len() {
@@ -1040,6 +1078,7 @@ async fn run_turn(
         }
 
         if calls.is_empty() {
+            finished = true;
             break;
         }
 
@@ -1114,6 +1153,17 @@ async fn run_turn(
                 output: outcome.output,
             });
         }
+    }
+
+    if !finished {
+        // The loop ran out of rounds rather than the model running out of work.
+        // Saying so beats stopping in silence, which reads as being cut off.
+        session.push(
+            "system",
+            format!(
+                "stopped after {MAX_ITERATIONS} tool rounds in one turn; say \"continue\" and it picks up where it left off"
+            ),
+        );
     }
 
     compact_if_full(&shared, &session).await;
@@ -1397,9 +1447,10 @@ async fn permission_check(
     }
 }
 
-/// Whether a failure deserves another attempt: server-side and transport
-/// problems do, a rejected request does not.
-fn transient(message: &str) -> bool {
+    /// Whether a failure deserves another attempt: server-side and transport
+    /// problems do, a rejected request does not.
+    #[cfg(test)]
+    fn transient(message: &str) -> bool {
     let lowered = message.to_ascii_lowercase();
     if lowered.contains("http 4") {
         return false;
@@ -1410,6 +1461,15 @@ fn transient(message: &str) -> bool {
         "timeout",
         "connection",
         "error sending request",
+        "dns error",
+        "failed to lookup address",
+        "temporary failure",
+        "temporary fail",
+        "name resolution",
+        "name or service not known",
+        "temporary failure in name resolution",
+        "could not resolve host",
+        "no such host",
         "broken pipe",
         "reset by peer",
         "unexpected eof",
@@ -1429,6 +1489,9 @@ mod tests {
         assert!(transient("error sending request for url (https://api.openai.com)"));
         assert!(transient("operation timed out after 25s"));
         assert!(transient("connection reset by peer"));
+        assert!(transient("dns error: failed to lookup address information"));
+        assert!(transient("Temporary failure: DNS lookup failed"));
+        assert!(transient("temporary failure in name resolution"));
         assert!(!transient("HTTP 404: model not found"));
         assert!(!transient("HTTP 401: invalid api key"));
         assert!(!transient("unknown provider 'nope' — run /login"));
@@ -1932,6 +1995,7 @@ async fn session_snapshot(
                 .map(|msg| WireMsg {
                     role: msg.role.clone(),
                     text: msg.text.clone(),
+                    images: 0,
                 })
                 .collect(),
             live: String::new(),
@@ -1957,24 +2021,17 @@ async fn prompt(
     let Some(session) = find(&shared, &id) else {
         return (StatusCode::NOT_FOUND, "no such session").into_response();
     };
-    if body.text.trim().is_empty() && body.image.is_none() {
+    if body.text.trim().is_empty() && body.images.is_empty() {
         return (StatusCode::BAD_REQUEST, "empty prompt").into_response();
     }
     let text = body.text.trim().to_string();
-    let image = body.image.clone();
-    let shown = match &image {
-        Some(image) => format!(
-            "{text}\n[image: {}, {} KB]",
-            image.media_type,
-            image.data.len() * 3 / 4 / 1024
-        ),
-        None => text.clone(),
-    };
-    session.push("user", shown);
-
-    // `@file` mentions: pictures ride along as attachments, everything else is
-    // named in the model's own copy of the prompt so it reads them first.
-    let mut images: Vec<crate::proto::WireImage> = image.into_iter().collect();
+    let mut images: Vec<crate::proto::WireImage> = body.images.clone();
+    session.push("user", text.clone());
+    if let Ok(mut state) = session.state.lock()
+        && let Some(last) = state.transcript.last_mut()
+    {
+        last.images = images.len();
+    }
     let mut readable: Vec<String> = Vec::new();
     let mut missing: Vec<String> = Vec::new();
     for named in &body.files {
@@ -2621,6 +2678,7 @@ fn restore_sessions() -> HashMap<String, Arc<Session>> {
                 .map(|msg| WireMsg {
                     role: msg.role.clone(),
                     text: msg.text.clone(),
+                    images: 0,
                 })
                 .collect();
         }

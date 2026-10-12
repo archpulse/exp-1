@@ -8,6 +8,8 @@ pub struct WireMsg {
     /// `user`, `assistant`, `tool` or `system`.
     pub role: String,
     pub text: String,
+    #[serde(default)]
+    pub images: usize,
 }
 
 /// How far along a turn is.
@@ -79,9 +81,9 @@ pub enum WireEvent {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PromptBody {
     pub text: String,
-    /// A picture pasted into the prompt, if any.
+    /// Pictures pasted into the prompt, if any.
     #[serde(default)]
-    pub image: Option<WireImage>,
+    pub images: Vec<WireImage>,
     /// Files named with `@` in the prompt, resolved against the session's
     /// directory: pictures are attached, the rest are handed to the model to
     /// read before it answers.
