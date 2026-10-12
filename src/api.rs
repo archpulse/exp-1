@@ -4,7 +4,6 @@ use anyhow::{Context, Result, bail};
 use futures_util::StreamExt;
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use uuid::Uuid;
 
 use crate::auth::Auth;
 use crate::protocol::{Usage, RawEvent, ResponsesRequest};
@@ -53,9 +52,13 @@ impl CodexClient {
     }
 
     /// POSTs the request and returns a channel of decoded stream events.
+    /// `conversation` is stable for the life of one session: the backend caches
+    /// prompt prefixes, and a fresh id on every request would ask for a new
+    /// cache each time.
     pub async fn stream(
         self: &Arc<Self>,
         request: &ResponsesRequest,
+        conversation: &str,
     ) -> Result<mpsc::Receiver<ApiEvent>> {
         let (token, account_id) = {
             let mut guard = self.auth.lock().await;
@@ -63,6 +66,14 @@ impl CodexClient {
             let account_id = guard.account_id().map(str::to_string);
             (token, account_id)
         };
+
+        let mut body = serde_json::to_value(request).context("serialize the request")?;
+        if let Some(object) = body.as_object_mut() {
+            object.insert(
+                "prompt_cache_key".to_string(),
+                serde_json::Value::String(conversation.to_string()),
+            );
+        }
 
         let url = format!("{BASE_URL}/responses");
         let response = self
@@ -73,8 +84,8 @@ impl CodexClient {
             .header("originator", ORIGINATOR)
             .header("User-Agent", &self.user_agent)
             .header("Accept", "text/event-stream")
-            .header("session-id", Uuid::new_v4().to_string())
-            .json(request)
+            .header("session-id", conversation)
+            .json(&body)
             .send()
             .await
             .context("POST responses")?;

@@ -387,9 +387,21 @@ fn clamp(text: &str, limit: Option<usize>) -> String {
         out.push_str(&format!("\n... truncated at {limit} lines"));
     }
     if out.len() > MAX_OUTPUT {
-        let end = cut(&out, MAX_OUTPUT).len();
-        out.truncate(end);
-        out.push_str("\n... [output truncated by exp-1 agent]");
+        // Keep both ends and drop the middle: a build log opens with what ran
+        // and ends with the error, and the middle is the part nobody reads. A
+        // cut of the tail alone would hide exactly the lines that matter.
+        let marker_room = 160;
+        let head = cut(&out, MAX_OUTPUT / 3).len();
+        let tail_len = MAX_OUTPUT.saturating_sub(head + marker_room);
+        let tail_start = cut(&out, out.len() - tail_len).len();
+        let omitted = tail_start - head;
+        let mut kept = String::with_capacity(MAX_OUTPUT);
+        kept.push_str(&out[..head]);
+        kept.push_str(&format!(
+            "\n... [exp-1 agent omitted {omitted} characters here; re-read with output_id and a larger limit] ...\n"
+        ));
+        kept.push_str(&out[tail_start..]);
+        out = kept;
     }
     out
 }
@@ -538,62 +550,161 @@ pub async fn write(cwd: &Path, undo: &Arc<StdMutex<UndoLog>>, args: &Value) -> O
 
 // ---------------------------------------------------------------- edit
 
+/// The replacements an `edit` call asks for: one `old`/`new` pair, or an
+/// `edits` array applied in order.
+fn edit_pairs(args: &Value) -> Result<Vec<(String, String)>, String> {
+    if let Some(list) = args.get("edits") {
+        let Some(list) = list.as_array() else {
+            return Err("edit: 'edits' must be an array of {\"old\", \"new\"} objects".to_string());
+        };
+        if list.is_empty() {
+            return Err("edit: 'edits' is empty".to_string());
+        }
+        let mut pairs = Vec::with_capacity(list.len());
+        for (index, item) in list.iter().enumerate() {
+            let old = item.get("old").and_then(Value::as_str).unwrap_or_default();
+            let new = item.get("new").and_then(Value::as_str).unwrap_or_default();
+            if old.is_empty() {
+                return Err(format!("edit: edits[{index}].old is required"));
+            }
+            if old == new {
+                return Err(format!("edit: edits[{index}] has identical 'old' and 'new'"));
+            }
+            pairs.push((old.to_string(), new.to_string()));
+        }
+        return Ok(pairs);
+    }
+    let Some(old) = args.get("old").and_then(Value::as_str) else {
+        return Err("edit: 'old' is required (or an 'edits' array)".to_string());
+    };
+    let Some(new) = args.get("new").and_then(Value::as_str) else {
+        return Err("edit: 'new' is required".to_string());
+    };
+    if old == new {
+        return Err("edit: 'old' and 'new' are identical".to_string());
+    }
+    Ok(vec![(old.to_string(), new.to_string())])
+}
+
+/// When `old` is not in the file, the lines carrying its first non-empty line
+/// are what the model meant: the mismatch is nearly always whitespace, and
+/// showing the real text saves a full re-read.
+fn missing_hint(raw: &str, text: &str, old: &str) -> String {
+    let needle = old
+        .lines()
+        .find(|line| !line.trim().is_empty())
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    let mut hint = format!("edit: 'old' not found in {raw}");
+    if needle.chars().count() < 4 {
+        hint.push_str("; read the file again and copy the exact text");
+        return hint;
+    }
+    let near: Vec<String> = text
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| line.contains(needle.as_str()))
+        .take(3)
+        .map(|(index, line)| format!("{:>5} | {}", index + 1, clip_line_to(line, 120)))
+        .collect();
+    if near.is_empty() {
+        hint.push_str("; read the file again and copy the exact text");
+    } else {
+        hint.push_str(&format!(
+            "; the closest lines are below — the whitespace has to match exactly:\n{}",
+            near.join("\n")
+        ));
+    }
+    hint
+}
+
+/// When `old` matches more than once, say where, so the model can widen the
+/// snippet without reading the file back.
+fn ambiguous_hint(raw: &str, text: &str, old: &str, hits: usize) -> String {
+    let places: Vec<String> = text
+        .match_indices(old)
+        .take(5)
+        .map(|(at, _)| (text[..at].lines().count() + 1).to_string())
+        .collect();
+    format!(
+        "edit: 'old' matches {hits} times in {raw} (lines {}); include more surrounding context to make it unique",
+        places.join(", ")
+    )
+}
+
 pub async fn edit(cwd: &Path, undo: &Arc<StdMutex<UndoLog>>, args: &Value) -> Outcome {
     let Some(raw) = args.get("path").and_then(Value::as_str) else {
         return err("edit: 'path' is required");
     };
-    let Some(old) = args.get("old").and_then(Value::as_str) else {
-        return err("edit: 'old' is required");
+    let pairs = match edit_pairs(args) {
+        Ok(pairs) => pairs,
+        Err(message) => return err(message),
     };
-    let Some(new) = args.get("new").and_then(Value::as_str) else {
-        return err("edit: 'new' is required");
-    };
-    if old == new {
-        return err("edit: 'old' and 'new' are identical");
-    }
     let path = resolve(cwd, raw);
     let text = match std::fs::read_to_string(&path) {
         Ok(text) => text,
         Err(e) => return err(format!("edit: {}: {e}", path.display())),
     };
 
-    let hits = text.matches(old).count();
-    if hits == 0 {
-        return err(format!(
-            "edit: 'old' not found in {raw}; read the file again and copy the exact text"
-        ));
+    // Every replacement is checked against the text the previous one produced,
+    // and nothing is written until all of them have passed: a call that fails
+    // halfway leaves the file exactly as it was.
+    let mut updated = text.clone();
+    for (old, new) in &pairs {
+        let hits = updated.matches(old.as_str()).count();
+        if hits == 0 {
+            return err(missing_hint(raw, &updated, old));
+        }
+        if hits > 1 {
+            return err(ambiguous_hint(raw, &updated, old, hits));
+        }
+        updated = updated.replacen(old.as_str(), new, 1);
     }
-    if hits > 1 {
-        return err(format!(
-            "edit: 'old' matches {hits} times in {raw}; include more surrounding context to make it unique"
-        ));
-    }
-    let updated = text.replacen(old, new, 1);
     if let Ok(mut log) = undo.lock() {
         log.record(&path);
     }
     if let Err(e) = std::fs::write(&path, &updated) {
         return err(format!("edit: {}: {e}", path.display()));
     }
-    let removed = old.lines().count();
-    let added = new.lines().count();
-    // A short window around the change, so the model can see what it did
-    // instead of reading the file back — those re-reads cost far more than the
-    // edit itself, and they were most of what filled the conversation.
-    let at = text.find(old).map(|offset| text[..offset].lines().count() + 1).unwrap_or(1);
-    let from = at.saturating_sub(2).max(1);
-    let window: Vec<String> = updated
-        .lines()
-        .skip(from - 1)
-        .take(added + 4)
-        .enumerate()
-        .map(|(index, body)| format!("{:>5} | {body}", from + index))
+
+    let removed: usize = pairs.iter().map(|(old, _)| old.lines().count()).sum();
+    let added: usize = pairs.iter().map(|(_, new)| new.lines().count()).sum();
+    let lines = updated.lines().count();
+    if pairs.len() == 1 {
+        let (old, new) = &pairs[0];
+        // A short window around the change, so the model can see what it did
+        // instead of reading the file back — those re-reads cost far more than
+        // the edit itself, and they were most of what filled the conversation.
+        let at = text
+            .find(old.as_str())
+            .map(|offset| text[..offset].lines().count() + 1)
+            .unwrap_or(1);
+        let from = at.saturating_sub(2).max(1);
+        let window: Vec<String> = updated
+            .lines()
+            .skip(from - 1)
+            .take(new.lines().count() + 4)
+            .enumerate()
+            .map(|(index, body)| format!("{:>5} | {body}", from + index))
+            .collect();
+        return Outcome {
+            output: format!(
+                "edited {raw}: replaced {removed} line(s) with {added}; file is now {lines} lines\n{}",
+                window.join("\n")
+            ),
+            background_id: None,
+        };
+    }
+    let changes: Vec<String> = pairs
+        .iter()
+        .map(|(_, new)| format!("  - {}", clip_line_to(new.lines().next().unwrap_or(""), 100)))
         .collect();
     Outcome {
         output: format!(
-            "edited {raw}: replaced {removed} line(s) with {added}; file is now {} lines\n{}",
-            updated.lines().count(),
-            window.join("\n")
+            "edited {raw}: {} changes, {removed} line(s) replaced with {added}; file is now {lines} lines\n{}",
+            pairs.len(),
+            changes.join("\n")
         ),
         background_id: None,
     }
@@ -699,10 +810,54 @@ pub async fn read_output(registry: &Shared, args: &Value) -> Outcome {
     }
 }
 
+/// Removes ANSI escape sequences. `TERM=dumb` stops most tools from colouring
+/// their output, but not all of them, and escape bytes are pure noise in a
+/// model's context.
+fn strip_ansi(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch != '\u{1b}' {
+            out.push(ch);
+            continue;
+        }
+        match chars.peek().copied() {
+            // CSI: ESC [ … a byte in 0x40..=0x7e ends it.
+            Some('[') => {
+                chars.next();
+                for next in chars.by_ref() {
+                    if ('\u{40}'..='\u{7e}').contains(&next) {
+                        break;
+                    }
+                }
+            }
+            // OSC: ESC ] … ends at BEL or ESC \.
+            Some(']') => {
+                chars.next();
+                while let Some(next) = chars.next() {
+                    if next == '\u{7}' {
+                        break;
+                    }
+                    if next == '\u{1b}' && chars.peek() == Some(&'\\') {
+                        chars.next();
+                        break;
+                    }
+                }
+            }
+            // Any other escape is two characters.
+            Some(_) => {
+                chars.next();
+            }
+            None => {}
+        }
+    }
+    out
+}
+
 fn render_output(output: &std::process::Output) -> String {
     let mut body = String::new();
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = strip_ansi(&String::from_utf8_lossy(&output.stdout));
+    let stderr = strip_ansi(&String::from_utf8_lossy(&output.stderr));
     if !stdout.is_empty() {
         body.push_str(stdout.trim_end());
     }
@@ -1635,6 +1790,7 @@ pub async fn grep(cwd: &Path, args: &Value) -> Outcome {
         .map(|v| v.max(1) as usize)
         .unwrap_or(GREP_DEFAULT_MAX);
     let raw = args.get("path").and_then(Value::as_str).unwrap_or(".");
+    let include = args.get("include").and_then(Value::as_str).map(str::to_string);
     let path = resolve(cwd, raw);
     if !path.exists() {
         return err(format!("grep: {raw}: no such file or directory"));
@@ -1660,6 +1816,12 @@ pub async fn grep(cwd: &Path, args: &Value) -> Outcome {
                         stack.push(entry.path());
                     }
                 } else {
+                    if let Some(include) = &include {
+                        let name = entry.file_name().to_string_lossy().to_string();
+                        if !glob(include, &name) {
+                            continue;
+                        }
+                    }
                     files.push(entry.path());
                 }
             }
@@ -1734,11 +1896,16 @@ pub async fn grep(cwd: &Path, args: &Value) -> Outcome {
 
 /// A match line, trimmed and clipped so one minified line cannot eat the answer.
 fn clip_line(line: &str) -> String {
+    clip_line_to(line, GREP_LINE_CAP)
+}
+
+/// One line, trimmed and clipped to a readable width.
+fn clip_line_to(line: &str, limit: usize) -> String {
     let trimmed = line.trim_end();
-    if trimmed.chars().count() <= GREP_LINE_CAP {
+    if trimmed.chars().count() <= limit {
         return trimmed.to_string();
     }
-    let mut clipped: String = trimmed.chars().take(GREP_LINE_CAP).collect();
+    let mut clipped: String = trimmed.chars().take(limit).collect();
     clipped.push('…');
     clipped
 }
@@ -1830,15 +1997,31 @@ pub fn specs() -> Vec<Value> {
             "type": "function",
             "name": "edit",
             "description": "Replace an exact snippet in a file. Fails when 'old' is absent or \
-                            matches more than once, so include enough context.",
+                            matches more than once, and the failure names the closest lines or \
+                            the positions of the matches. Pass several 'edits' to change one \
+                            file in one call: they apply in order, all or nothing. The result \
+                            shows what changed, so there is no need to read the file back.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "path": { "type": "string" },
                     "old": { "type": "string", "description": "Exact text to replace." },
-                    "new": { "type": "string", "description": "Replacement text." }
+                    "new": { "type": "string", "description": "Replacement text." },
+                    "edits": {
+                        "type": "array",
+                        "description": "Several replacements in one call, applied in order, all or nothing.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "old": { "type": "string" },
+                                "new": { "type": "string" }
+                            },
+                            "required": ["old", "new"],
+                            "additionalProperties": false
+                        }
+                    }
                 },
-                "required": ["path", "old", "new"],
+                "required": ["path"],
                 "additionalProperties": false
             }
         }),
@@ -1849,7 +2032,8 @@ pub fn specs() -> Vec<Value> {
                             and one still running after 60s is promoted to the background \
                             where you are told when it finishes. Pass background true to \
                             keep working. A background command is never killed on a timer. \
-                            Output is line-limited; re-read a previous run with output_id \
+                            Output is capped: a very long one keeps the beginning and the \
+                            end, with the gap marked; re-read a previous run with output_id \
                             and a new limit.",
             "parameters": {
                 "type": "object",
@@ -1929,6 +2113,7 @@ pub fn specs() -> Vec<Value> {
                 "properties": {
                     "pattern": { "type": "string", "description": "Regular expression to find." },
                     "path": { "type": "string", "description": "File or directory, relative to the working directory (default: the working directory)." },
+                    "include": { "type": "string", "description": "Only search files whose name matches this pattern, e.g. *.rs." },
                     "max": { "type": "integer", "description": "Matches to return (default 100)." }
                 },
                 "required": ["pattern"],
@@ -1994,6 +2179,134 @@ pub fn specs() -> Vec<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Escape sequences are stripped: colour codes are noise in a model's
+    /// context, and some tools emit them even with TERM=dumb.
+    #[test]
+    fn escape_sequences_are_stripped() {
+        assert_eq!(strip_ansi("\u{1b}[31mred\u{1b}[0m plain"), "red plain");
+        assert_eq!(strip_ansi("\u{1b}]0;title\u{7}after"), "after");
+        assert_eq!(strip_ansi("no escapes"), "no escapes");
+    }
+
+    /// A capped output keeps both ends: the head says what ran, the tail says
+    /// how it ended, and the middle is what goes.
+    #[test]
+    fn a_capped_output_keeps_both_ends() {
+        let text = format!("first line\n{}\nlast line", "x".repeat(MAX_OUTPUT * 2));
+        let clamped = clamp(&text, None);
+        assert!(clamped.starts_with("first line"), "{}", &clamped[..40.min(clamped.len())]);
+        assert!(
+            clamped.ends_with("last line"),
+            "{}",
+            &clamped[clamped.len().saturating_sub(40)..]
+        );
+        assert!(clamped.contains("omitted"), "the gap is marked: {}", clamped.len());
+        assert!(clamped.len() <= MAX_OUTPUT + 64, "{}", clamped.len());
+    }
+
+    /// `include` narrows a search to matching file names.
+    #[test]
+    fn grep_can_limit_itself_to_matching_files() {
+        let dir = std::env::temp_dir().join(format!("exp1-grep-include-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("src")).expect("temp dir");
+        std::fs::write(dir.join("src/lib.rs"), "needle\n").expect("write");
+        std::fs::write(dir.join("src/notes.md"), "needle\n").expect("write");
+
+        let runtime = tokio::runtime::Runtime::new().expect("runtime");
+        let outcome = runtime.block_on(grep(
+            &dir,
+            &json!({ "pattern": "needle", "include": "*.rs" }),
+        ));
+        assert!(outcome.output.contains("lib.rs:1: needle"), "{}", outcome.output);
+        assert!(!outcome.output.contains("notes.md"), "{}", outcome.output);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Several replacements in one call, and nothing written when one of them
+    /// cannot be made.
+    #[test]
+    fn an_edit_can_change_several_places_at_once() {
+        let dir = std::env::temp_dir().join(format!("exp1-multi-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        let file = dir.join("code.rs");
+        std::fs::write(&file, "alpha\nbeta\ngamma\n").expect("write");
+
+        let undo = Arc::new(StdMutex::new(UndoLog::default()));
+        let runtime = tokio::runtime::Runtime::new().expect("runtime");
+        let outcome = runtime.block_on(edit(
+            &dir,
+            &undo,
+            &json!({
+                "path": "code.rs",
+                "edits": [
+                    { "old": "alpha", "new": "ALPHA" },
+                    { "old": "gamma", "new": "GAMMA" }
+                ]
+            }),
+        ));
+        assert!(outcome.output.contains("2 changes"), "{}", outcome.output);
+        assert_eq!(std::fs::read_to_string(&file).expect("read"), "ALPHA\nbeta\nGAMMA\n");
+
+        // One bad pair leaves the file exactly as it was.
+        let outcome = runtime.block_on(edit(
+            &dir,
+            &undo,
+            &json!({
+                "path": "code.rs",
+                "edits": [
+                    { "old": "beta", "new": "BETA" },
+                    { "old": "delta", "new": "DELTA" }
+                ]
+            }),
+        ));
+        assert!(outcome.output.contains("not found"), "{}", outcome.output);
+        assert_eq!(
+            std::fs::read_to_string(&file).expect("read"),
+            "ALPHA\nbeta\nGAMMA\n",
+            "nothing was written"
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A failed edit says enough to fix it without reading the file again.
+    #[test]
+    fn an_edit_failure_points_at_the_real_text() {
+        let dir = std::env::temp_dir().join(format!("exp1-hint-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        let file = dir.join("code.rs");
+        std::fs::write(&file, "fn main() {\n    let total = 1;\n    let other = 2;\n}\n")
+            .expect("write");
+
+        let undo = Arc::new(StdMutex::new(UndoLog::default()));
+        let runtime = tokio::runtime::Runtime::new().expect("runtime");
+        // The model got the indentation of the second line wrong, so the
+        // two-line snippet is not in the file.
+        let outcome = runtime.block_on(edit(
+            &dir,
+            &undo,
+            &json!({
+                "path": "code.rs",
+                "old": "    let total = 1;\n   let other = 2;",
+                "new": "    let total = 3;"
+            }),
+        ));
+        assert!(outcome.output.contains("closest lines"), "{}", outcome.output);
+        assert!(outcome.output.contains("2 |     let total = 1;"), "{}", outcome.output);
+
+        // Two candidates: the answer says where they are.
+        std::fs::write(&file, "let x = 1;\nlet x = 1;\n").expect("write");
+        let outcome = runtime.block_on(edit(
+            &dir,
+            &undo,
+            &json!({ "path": "code.rs", "old": "let x = 1;", "new": "let x = 2;" }),
+        ));
+        assert!(outcome.output.contains("lines 1, 2"), "{}", outcome.output);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     /// A grep answers with `path:line: text`, skips build output, and stops at
     /// `max` with a note on how to ask for more.

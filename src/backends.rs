@@ -57,7 +57,7 @@ async fn openai_responses(
         input,
         tools,
         tool_choice: "auto",
-        parallel_tool_calls: false,
+        parallel_tool_calls: true,
         reasoning: crate::protocol::Reasoning {
             effort: "medium".to_string(),
             summary: "auto",

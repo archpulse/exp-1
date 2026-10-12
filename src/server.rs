@@ -32,6 +32,9 @@ use crate::store;
 /// Tool rounds in one turn. Real work on a large project runs into the dozens;
 /// the limit is a guard against a loop that never converges, not a budget.
 const MAX_ITERATIONS: usize = 200;
+/// Characters of a subagent's report the parent keeps; anything beyond is cut,
+/// because the report lands in the parent's context.
+const SUBAGENT_REPORT_CHARS: usize = 6_000;
 /// How deep `task` may recurse before subagents stop being offered.
 const MAX_SUBAGENT_DEPTH: usize = 2;
 
@@ -150,7 +153,7 @@ async fn run_subagent(
             input: history.clone(),
             tools: specs.clone(),
             tool_choice: "auto",
-            parallel_tool_calls: false,
+            parallel_tool_calls: true,
             reasoning: Reasoning {
                 effort: shared.agent.effort(),
                 summary: "auto",
@@ -189,7 +192,7 @@ async fn run_subagent(
                 let tried = match provider {
                     Some(entry) if entry.wire_for(candidate) == crate::providers::Wire::CodexResponses => {
                         match shared.agent.codex() {
-                            Ok(client) => client.stream(&attempt_request).await,
+                            Ok(client) => client.stream(&attempt_request, &session.id).await,
                             Err(err) => Err(err),
                         }
                     }
@@ -313,7 +316,13 @@ async fn run_subagent(
         output: if report.is_empty() {
             "the subagent finished without a report".to_string()
         } else {
-            report
+            // A subagent's report lands in the parent's context: keep it tight.
+            let kept = clip(&report, SUBAGENT_REPORT_CHARS);
+            if kept.chars().count() < report.chars().count() {
+                format!("{kept}\n... [report cut at {SUBAGENT_REPORT_CHARS} characters]")
+            } else {
+                kept
+            }
         },
         background_id: None,
     }
@@ -438,29 +447,105 @@ fn recent_tail(history: &[InputItem], turns: usize) -> Vec<InputItem> {
     history[starts[starts.len() - turns]..].to_vec()
 }
 
+/// Roughly how many characters an item adds to a request.
+fn item_chars(item: &InputItem) -> usize {
+    match item {
+        InputItem::Message { content, .. } => content
+            .iter()
+            .map(|part| match part {
+                ContentPart::InputText { text } | ContentPart::OutputText { text } => {
+                    text.chars().count()
+                }
+                // A picture costs roughly this much in most vision models.
+                ContentPart::InputImage { .. } => 4_400,
+            })
+            .sum(),
+        InputItem::FunctionCall { arguments, name, .. } => {
+            arguments.chars().count() + name.chars().count()
+        }
+        InputItem::FunctionCallOutput { output, .. } => output.chars().count(),
+    }
+}
+
 /// Rough token count: four characters to a token is close enough to decide
 /// whether a tail still fits.
 fn rough_tokens(items: &[InputItem]) -> u64 {
-    items
+    (items.iter().map(item_chars).sum::<usize>() / 4) as u64
+}
+
+/// Tool output is what fills a long conversation, and every request re-sends
+/// all of it. Before a request goes out, the oldest outputs — outside the last
+/// turns, which are the working set — are replaced with a note saying what was
+/// dropped: the model knows what it did and can run the tool again for anything
+/// it still needs. The transcript the user sees keeps the full text.
+const PRUNE_AT_CHARS: usize = 200_000;
+const PRUNE_TO_CHARS: usize = 120_000;
+const PRUNE_KEEP_TURNS: usize = 2;
+
+/// Replaces old tool output with a note; returns how many items were dropped.
+fn prune_history(history: &mut [InputItem]) -> usize {
+    let starts: Vec<usize> = history
         .iter()
-        .map(|item| match item {
-            InputItem::Message { content, .. } => content
-                .iter()
-                .map(|part| match part {
-                    ContentPart::InputText { text } | ContentPart::OutputText { text } => {
-                        text.chars().count() as u64
-                    }
-                    // A picture costs roughly this much in most vision models.
-                    ContentPart::InputImage { .. } => 1_100,
-                })
-                .sum::<u64>(),
-            InputItem::FunctionCall { arguments, name, .. } => {
-                (arguments.chars().count() + name.chars().count()) as u64
+        .enumerate()
+        .filter(|(_, item)| matches!(item, InputItem::Message { role, .. } if role == "user"))
+        .map(|(index, _)| index)
+        .collect();
+    let recent_from = if starts.len() > PRUNE_KEEP_TURNS {
+        starts[starts.len() - PRUNE_KEEP_TURNS]
+    } else {
+        return 0;
+    };
+    let mut total: usize = history.iter().map(item_chars).sum();
+    if total <= PRUNE_AT_CHARS {
+        return 0;
+    }
+
+    // What each call was, for the note that replaces its output.
+    let mut labels: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    for item in history.iter() {
+        if let InputItem::FunctionCall {
+            call_id,
+            name,
+            arguments,
+        } = item
+        {
+            labels.insert(call_id.clone(), command_preview(name, arguments));
+        }
+    }
+
+    let mut dropped = 0usize;
+    for item in history.iter_mut().take(recent_from) {
+        if total <= PRUNE_TO_CHARS {
+            break;
+        }
+        match item {
+            InputItem::FunctionCallOutput { call_id, output } => {
+                let was = output.chars().count();
+                if was <= 400 {
+                    continue;
+                }
+                let label = labels.get(call_id).map(String::as_str).unwrap_or("a tool");
+                *output = format!(
+                    "[output dropped to keep the context light: {label} returned {was} characters; run the tool again if you need it]"
+                );
+                total = total - was + output.chars().count();
+                dropped += 1;
             }
-            InputItem::FunctionCallOutput { output, .. } => output.chars().count() as u64,
-        })
-        .sum::<u64>()
-        / 4
+            InputItem::FunctionCall { name, arguments, .. } => {
+                let was = arguments.chars().count();
+                if was <= 2_000 {
+                    continue;
+                }
+                *arguments = format!(
+                    "[arguments dropped to keep the context light: {name} was called with {was} characters of input]"
+                );
+                total = total - was + arguments.chars().count();
+                dropped += 1;
+            }
+            _ => {}
+        }
+    }
+    dropped
 }
 
 /// Replaces the conversation with a summary once it fills the context window.
@@ -489,7 +574,13 @@ async fn compact(shared: &Arc<Shared>, session: &Arc<Session>) -> Option<String>
         include: Vec::new(),
     };
 
-    let mut stream = shared.agent.codex().ok()?.stream(&request).await.ok()?;
+    let mut stream = shared
+        .agent
+        .codex()
+        .ok()?
+        .stream(&request, &session.id)
+        .await
+        .ok()?;
     let mut summary = String::new();
     while let Some(event) = stream.recv().await {
         if let ApiEvent::TextDelta(delta) = event {
@@ -539,15 +630,15 @@ const INSTRUCTIONS: &str = r#"You are exp-1 agent, a coding assistant operating 
 - `read` — read a text file. `path` (required) is relative to the working directory. It returns **at most 400 lines** by default: pass `limit` for a different number and `pos` for a 1-based first line to start at. Output is prefixed with `path (N lines)` and every line is numbered. When the read was cut short, a trailing line says how many lines were shown and tells you to continue with a further `pos` — a whole 3000-line file is walked in pieces on purpose, because swallowing it costs tens of thousands of tokens of context. Read the part you need, not the file.
 - `write` — create a file or overwrite it entirely. `path`, `content`.
 - `delete` — delete a file. `path`. Directories are refused (use shell for those) and there is no undo, so delete only what you are sure about.
-- `edit` — replace an exact snippet in a file. `path`, `old`, `new`. `old` must match the file exactly and only once: the edit fails if `old` is missing or matches more than once, so include enough surrounding context to make it unique. `old` and `new` must differ. It reports how many lines were replaced and the new line count.
+- `edit` — replace an exact snippet in a file. `path`, `old`, `new`; `old` must match the file exactly and only once, or the call fails with the closest lines (or the positions of the matches), so include enough context to be unique. `old` and `new` must differ. The result shows what changed, so there is no need to read the file back. To change several places in one file, pass `edits` (an array of `{"old", "new"}`, applied in order, all or nothing) instead of making several calls.
 - `shell` — run a command. `command` is an **array of strings** (`["cargo", "test"]`), not a single string. Options:
   - Foreground by default: you wait for it to finish. A command still running after 60s is automatically promoted to a background task, so you are never blocked indefinitely.
   - `background: true` returns immediately with a `bg-…` id; you are woken with its output the moment it finishes, so poll with that id in `output_id` only to check progress.
-  - Output is line-limited; re-read any earlier run (foreground `out-…` id or background `bg-…` id) by passing its id in `output_id` together with a new `limit`.
+  - Output is capped: a very long one keeps the beginning and the end, with the gap marked, because errors live at the end. Re-read any earlier run (foreground `out-…` id or background `bg-…` id) by passing its id in `output_id` together with a new `limit`.
   - A background command is never killed on a timer: a long build or a test suite runs to the end. `TERM=dumb` is set, so output is plain and non-interactive; `stdin` is closed, so nothing will wait for input.
 - `ast` — show the directory tree of the project. `path` (defaults to the working directory), `refresh` (set true to rebuild instead of using the `.cache/ast` cache). The tree caps at a few thousand entries and skips `.git`.
 - `count` — count the lines of a file, or of every file under a directory, without pulling the contents into the conversation. `path` (required), `refresh` (set true to recount instead of using the `.cache/count` cache). Answers are cached per file and recounted whenever its size or modification time change.
-- `grep` — find where something is without reading whole files. `pattern` (required) is a regular expression (`(?i)` for case-insensitive), `path` (defaults to the working directory) and `max` (matches returned, default 100). Skips `.git`, `.cache`, `target` and `node_modules`, follows no symlinks, ignores non-text files. Answers are `path:line: text`, capped, and a broad pattern says how to narrow it.
+- `grep` — find where something is without reading whole files. `pattern` (required) is a regular expression (`(?i)` for case-insensitive), `path` (defaults to the working directory), `include` (a file-name pattern such as `*.rs`) and `max` (matches returned, default 100). Skips `.git`, `.cache`, `target` and `node_modules`, follows no symlinks, ignores non-text files. Answers are `path:line: text`, capped, and a broad pattern says how to narrow it.
 - `fetch` — read one web page as plain text, paged like a file: `url` (required), `limit` (maximum lines, default 400) and `pos` (the 1-based line to start at). Use it when you already have a URL — documentation, a changelog, an issue — instead of searching for the page.
 - `websearch` — search the web and get page contents back. `query` (required). Tune with `numResults` (default 8), `type` (`auto`|`fast`|`deep`), `livecrawl` (`fallback`|`preferred`), and `contextMaxCharacters` (default 10000). Use it for anything outside this machine: current versions, documentation, error messages, facts you cannot read from the filesystem.
 - `ask_question` — ask the user a question and wait for the answer. `question` (required), with optional `options` to offer choices. Whatever the user types is taken as their answer. Use it when a decision is theirs to make and guessing would waste work — a choice of approach, a missing credential, an ambiguous requirement.
@@ -560,6 +651,8 @@ const INSTRUCTIONS: &str = r#"You are exp-1 agent, a coding assistant operating 
 - Run `shell` commands in the foreground unless you genuinely need to keep working while one runs; then use `background` — you are told when it finishes. Re-read long output with a larger `limit` instead of guessing at it.
 - Reach for `count` when the question is how big a file or a tree is in lines — never read a file just to count it.
 - Reach for `grep` to find where something is; reading files to look for it wastes context.
+- When you need several independent things at once — a few reads, greps or searches — ask for them in one message: they run at the same time, and one wait beats three.
+- Long sessions drop old tool output to keep the context light; if you need something you saw earlier, run the tool again.
 - Reach for `fetch` when you have the URL and `websearch` when you only have the question.
 - Reach for `websearch` when the answer depends on something outside this machine.
 - Ask with `ask_question` rather than guessing when a choice is the user's to make; delegate broad or parallel work to `task` instead of flooding your own context.
@@ -839,6 +932,122 @@ fn usage_to_wire(usage: Usage) -> WireUsage {
 
 // ------------------------------------------------------------------ the turn
 
+/// True for tools that only read: several of them in one model message can run
+/// at the same time without changing what any of them sees.
+fn reads_only(name: &str) -> bool {
+    matches!(name, "read" | "grep" | "count" | "ast" | "fetch" | "websearch")
+}
+
+/// True when a permission rule would ask the user about this call. Such calls
+/// run one at a time: there is a single question slot, and two prompts at once
+/// would cancel each other.
+fn needs_asking(session: &Arc<Session>, name: &str, arguments: &str) -> bool {
+    let resource = permission_resource(name, arguments, &session.cwd());
+    tools::load_rules()
+        .decide(name, &resource)
+        .is_some_and(|rule| rule.effect == "ask")
+}
+
+/// Runs one tool call with permissions and plan mode applied.
+async fn run_one(
+    shared: &Arc<Shared>,
+    session: &Arc<Session>,
+    name: &str,
+    arguments: &str,
+) -> tools::Outcome {
+    let refusal = permission_check(session, name, arguments)
+        .await
+        .or_else(|| plan_refusal(session, name));
+    if let Some(refusal) = refusal {
+        session.push("system", refusal.clone());
+        return tools::Outcome {
+            output: refusal,
+            background_id: None,
+        };
+    }
+    if name == "task" {
+        return run_subagent(shared.clone(), session.clone(), subagent_prompt(arguments), 0).await;
+    }
+    if let Some(result) = shared.mcp.call(name, arguments).await {
+        return match result {
+            Ok(text) => tools::Outcome {
+                output: text,
+                background_id: None,
+            },
+            Err(err) => tools::Outcome {
+                output: format!("mcp: {err:#}"),
+                background_id: None,
+            },
+        };
+    }
+    tools::call(
+        &session.cwd(),
+        &shared.agent.registry,
+        &session.undo,
+        &session.ask,
+        name,
+        arguments,
+    )
+    .await
+}
+
+/// Runs the calls of one model message. Runs of read-only calls go together;
+/// everything else keeps its order, so a write followed by a read of the same
+/// file cannot be reordered.
+async fn run_calls(
+    shared: &Arc<Shared>,
+    session: &Arc<Session>,
+    calls: Vec<(String, String, String)>,
+) -> Vec<(String, String, String, tools::Outcome)> {
+    let mut results = Vec::with_capacity(calls.len());
+    let mut group: Vec<(String, String, String)> = Vec::new();
+    for (call_id, name, arguments) in calls {
+        if reads_only(&name) && !needs_asking(session, &name, &arguments) {
+            group.push((call_id, name, arguments));
+            continue;
+        }
+        if !group.is_empty() {
+            results.extend(run_group(shared, session, std::mem::take(&mut group)).await);
+        }
+        let outcome = run_one(shared, session, &name, &arguments).await;
+        results.push((call_id, name, arguments, outcome));
+    }
+    if !group.is_empty() {
+        results.extend(run_group(shared, session, group).await);
+    }
+    results
+}
+
+/// Runs a batch of read-only calls at the same time, keeping the answers in the
+/// order the model asked for them.
+async fn run_group(
+    shared: &Arc<Shared>,
+    session: &Arc<Session>,
+    group: Vec<(String, String, String)>,
+) -> Vec<(String, String, String, tools::Outcome)> {
+    let mut running = Vec::with_capacity(group.len());
+    for (call_id, name, arguments) in group {
+        let shared = shared.clone();
+        let session = session.clone();
+        let (job_name, job_arguments) = (name.clone(), arguments.clone());
+        running.push((
+            call_id,
+            name,
+            arguments,
+            tokio::spawn(async move { run_one(&shared, &session, &job_name, &job_arguments).await }),
+        ));
+    }
+    let mut results = Vec::with_capacity(running.len());
+    for (call_id, name, arguments, handle) in running {
+        let outcome = handle.await.unwrap_or_else(|_| tools::Outcome {
+            output: "the tool task failed".to_string(),
+            background_id: None,
+        });
+        results.push((call_id, name, arguments, outcome));
+    }
+    results
+}
+
 async fn run_turn(
     shared: Arc<Shared>,
     session: Arc<Session>,
@@ -890,6 +1099,19 @@ async fn run_turn(
         // What the model is shown: a side chat sees the whole conversation it
         // follows first, then its own questions. The parent's history is only
         // read, never written, so a side question cannot disturb the main chat.
+        // Prune before the request is built: old tool output is the bulk of a
+        // long conversation, and dropping it keeps every request cheap.
+        let dropped = {
+            let mut history = session.history.lock().await;
+            prune_history(&mut history)
+        };
+        if dropped > 0 {
+            session.push(
+                "system",
+                format!("dropped {dropped} old tool output(s) to keep the context light"),
+            );
+        }
+
         let mut context: Vec<InputItem> = Vec::new();
         if let Some(parent) = session.parent.as_deref() {
             // The map lock is dropped before the await: holding it would make
@@ -911,7 +1133,7 @@ async fn run_turn(
             input: context.clone(),
             tools: specs_with_mcp(&shared, &session).await,
             tool_choice: "auto",
-            parallel_tool_calls: false,
+            parallel_tool_calls: true,
             reasoning: Reasoning {
                 effort: shared.agent.effort(),
                 summary: "auto",
@@ -946,7 +1168,7 @@ async fn run_turn(
                         if entry.wire_for(candidate) == crate::providers::Wire::CodexResponses =>
                     {
                         match shared.agent.codex() {
-                            Ok(client) => client.stream(&attempt_request).await,
+                            Ok(client) => client.stream(&attempt_request, &session.id).await,
                             Err(err) => Err(err),
                         }
                     }
@@ -1084,57 +1306,21 @@ async fn run_turn(
             break;
         }
 
-        for (call_id, name, arguments) in calls {
+        // Labels first, so a batch of calls reads as a batch in the transcript.
+        for (_, name, arguments) in &calls {
             // An MCP tool has no shell line worth showing; its own name is the
             // useful thing, since that is what the model asked for.
-            let label = if shared.mcp.owns(&name).await {
+            let label = if shared.mcp.owns(name).await {
                 format!("mcp: {name}")
             } else {
-                command_preview(&name, &arguments)
+                command_preview(name, arguments)
             };
             session.push("tool", label.clone());
             session.broadcast(WireEvent::Tool { text: label });
-            session.set_phase(WirePhase::Running);
+        }
+        session.set_phase(WirePhase::Running);
 
-            let refusal = permission_check(&session, &name, &arguments)
-                .await
-                .or_else(|| plan_refusal(&session, &name));
-            let outcome = if let Some(refusal) = refusal {
-                session.push("system", refusal.clone());
-                tools::Outcome {
-                    output: refusal,
-                    background_id: None,
-                }
-            } else if name == "task" {
-                run_subagent(
-                    shared.clone(),
-                    session.clone(),
-                    subagent_prompt(&arguments),
-                    0,
-                )
-                .await
-            } else if let Some(result) = shared.mcp.call(&name, &arguments).await {
-                match result {
-                    Ok(text) => tools::Outcome {
-                        output: text,
-                        background_id: None,
-                    },
-                    Err(err) => tools::Outcome {
-                        output: format!("mcp: {err:#}"),
-                        background_id: None,
-                    },
-                }
-            } else {
-                tools::call(
-                    &session.cwd(),
-                    &shared.agent.registry,
-                    &session.undo,
-                    &session.ask,
-                    &name,
-                    &arguments,
-                )
-                .await
-            };
+        for (call_id, name, arguments, outcome) in run_calls(&shared, &session, calls).await {
             // A promoted command needs a watcher so its finish is not lost.
             if let Some(id) = outcome.background_id.clone() {
                 watch_background(shared.clone(), session.clone(), id);
@@ -1142,7 +1328,6 @@ async fn run_turn(
             let shown = preview(&outcome.output);
             session.push("tool", shown.clone());
             session.broadcast(WireEvent::Tool { text: shown });
-            session.set_phase(WirePhase::Streaming);
 
             let mut history = session.history.lock().await;
             history.push(InputItem::FunctionCall {
@@ -1155,6 +1340,7 @@ async fn run_turn(
                 output: outcome.output,
             });
         }
+        session.set_phase(WirePhase::Streaming);
     }
 
     if !finished {
@@ -1493,6 +1679,46 @@ async fn permission_check(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Old tool output is dropped before a request goes out; the last turns
+    /// stay whole, and the note names the call it replaced.
+    #[test]
+    fn old_tool_output_is_dropped_from_requests() {
+        let big = "x".repeat(60_000);
+        let mut history = Vec::new();
+        for turn in 0..5 {
+            history.push(InputItem::user_text(format!("question {turn}")));
+            history.push(InputItem::FunctionCall {
+                call_id: format!("call-{turn}"),
+                name: "read".to_string(),
+                arguments: format!("{{\"path\": \"file-{turn}.rs\"}}"),
+            });
+            history.push(InputItem::FunctionCallOutput {
+                call_id: format!("call-{turn}"),
+                output: big.clone(),
+            });
+        }
+        let before: usize = history.iter().map(item_chars).sum();
+        assert!(before > PRUNE_AT_CHARS, "the fixture must be over the limit");
+
+        let dropped = prune_history(&mut history);
+        let after: usize = history.iter().map(item_chars).sum();
+        assert!(dropped >= 3, "the oldest outputs go first: {dropped}");
+        assert!(before - after > 150_000, "most of the bulk is gone: {}", before - after);
+        assert!(after < PRUNE_AT_CHARS, "{after}");
+
+        let outputs: Vec<&String> = history
+            .iter()
+            .filter_map(|item| match item {
+                InputItem::FunctionCallOutput { output, .. } => Some(output),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(outputs.len(), 5);
+        assert!(outputs[3] == &big && outputs[4] == &big, "the working set stays whole");
+        assert!(outputs[0].contains("dropped"), "{}", outputs[0]);
+        assert!(outputs[0].contains("read file-0.rs"), "the note names the call: {}", outputs[0]);
+    }
 
     /// A tool preview is cut at a character boundary. The old code truncated at
     /// byte 400, which panics inside a multi-byte character; this sample is
@@ -2484,7 +2710,7 @@ async fn remote_title(shared: &Arc<Shared>, text: &str) -> (Option<String>, Opti
     let Ok(client) = shared.agent.codex() else {
         return (None, None);
     };
-    let Ok(mut stream) = client.stream(&request).await else {
+    let Ok(mut stream) = client.stream(&request, "exp1-title").await else {
         return (None, None);
     };
     let mut text_out = String::new();

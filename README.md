@@ -20,18 +20,19 @@ Codex CLI does** — ChatGPT OAuth against `auth.openai.com`, with model request
 | --- | --- | --- |
 | `read` | `path`, `limit?`, `pos?` | At most 400 lines by default; `limit` changes that, `pos` is the first line, 1-based. Output is numbered and a cut read says how to continue. A 3000-line file is walked in pieces on purpose: swallowing one costs tens of thousands of tokens. |
 | `write` | `path`, `content` | Creates parent directories; overwrites an existing file. |
-| `edit` | `path`, `old`, `new` | Exact replacement. Fails when `old` is absent or matches more than once. The result shows the lines around the change, so the file does not have to be read back. |
+| `edit` | `path`, `old`, `new`, `edits?` | Exact replacement, all or nothing. A failure names the closest lines or the positions of the matches, so a whitespace mismatch costs no re-read. `edits` takes several `{old, new}` pairs for one file in one call. The result shows what changed. |
 | `fetch` | `url`, `limit?`, `pos?` | One page as plain text, paged like a file: `limit` lines (default 400) from `pos` (1-based). Scripts and styles are dropped, entities decoded. |
 | `count` | `path`, `refresh?` | Lines in a file, or across every file under a directory, without reading the contents. Cached per file in `.cache/count`, keyed by size and mtime. |
-| `grep` | `pattern`, `path?`, `max?` | Regular-expression search across a file or a tree without reading the files into the conversation. Skips `.git`, `.cache`, `target`, `node_modules`; follows no symlinks; ignores non-text files. Capped at `max` matches (default 100). |
+| `grep` | `pattern`, `path?`, `include?`, `max?` | Regular-expression search across a file or a tree without reading the files into the conversation. `include` filters by file name (`*.rs`). Skips `.git`, `.cache`, `target`, `node_modules`; follows no symlinks; ignores non-text files. Capped at `max` matches (default 100). |
 | `delete` | `path` | Removes a file. Directories are refused — emptying a tree belongs in `shell`, where the whole command is visible. |
-| `shell` | `command`, `background?`, `limit?`, `output_id?` | Foreground blocks the agent until it finishes; after 60s a command is promoted to the background and the agent is told when it finishes. `background: true` returns an id immediately. Background commands are never killed on a timer. Output is line-limited, and `output_id` re-reads any earlier run with a different `limit`. |
+| `shell` | `command`, `background?`, `limit?`, `output_id?` | Foreground blocks the agent until it finishes; after 60s a command is promoted to the background and the agent is told when it finishes. `background: true` returns an id immediately. Background commands are never killed on a timer. Output is capped at 30 000 bytes: a longer one keeps the beginning and the end, with the gap marked. `output_id` re-reads any earlier run with a different `limit`. |
 | `ast` | `path?`, `refresh?` | Project tree in `tree` format. Cached in `.cache/ast`; `refresh: true` rebuilds. `.git` is skipped. |
 | `websearch` | `query`, `numResults?`, `type?`, `livecrawl?`, `contextMaxCharacters?` | Web search with page contents. Uses Exa's hosted MCP at `mcp.exa.ai`, which needs **no API key**; set `EXA_API_KEY` to lift rate limits. `type` is `auto`/`fast`/`deep`. |
 | `ask_question` | `question`, `options?`, `label?`, `submit?` | Blocks the turn and shows a question panel. `↑↓` pick an option, `Tab` moves between questions, `Enter` confirms, `Esc` dismisses. Anything typed is taken as a free-form answer and wins over the highlighted option. |
 
-Shell commands run unsandboxed as the user, with a 120 s foreground timeout and output capped at
-30 000 bytes.
+Shell commands run unsandboxed as the user. A foreground command is promoted to the background
+after 60 seconds, nothing kills a background command on a timer, and output is capped at
+30 000 bytes: a longer result keeps the beginning and the end, with the gap marked as omitted.
 
 The `web` tool searches the web: Exa's hosted MCP first, because it returns page content,
 and DuckDuckGo's HTML page when Exa's shared free tier rate-limits. `EXA_API_KEY` switches Exa to
@@ -286,7 +287,7 @@ originator: codex_cli_rs
 User-Agent: codex_cli_rs/<version> (<os>; <arch>) terminal
 Accept: text/event-stream
 Content-Type: application/json
-session-id: <uuid per request>
+session-id: <the session's id, stable for the whole conversation>
 
 {
   "model": "gpt-5.6-terra",
@@ -300,7 +301,8 @@ session-id: <uuid per request>
   ],
   "tools": [{ "type": "function", "name": "read", "parameters": { … } }, …],
   "tool_choice": "auto",
-  "parallel_tool_calls": false,
+  "parallel_tool_calls": true,
+  "prompt_cache_key": "<the session's id>",
   "reasoning": { "effort": "medium", "summary": "auto" },
   "store": false,
   "include": []
@@ -337,7 +339,8 @@ rapid wheel scrolling.
 ## Subagents and long commands
 
 **Subagents.** The `task` tool runs a second agent with its own context and the same tools, then
-returns only its report — useful for work that would otherwise flood the caller's context. Nested
+returns only its report — useful for work that would otherwise flood the caller's context. The
+report is cut at 6 000 characters, because it lands in the caller's context. Nested
 subagents are offered while depth remains, capped at two levels so recursion cannot run away. The
 transcript shows each step the subagent takes.
 
@@ -709,7 +712,15 @@ file entirely.
 A turn runs at most 200 tool rounds; if it ever gets there the transcript says so instead of
 stopping in silence.
 
-## Limits
+**Token economy.** Requests stay small on purpose: `read` pages, `grep` caps its matches, a long
+command output keeps both ends, a subagent's report is cut at 6 000 characters, and before each
+request the oldest tool outputs — outside the last two turns — are replaced with a one-line note
+saying what was dropped. The model can re-run a tool for anything it still needs, and the
+transcript the user sees keeps the full text.
+
+**Parallel calls.** A model message may ask for several tools at once. Runs of read-only calls
+(`read`, `grep`, `count`, `ast`, `fetch`, `websearch`) execute at the same time; everything that
+writes keeps its order, so a write followed by a read of the same file cannot be reordered.
 
 This is an MVP. Known gaps:
 
