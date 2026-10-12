@@ -1149,6 +1149,7 @@ async fn persist(session: &Arc<Session>) {
             state
                 .transcript
                 .iter()
+                .skip(state.transcript.len().saturating_sub(MAX_STORED_MESSAGES))
                 .map(|msg| store::StoredMsg {
                     role: msg.role.clone(),
                     text: msg.text.clone(),
@@ -1172,6 +1173,10 @@ async fn persist(session: &Arc<Session>) {
     };
     let _ = store::save_session(&stored);
 }
+
+/// How many messages of a conversation are kept on disk. Older ones fall off
+/// the front; the model's own context is bounded separately by compaction.
+const MAX_STORED_MESSAGES: usize = 250;
 
 fn command_preview(name: &str, arguments: &str) -> String {
     let value: serde_json::Value = match serde_json::from_str(arguments) {
@@ -2636,6 +2641,10 @@ pub async fn bind(port: Option<u16>) -> Result<TcpListener> {
 }
 
 pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
+    // Older builds kept conversations beside the configuration; move them into
+    // the cache before anything reads, and keep that cache bounded.
+    store::migrate();
+    store::trim_cache(store::CACHE_LIMIT_BYTES);
     // Every prompt gets its file up front, so there is something to edit
     // before the role is first used.
     for (name, builtin) in [

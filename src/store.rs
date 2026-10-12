@@ -20,17 +20,103 @@ pub fn home() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("/"))
 }
 
-/// `$XDG_CONFIG_HOME/exp-1/sessions`, or `~/.config/exp-1/sessions`.
-pub fn dir() -> PathBuf {
+/// Configuration: settings, credentials, prompts, permissions, MCP servers and
+/// skills. `$XDG_CONFIG_HOME/exp-1`, or `~/.config/exp-1`.
+pub fn config_dir() -> PathBuf {
     if let Some(base) = std::env::var_os("XDG_CONFIG_HOME").filter(|base| !base.is_empty()) {
-        return PathBuf::from(base).join("exp-1").join("sessions");
+        return PathBuf::from(base).join("exp-1");
     }
     // Windows keeps application data under APPDATA rather than a dot-directory.
     #[cfg(windows)]
     if let Some(base) = std::env::var_os("APPDATA").filter(|base| !base.is_empty()) {
+        return PathBuf::from(base).join("exp-1");
+    }
+    home().join(".config").join("exp-1")
+}
+
+/// Conversations, which are a cache: losing them costs context, not setup.
+/// `$XDG_CACHE_HOME/exp-1/sessions`, or `~/.cache/exp-1/sessions`.
+pub fn dir() -> PathBuf {
+    if let Some(base) = std::env::var_os("XDG_CACHE_HOME").filter(|base| !base.is_empty()) {
         return PathBuf::from(base).join("exp-1").join("sessions");
     }
-    home().join(".config").join("exp-1").join("sessions")
+    #[cfg(windows)]
+    if let Some(base) = std::env::var_os("LOCALAPPDATA").filter(|base| !base.is_empty()) {
+        return PathBuf::from(base).join("exp-1").join("sessions");
+    }
+    home().join(".cache").join("exp-1").join("sessions")
+}
+
+/// How much of the cache the conversations may take. Past this, the oldest
+/// session files are dropped: they are a cache, and the alternative is a
+/// directory that grows without ever being looked at again.
+pub const CACHE_LIMIT_BYTES: u64 = 250 * 1024 * 1024;
+
+/// Drops the oldest conversations until the directory fits `limit` bytes.
+pub fn trim_cache(limit: u64) {
+    let Ok(entries) = std::fs::read_dir(dir()) else {
+        return;
+    };
+    let mut files: Vec<(std::time::SystemTime, u64, PathBuf)> = entries
+        .flatten()
+        .filter_map(|entry| {
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_string();
+            if !name.ends_with(".json") || name == SETTINGS || name == CREDENTIALS {
+                return None;
+            }
+            let meta = entry.metadata().ok()?;
+            Some((meta.modified().ok()?, meta.len(), path))
+        })
+        .collect();
+    let mut total: u64 = files.iter().map(|(_, size, _)| *size).sum();
+    if total <= limit {
+        return;
+    }
+    // Oldest first, so the newest conversations survive.
+    files.sort_by_key(|(modified, _, _)| *modified);
+    for (_, size, path) in files {
+        if total <= limit {
+            break;
+        }
+        if std::fs::remove_file(&path).is_ok() {
+            total = total.saturating_sub(size);
+        }
+    }
+}
+
+/// Moves what older builds kept beside the configuration into the cache, and
+/// leaves the configuration where it belongs. Runs before anything reads.
+pub fn migrate() {
+    let old = config_dir().join("sessions");
+    if !old.is_dir() {
+        return;
+    }
+    // Settings and credentials stay in the configuration directory.
+    for name in [SETTINGS, CREDENTIALS] {
+        let from = old.join(name);
+        let to = config_dir().join(name);
+        if from.is_file() && !to.exists() {
+            let _ = std::fs::rename(&from, &to);
+        }
+    }
+    // Everything else there is a conversation.
+    if let Ok(entries) = std::fs::read_dir(&old) {
+        let _ = std::fs::create_dir_all(dir());
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_string();
+            if !name.ends_with(".json") || name == SETTINGS || name == CREDENTIALS {
+                continue;
+            }
+            let target = dir().join(&name);
+            if !target.exists() {
+                let _ = std::fs::rename(&path, &target);
+            }
+        }
+    }
+    // The directory is empty now, or holds only leftovers.
+    let _ = std::fs::remove_dir(&old);
 }
 
 fn write_atomic(path: &PathBuf, bytes: &[u8]) -> Result<()> {
@@ -81,7 +167,7 @@ impl Default for Settings {
 }
 
 pub fn load_settings() -> Settings {
-    std::fs::read_to_string(dir().join(SETTINGS))
+    std::fs::read_to_string(config_dir().join(SETTINGS))
         .ok()
         .and_then(|raw| serde_json::from_str(&raw).ok())
         .unwrap_or_default()
@@ -89,7 +175,7 @@ pub fn load_settings() -> Settings {
 
 pub fn save_settings(settings: &Settings) {
     if let Ok(json) = serde_json::to_vec_pretty(settings) {
-        let _ = write_atomic(&dir().join(SETTINGS), &json);
+        let _ = write_atomic(&config_dir().join(SETTINGS), &json);
     }
 }
 
@@ -107,14 +193,14 @@ pub struct Credentials {
 }
 
 pub fn load_credentials() -> Credentials {
-    std::fs::read_to_string(dir().join(CREDENTIALS))
+    std::fs::read_to_string(config_dir().join(CREDENTIALS))
         .ok()
         .and_then(|raw| serde_json::from_str(&raw).ok())
         .unwrap_or_default()
 }
 
 pub fn save_credentials(credentials: &Credentials) -> Result<()> {
-    let path = dir().join(CREDENTIALS);
+    let path = config_dir().join(CREDENTIALS);
     let json = serde_json::to_vec_pretty(credentials)?;
     write_atomic(&path, &json)?;
     #[cfg(unix)]
@@ -319,10 +405,7 @@ fn filter_sessions(
 /// Where the editable prompts live: one markdown file per role, beside the
 /// session directory.
 pub fn prompts_dir() -> PathBuf {
-    dir()
-        .parent()
-        .map(|base| base.join("prompts"))
-        .unwrap_or_else(|| dir().join("prompts"))
+    config_dir().join("prompts")
 }
 
 /// The prompt for one role, read from its file. The built-in text is written
@@ -344,26 +427,17 @@ pub fn prompt(name: &str, builtin: &str) -> String {
 
 /// The permission rules: one file beside the prompts.
 pub fn permissions_path() -> PathBuf {
-    dir()
-        .parent()
-        .map(|base| base.join("permissions.json"))
-        .unwrap_or_else(|| dir().join("permissions.json"))
+    config_dir().join("permissions.json")
 }
 
 /// Where installed skills live: one directory per skill, each with SKILL.md.
 pub fn skills_dir() -> PathBuf {
-    dir()
-        .parent()
-        .map(|base| base.join("skills"))
-        .unwrap_or_else(|| dir().join("skills"))
+    config_dir().join("skills")
 }
 
 /// The MCP server list: one file next to the prompts, in opencode's shape.
 pub fn mcp_path() -> PathBuf {
-    dir()
-        .parent()
-        .map(|base| base.join("mcp.json"))
-        .unwrap_or_else(|| dir().join("mcp.json"))
+    config_dir().join("mcp.json")
 }
 
 /// Sessions visible from a directory whose text mentions `query`: the title,

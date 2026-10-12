@@ -461,6 +461,9 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             app.session_id = None;
             app.session_title.clear();
             app.title_started = false;
+            // The footer shows the thread's name, so both threads lose theirs:
+            // a cleared conversation is not "Анализ проекта" any more.
+            app.threads[0].name.clear();
             app.threads[1].transcript.clear();
             app.threads[1].history.lock().unwrap().clear();
             app.threads[1].name.clear();

@@ -1324,7 +1324,23 @@ impl App {
         }
 
         if !thread.live.is_empty() {
-            lines.push(Line::raw(thread.live.clone()));
+            // The text being streamed is markdown too, so it is formatted while
+            // it arrives instead of snapping into shape once the turn ends.
+            for run_line in md::render(&thread.live) {
+                for part in wrap_runs(&run_line, width) {
+                    let mut spans: Vec<Span> = Vec::new();
+                    for run in &part {
+                        if run.style == md::Style::CodeBlock {
+                            spans.push(Span::styled("│ ", Style::default().fg(theme.dim)));
+                        }
+                        spans.push(Span::styled(run.text.clone(), md_style(run.style, theme)));
+                    }
+                    if spans.is_empty() {
+                        spans.push(Span::raw(""));
+                    }
+                    lines.push(Line::from(spans));
+                }
+            }
         } else if thread.busy() {
             // The activity line sits directly under the prompt it belongs to.
             let label = if thread.phase == Phase::Running {

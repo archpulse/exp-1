@@ -609,13 +609,24 @@ exercised without filling a 272 000-token window.
 
 ## Persistence
 
-State lives in `~/.config/exp-1/sessions/` (or `$XDG_CONFIG_HOME/exp-1/sessions`):
+Configuration lives in `~/.config/exp-1/` (or `$XDG_CONFIG_HOME/exp-1`); the conversations
+themselves live in `~/.cache/exp-1/sessions/` (or `$XDG_CACHE_HOME/exp-1/sessions`), because a
+transcript is a cache: losing one costs context, not setup. The daemon's own files — `server.json`
+and `password` — sit in `~/.local/state/exp-1/`.
 
 | File | Holds |
 | --- | --- |
-| `settings.json` | model, reasoning effort, theme |
-| `<id>.json` | one conversation: title, both transcripts, model-side history, prompt history |
-| `../prompts/*.md` | the four system prompts, editable: `system`, `subagent`, `compaction`, `title` |
+| `config/settings.json` | model, reasoning effort, theme, titler mode, fallback model |
+| `config/credentials.json` | one API key per provider, mode `0600` |
+| `config/prompts/*.md` | the system prompts, editable: `system`, `subagent`, `compaction`, `title`, `plan` |
+| `config/permissions.json` | the allow/ask/deny rules |
+| `config/mcp.json` | the MCP servers |
+| `config/skills/` | installed skills, one directory each |
+| `cache/sessions/<id>.json` | one conversation: title, both transcripts, model-side history, prompt history |
+
+A conversation keeps its newest **250 messages** on disk, and the cache as a whole is trimmed to
+**250 MB** — oldest files first — when the server starts. An older layout, where everything sat in
+`config/exp-1/sessions/`, is migrated on the first start after the change.
 
 Settings are written when the app exits; a session is written after every completed turn, so a
 crash costs at most the turn in flight.

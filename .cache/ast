@@ -1,2004 +1,2006 @@
 /home/user/projects/exp1-agent/.
+├── .cache
+│   └── ast
 ├── .github
 │   └── workflows
 │       └── release.yml
-├── opencode
-│   ├── .github
-│   │   ├── ISSUE_TEMPLATE
-│   │   │   ├── bug-report.yml
-│   │   │   ├── config.yml
-│   │   │   └── feature-request.yml
-│   │   ├── actions
-│   │   │   ├── setup-bun
-│   │   │   │   └── action.yml
-│   │   │   └── setup-git-committer
-│   │   │       └── action.yml
-│   │   ├── workflows
-│   │   │   ├── check.yml
-│   │   │   ├── close-issues.yml
-│   │   │   ├── close-prs.yml
-│   │   │   ├── compliance-close.yml
-│   │   │   ├── containers.yml
-│   │   │   ├── deploy-files.yml
-│   │   │   ├── deploy-posts.yml
-│   │   │   ├── deploy-update.yml
-│   │   │   ├── deploy-www.yml
-│   │   │   ├── deploy.yml
-│   │   │   ├── docs-locale-sync.yml
-│   │   │   ├── docs-update.yml
-│   │   │   ├── duplicate-issues.yml
-│   │   │   ├── nix-eval.yml
-│   │   │   ├── nix-hashes.yml
-│   │   │   ├── notify-discord.yml
-│   │   │   ├── opencode.yml
-│   │   │   ├── pr-management.yml
-│   │   │   ├── pr-standards.yml
-│   │   │   ├── publish-github-action.yml
-│   │   │   ├── publish-vscode.yml
-│   │   │   ├── publish.yml
-│   │   │   ├── release-github-action.yml
-│   │   │   ├── review.yml
-│   │   │   ├── stats.yml
-│   │   │   ├── storybook.yml
-│   │   │   ├── test.yml
-│   │   │   └── triage.yml
-│   │   ├── CODEOWNERS
-│   │   ├── TEAM_MEMBERS
-│   │   ├── publish-python-sdk.yml
-│   │   └── pull_request_template.md
-│   ├── .husky
-│   │   └── pre-push
-│   ├── .opencode
-│   │   ├── agent
-│   │   │   ├── duplicate-pr.md
-│   │   │   └── triage.md
-│   │   ├── command
-│   │   │   ├── ai-deps.md
-│   │   │   ├── changelog.md
-│   │   │   ├── commit.md
-│   │   │   ├── issues.md
-│   │   │   ├── learn.md
-│   │   │   ├── rmslop.md
-│   │   │   ├── spellcheck.md
-│   │   │   └── translate.md
-│   │   ├── glossary
-│   │   │   ├── README.md
-│   │   │   ├── ar.md
-│   │   │   ├── br.md
-│   │   │   ├── bs.md
-│   │   │   ├── da.md
-│   │   │   ├── de.md
-│   │   │   ├── es.md
-│   │   │   ├── fr.md
-│   │   │   ├── he.md
-│   │   │   ├── ja.md
-│   │   │   ├── ko.md
-│   │   │   ├── no.md
-│   │   │   ├── pl.md
-│   │   │   ├── ru.md
-│   │   │   ├── th.md
-│   │   │   ├── tr.md
-│   │   │   ├── zh-cn.md
-│   │   │   └── zh-tw.md
-│   │   ├── plugins
-│   │   │   └── smoke-theme.json
-│   │   ├── skills
-│   │   │   ├── effect
-│   │   │   │   └── SKILL.md
-│   │   │   ├── opencode-dev
-│   │   │   │   └── SKILL.md
-│   │   │   ├── rtl-aware-development
-│   │   │   │   └── SKILL.md
-│   │   │   └── sample-skill
-│   │   │       └── SKILL.md
-│   │   ├── themes
-│   │   │   ├── .gitignore
-│   │   │   └── mytheme.json
-│   │   ├── tool
-│   │   │   ├── github-pr-search.ts
-│   │   │   └── github-triage.ts
-│   │   ├── .gitignore
-│   │   ├── env.d.ts
-│   │   ├── opencode.jsonc
-│   │   └── tui.json
-│   ├── .vscode
-│   │   ├── launch.example.json
-│   │   └── settings.example.json
-│   ├── .zed
-│   │   └── settings.json
-│   ├── github
-│   │   ├── script
-│   │   │   ├── publish
-│   │   │   └── release
-│   │   ├── .gitignore
-│   │   ├── README.md
-│   │   ├── action.yml
-│   │   ├── bun.lock
-│   │   ├── index.ts
-│   │   ├── package.json
-│   │   ├── sst-env.d.ts
-│   │   └── tsconfig.json
-│   ├── infra
-│   │   ├── app.ts
-│   │   ├── console.ts
-│   │   ├── enterprise.ts
-│   │   ├── monitoring.ts
-│   │   ├── secret.ts
-│   │   ├── stage.ts
-│   │   ├── stats.ts
-│   │   └── webapp.ts
-│   ├── nix
-│   │   ├── scripts
-│   │   │   ├── canonicalize-node-modules.ts
-│   │   │   └── normalize-bun-binaries.ts
-│   │   ├── desktop.nix
-│   │   ├── electron.nix
-│   │   ├── hashes.json
-│   │   ├── node_modules.nix
-│   │   └── opencode.nix
-│   ├── packages
-│   │   ├── ai
-│   │   │   ├── docs
-│   │   │   │   └── media-design.md
-│   │   │   ├── example
-│   │   │   │   └── tutorial.ts
-│   │   │   ├── script
-│   │   │   │   ├── publish.ts
-│   │   │   │   ├── recording-cost-report.ts
-│   │   │   │   └── setup-recording-env.ts
-│   │   │   ├── src
-│   │   │   │   ├── experimental
-│   │   │   │   │   ├── evaluation-client.ts
-│   │   │   │   │   ├── evaluation.ts
-│   │   │   │   │   └── system-one.ts
-│   │   │   │   ├── protocols
-│   │   │   │   │   ├── utils
-│   │   │   │   │   │   ├── bedrock-auth.ts
-│   │   │   │   │   │   ├── bedrock-cache.ts
-│   │   │   │   │   │   ├── bedrock-media.ts
-│   │   │   │   │   │   ├── cache.ts
-│   │   │   │   │   │   ├── claude-model.ts
-│   │   │   │   │   │   ├── fal-queue.ts
-│   │   │   │   │   │   ├── gateway-protocol.ts
-│   │   │   │   │   │   ├── gemini-generate-content.ts
-│   │   │   │   │   │   ├── gemini-json-schema.ts
-│   │   │   │   │   │   ├── lifecycle.ts
-│   │   │   │   │   │   ├── media-input.ts
-│   │   │   │   │   │   ├── mistral-tool-id.ts
-│   │   │   │   │   │   ├── open-responses-options.ts
-│   │   │   │   │   │   ├── openai-options.ts
-│   │   │   │   │   │   ├── partial-json-options.ts
-│   │   │   │   │   │   ├── partial-json.ts
-│   │   │   │   │   │   ├── responses-checkpoint.ts
-│   │   │   │   │   │   ├── responses-compaction.ts
-│   │   │   │   │   │   ├── responses-hosted-tools.ts
-│   │   │   │   │   │   ├── speaker-turns.ts
-│   │   │   │   │   │   ├── speech-stream.ts
-│   │   │   │   │   │   ├── tool-schema.ts
-│   │   │   │   │   │   └── tool-stream.ts
-│   │   │   │   │   ├── alibaba-chat.ts
-│   │   │   │   │   ├── alibaba-messages.ts
-│   │   │   │   │   ├── alibaba-responses.ts
-│   │   │   │   │   ├── anthropic-messages.ts
-│   │   │   │   │   ├── assemblyai-transcription.ts
-│   │   │   │   │   ├── bedrock-converse.ts
-│   │   │   │   │   ├── bedrock-event-stream.ts
-│   │   │   │   │   ├── bfl-images.ts
-│   │   │   │   │   ├── cartesia-speech.ts
-│   │   │   │   │   ├── cohere-chat.ts
-│   │   │   │   │   ├── deepgram-speech.ts
-│   │   │   │   │   ├── deepgram-transcription.ts
-│   │   │   │   │   ├── elevenlabs-speech.ts
-│   │   │   │   │   ├── elevenlabs-transcription.ts
-│   │   │   │   │   ├── fal-images.ts
-│   │   │   │   │   ├── fal-video.ts
-│   │   │   │   │   ├── gemini.ts
-│   │   │   │   │   ├── google-images.ts
-│   │   │   │   │   ├── google-interactions.ts
-│   │   │   │   │   ├── google-speech.ts
-│   │   │   │   │   ├── google-transcription.ts
-│   │   │   │   │   ├── google-video.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── meta-images.ts
-│   │   │   │   │   ├── meta-messages.ts
-│   │   │   │   │   ├── meta-responses.ts
-│   │   │   │   │   ├── mistral-chat.ts
-│   │   │   │   │   ├── open-responses-channel.ts
-│   │   │   │   │   ├── open-responses-continuation.ts
-│   │   │   │   │   ├── open-responses.ts
-│   │   │   │   │   ├── openai-chat.ts
-│   │   │   │   │   ├── openai-compatible-chat.ts
-│   │   │   │   │   ├── openai-compatible-responses.ts
-│   │   │   │   │   ├── openai-images.ts
-│   │   │   │   │   ├── openai-responses.ts
-│   │   │   │   │   ├── openai-speech.ts
-│   │   │   │   │   ├── openai-transcription.ts
-│   │   │   │   │   ├── replicate-images.ts
-│   │   │   │   │   ├── runway-video.ts
-│   │   │   │   │   ├── shared.ts
-│   │   │   │   │   ├── stability-images.ts
-│   │   │   │   │   ├── venice-chat.ts
-│   │   │   │   │   ├── xai-images.ts
-│   │   │   │   │   ├── xai-responses.ts
-│   │   │   │   │   ├── xai-video.ts
-│   │   │   │   │   ├── zai-chat.ts
-│   │   │   │   │   ├── zai-images.ts
-│   │   │   │   │   └── zai-messages.ts
-│   │   │   │   ├── providers
-│   │   │   │   │   ├── alibaba
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── amazon-bedrock
-│   │   │   │   │   │   ├── mantle
-│   │   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   │   └── mantle.ts
-│   │   │   │   │   ├── azure
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── cohere
-│   │   │   │   │   │   └── chat.ts
-│   │   │   │   │   ├── google
-│   │   │   │   │   │   └── interactions.ts
-│   │   │   │   │   ├── google-vertex
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   ├── gemini.ts
-│   │   │   │   │   │   ├── interactions.ts
-│   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   ├── mistral.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── meta
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── minimax
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── moonshot
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── openai
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── openai-compatible
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── vercel-ai-gateway
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── zai
-│   │   │   │   │   │   └── chat.ts
-│   │   │   │   │   ├── zai-coding-plan
-│   │   │   │   │   │   ├── chat.ts
-│   │   │   │   │   │   ├── messages.ts
-│   │   │   │   │   │   └── responses.ts
-│   │   │   │   │   ├── alibaba.ts
-│   │   │   │   │   ├── amazon-bedrock-mantle.ts
-│   │   │   │   │   ├── amazon-bedrock.ts
-│   │   │   │   │   ├── anthropic-compatible.ts
-│   │   │   │   │   ├── anthropic.ts
-│   │   │   │   │   ├── assemblyai.ts
-│   │   │   │   │   ├── azure.ts
-│   │   │   │   │   ├── baseten.ts
-│   │   │   │   │   ├── black-forest-labs.ts
-│   │   │   │   │   ├── cartesia.ts
-│   │   │   │   │   ├── cerebras.ts
-│   │   │   │   │   ├── cloudflare-ai-gateway.ts
-│   │   │   │   │   ├── cloudflare-workers-ai.ts
-│   │   │   │   │   ├── cohere.ts
-│   │   │   │   │   ├── deepgram.ts
-│   │   │   │   │   ├── deepinfra.ts
-│   │   │   │   │   ├── deepseek.ts
-│   │   │   │   │   ├── digitalocean.ts
-│   │   │   │   │   ├── elevenlabs.ts
-│   │   │   │   │   ├── fal.ts
-│   │   │   │   │   ├── fireworks.ts
-│   │   │   │   │   ├── google-vertex-chat.ts
-│   │   │   │   │   ├── google-vertex-interactions.ts
-│   │   │   │   │   ├── google-vertex-messages.ts
-│   │   │   │   │   ├── google-vertex-mistral.ts
-│   │   │   │   │   ├── google-vertex-responses.ts
-│   │   │   │   │   ├── google-vertex-shared.ts
-│   │   │   │   │   ├── google-vertex.ts
-│   │   │   │   │   ├── google.ts
-│   │   │   │   │   ├── groq.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── meta.ts
-│   │   │   │   │   ├── minimax.ts
-│   │   │   │   │   ├── mistral.ts
-│   │   │   │   │   ├── moonshot.ts
-│   │   │   │   │   ├── open-responses-options.ts
-│   │   │   │   │   ├── openai-compatible-responses.ts
-│   │   │   │   │   ├── openai-compatible.ts
-│   │   │   │   │   ├── openai-options.ts
-│   │   │   │   │   ├── openai.ts
-│   │   │   │   │   ├── opencode-zen.ts
-│   │   │   │   │   ├── openrouter.ts
-│   │   │   │   │   ├── replicate.ts
-│   │   │   │   │   ├── runway.ts
-│   │   │   │   │   ├── stability.ts
-│   │   │   │   │   ├── togetherai.ts
-│   │   │   │   │   ├── typesafe-ai.ts
-│   │   │   │   │   ├── venice.ts
-│   │   │   │   │   ├── vercel-ai-gateway.ts
-│   │   │   │   │   ├── xai.ts
-│   │   │   │   │   ├── zai-coding-plan.ts
-│   │   │   │   │   └── zai.ts
-│   │   │   │   ├── route
-│   │   │   │   │   ├── transport
-│   │   │   │   │   │   ├── http.ts
-│   │   │   │   │   │   ├── index.ts
-│   │   │   │   │   │   ├── websocket-channel.ts
-│   │   │   │   │   │   └── websocket.ts
-│   │   │   │   │   ├── auth-options.ts
-│   │   │   │   │   ├── auth.ts
-│   │   │   │   │   ├── client.ts
-│   │   │   │   │   ├── endpoint.ts
-│   │   │   │   │   ├── executor-service.ts
-│   │   │   │   │   ├── executor.ts
-│   │   │   │   │   ├── framing.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── media-protocol.ts
-│   │   │   │   │   ├── media.ts
-│   │   │   │   │   └── protocol.ts
-│   │   │   │   ├── schema
-│   │   │   │   │   ├── errors.ts
-│   │   │   │   │   ├── events.ts
-│   │   │   │   │   ├── ids.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── messages.ts
-│   │   │   │   │   └── options.ts
-│   │   │   │   ├── utils
-│   │   │   │   │   ├── bytes.ts
-│   │   │   │   │   ├── json.ts
-│   │   │   │   │   ├── media-type.ts
-│   │   │   │   │   ├── record.ts
-│   │   │   │   │   └── sanitize.ts
-│   │   │   │   ├── ai-client.ts
-│   │   │   │   ├── cache-policy.ts
-│   │   │   │   ├── effort-updates.ts
-│   │   │   │   ├── experimental.ts
-│   │   │   │   ├── generation.ts
-│   │   │   │   ├── image-client.ts
-│   │   │   │   ├── image.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── llm.ts
-│   │   │   │   ├── media-client.ts
-│   │   │   │   ├── media-model.ts
-│   │   │   │   ├── media.ts
-│   │   │   │   ├── promise.ts
-│   │   │   │   ├── protocols.ts
-│   │   │   │   ├── provider-error.ts
-│   │   │   │   ├── provider-package.ts
-│   │   │   │   ├── provider.ts
-│   │   │   │   ├── providers.ts
-│   │   │   │   ├── route.ts
-│   │   │   │   ├── speech-client.ts
-│   │   │   │   ├── speech.ts
-│   │   │   │   ├── testing.ts
-│   │   │   │   ├── tool-history.ts
-│   │   │   │   ├── tool-runtime.ts
-│   │   │   │   ├── tool.ts
-│   │   │   │   ├── transcription-client.ts
-│   │   │   │   ├── transcription.ts
-│   │   │   │   ├── video-client.ts
-│   │   │   │   └── video.ts
-│   │   │   ├── test
-│   │   │   │   ├── fixtures
-│   │   │   │   │   ├── audio
-│   │   │   │   │   │   ├── dialog.mp3
-│   │   │   │   │   │   └── hello.mp3
-│   │   │   │   │   ├── images
-│   │   │   │   │   │   └── edit-source.jpg
-│   │   │   │   │   ├── media
-│   │   │   │   │   │   └── restroom.png
-│   │   │   │   │   └── recordings
-│   │   │   │   │       ├── alibaba-chat
-│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-disabled.json
-│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-enabled.json
-│   │   │   │   │       │   ├── qwen-3-8-flash-reads-image-bytes.json
-│   │   │   │   │       │   ├── qwen-3-8-max-obeys-named-tool-choice.json
-│   │   │   │   │       │   ├── qwen-3-8-max-replays-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── qwen-3-8-max-returns-a-json-object.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-default-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-high-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-low-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-max-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-medium-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-minimal-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-none-effort.json
-│   │   │   │   │       │   └── qwen-3-8-max-streams-xhigh-effort.json
-│   │   │   │   │       ├── alibaba-messages
-│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-disabled.json
-│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-enabled.json
-│   │   │   │   │       │   ├── qwen-3-8-flash-reads-image-bytes.json
-│   │   │   │   │       │   ├── qwen-3-8-max-follows-a-json-schema.json
-│   │   │   │   │       │   ├── qwen-3-8-max-obeys-named-tool-choice.json
-│   │   │   │   │       │   ├── qwen-3-8-max-replays-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-default-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-high-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-low-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-max-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-medium-effort.json
-│   │   │   │   │       │   └── qwen-3-8-max-streams-xhigh-effort.json
-│   │   │   │   │       ├── alibaba-responses
-│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-disabled.json
-│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-enabled.json
-│   │   │   │   │       │   ├── qwen-3-8-flash-reads-image-bytes.json
-│   │   │   │   │       │   ├── qwen-3-8-max-continues-a-stored-response.json
-│   │   │   │   │       │   ├── qwen-3-8-max-obeys-named-tool-choice.json
-│   │   │   │   │       │   ├── qwen-3-8-max-replays-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-default-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-high-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-low-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-max-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-medium-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-minimal-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-none-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-streams-xhigh-effort.json
-│   │   │   │   │       │   ├── qwen-3-8-max-uses-hosted-code-interpreter.json
-│   │   │   │   │       │   └── qwen-3-8-max-uses-hosted-web-search-and-extraction.json
-│   │   │   │   │       ├── anthropic-compatible-messages
-│   │   │   │   │       │   ├── minimax-m3-anthropic-compatible-text.json
-│   │   │   │   │       │   ├── minimax-m3-anthropic-compatible-tool-call.json
-│   │   │   │   │       │   └── minimax-m3-anthropic-compatible-tool-loop.json
-│   │   │   │   │       ├── anthropic-messages
-│   │   │   │   │       │   └── anthropic-opus-4-7-image-tool-result.json
-│   │   │   │   │       ├── anthropic-messages-cache
-│   │   │   │   │       │   ├── keeps-a-long-tool-turn-inside-the-cache-lookback.json
-│   │   │   │   │       │   └── writes-then-reads-cache-control-on-identical-second-call.json
-│   │   │   │   │       ├── assemblyai-transcription
-│   │   │   │   │       │   └── uploads-submits-and-polls-a-transcript.json
-│   │   │   │   │       ├── azure
-│   │   │   │   │       │   ├── chat-streams-text.json
-│   │   │   │   │       │   ├── responses-calls-a-tool.json
-│   │   │   │   │       │   ├── responses-continues-after-a-tool-result.json
-│   │   │   │   │       │   └── responses-streams-text.json
-│   │   │   │   │       ├── bedrock-converse
-│   │   │   │   │       │   ├── continues-after-parallel-tool-results.json
-│   │   │   │   │       │   ├── drives-a-tool-loop.json
-│   │   │   │   │       │   ├── streams-a-tool-call.json
-│   │   │   │   │       │   └── streams-text.json
-│   │   │   │   │       ├── bedrock-converse-cache
-│   │   │   │   │       │   └── writes-then-reads-cachepoint-on-identical-second-call.json
-│   │   │   │   │       ├── bedrock-converse-thinking-binding
-│   │   │   │   │       │   ├── accepts-the-default-binding-with-no-thinking-configured.json
-│   │   │   │   │       │   └── keeps-a-session-working-after-the-system-prompt-changes.json
-│   │   │   │   │       ├── bedrock-mantle
-│   │   │   │   │       │   └── streams-text.json
-│   │   │   │   │       ├── bedrock-mantle-messages
-│   │   │   │   │       │   ├── applies-mid-conversation-effort-updates-and-thinking-block-binding-on-opus-5-5.json
-│   │   │   │   │       │   ├── lowers-system-updates-to-wrapped-user-text-on-haiku-4-5-with-budget-thinking.json
-│   │   │   │   │       │   ├── replays-signed-thinking-through-a-tool-loop-and-native-system-update.json
-│   │   │   │   │       │   └── strips-unsupported-mid-conversation-effort-updates-on-opus-5-0.json
-│   │   │   │   │       ├── bfl-images
-│   │   │   │   │       │   └── submits-resumes-and-polls-an-image.json
-│   │   │   │   │       ├── cartesia-speech
-│   │   │   │   │       │   ├── generates-speech.json
-│   │   │   │   │       │   └── streams-speech-with-timestamps.json
-│   │   │   │   │       ├── cerebras-chat
-│   │   │   │   │       │   ├── cerebras-gpt-oss-120b-text.json
-│   │   │   │   │       │   ├── cerebras-gpt-oss-120b-tool-call.json
-│   │   │   │   │       │   └── cerebras-gpt-oss-120b-tool-loop.json
-│   │   │   │   │       ├── cloudflare-ai-gateway
-│   │   │   │   │       │   ├── cloudflare-ai-gateway-claude-haiku-4-5-text.json
-│   │   │   │   │       │   ├── cloudflare-ai-gateway-claude-haiku-4-5-tool-loop.json
-│   │   │   │   │       │   ├── cloudflare-ai-gateway-openai-gpt-5-nano-text.json
-│   │   │   │   │       │   ├── cloudflare-ai-gateway-openai-gpt-5-nano-tool-loop.json
-│   │   │   │   │       │   ├── cloudflare-ai-gateway-workers-ai-gpt-oss-20b-tools-tool-call.json
-│   │   │   │   │       │   └── cloudflare-ai-gateway-workers-ai-llama-3-1-8b-text.json
-│   │   │   │   │       ├── cloudflare-workers-ai
-│   │   │   │   │       │   ├── cloudflare-workers-ai-gpt-oss-20b-tools-tool-call.json
-│   │   │   │   │       │   └── cloudflare-workers-ai-llama-3-1-8b-text.json
-│   │   │   │   │       ├── cohere
-│   │   │   │   │       │   ├── continues-a-native-tool-call.json
-│   │   │   │   │       │   ├── streams-compatible-chat-reasoning.json
-│   │   │   │   │       │   ├── streams-native-text-and-usage.json
-│   │   │   │   │       │   └── streams-native-thinking-with-a-budget.json
-│   │   │   │   │       ├── deepgram-speech
-│   │   │   │   │       │   ├── generates-speech.json
-│   │   │   │   │       │   └── streams-speech.json
-│   │   │   │   │       ├── deepgram-transcription
-│   │   │   │   │       │   ├── splits-utterances-at-speaker-changes.json
-│   │   │   │   │       │   └── transcribes-raw-audio-with-speakers-and-word-timestamps.json
-│   │   │   │   │       ├── deepinfra-chat
-│   │   │   │   │       │   ├── deepinfra-llama-3-3-70b-text.json
-│   │   │   │   │       │   ├── deepinfra-llama-3-3-70b-tool-call.json
-│   │   │   │   │       │   └── deepinfra-llama-3-3-70b-tool-loop.json
-│   │   │   │   │       ├── digitalocean-chat
-│   │   │   │   │       │   ├── gpt-nano-continues-a-tool-call-with-cache-markers.json
-│   │   │   │   │       │   ├── gpt-nano-reuses-a-cached-prompt.json
-│   │   │   │   │       │   ├── haiku-continues-a-tool-call-with-cache-markers.json
-│   │   │   │   │       │   └── haiku-reuses-a-cached-prompt.json
-│   │   │   │   │       ├── elevenlabs-speech
-│   │   │   │   │       │   ├── generates-speech.json
-│   │   │   │   │       │   └── streams-speech-with-timestamps.json
-│   │   │   │   │       ├── elevenlabs-transcription
-│   │   │   │   │       │   ├── groups-diarized-words-into-speaker-turns.json
-│   │   │   │   │       │   └── transcribes-audio-with-word-timestamps.json
-│   │   │   │   │       ├── fal-images
-│   │   │   │   │       │   └── generates-an-image.json
-│   │   │   │   │       ├── fal-video
-│   │   │   │   │       │   └── generates-a-video.json
-│   │   │   │   │       ├── gemini
-│   │   │   │   │       │   └── gemini-2-5-flash-image.json
-│   │   │   │   │       ├── gemini-cache
-│   │   │   │   │       │   └── reports-cachedcontenttokencount-on-identical-second-call.json
-│   │   │   │   │       ├── google-images
-│   │   │   │   │       │   ├── edits-an-image.json
-│   │   │   │   │       │   └── generates-an-image.json
-│   │   │   │   │       ├── google-interactions
-│   │   │   │   │       │   ├── continues-tool-results-with-previous-interaction-id.json
-│   │   │   │   │       │   ├── replays-native-tool-results-and-signatures-statelessly.json
-│   │   │   │   │       │   ├── streams-reasoning-and-retains-thought-signatures.json
-│   │   │   │   │       │   └── streams-text-and-reports-usage.json
-│   │   │   │   │       ├── google-speech
-│   │   │   │   │       │   ├── generates-speech.json
-│   │   │   │   │       │   └── streams-speech.json
-│   │   │   │   │       ├── google-transcription
-│   │   │   │   │       │   ├── streams-speaker-turns.json
-│   │   │   │   │       │   └── transcribes-with-speakers-and-word-timestamps.json
-│   │   │   │   │       ├── google-vertex
-│   │   │   │   │       │   ├── calls-a-tool.json
-│   │   │   │   │       │   ├── continues-after-a-tool-result.json
-│   │   │   │   │       │   └── streams-text.json
-│   │   │   │   │       ├── google-video
-│   │   │   │   │       │   └── generates-a-video.json
-│   │   │   │   │       ├── groq-chat
-│   │   │   │   │       │   ├── continues-qwen-parallel-tool-calls.json
-│   │   │   │   │       │   ├── replays-gpt-oss-reasoning-through-a-tool-loop.json
-│   │   │   │   │       │   ├── streams-qwen-parsed-reasoning.json
-│   │   │   │   │       │   └── streams-text-with-usage.json
-│   │   │   │   │       ├── meta-chat
-│   │   │   │   │       │   ├── continues-a-generated-tool-call.json
-│   │   │   │   │       │   ├── streams-text-with-default-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-high-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-low-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-max-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-medium-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-minimal-reasoning.json
-│   │   │   │   │       │   └── streams-text-with-xhigh-reasoning.json
-│   │   │   │   │       ├── meta-images
-│   │   │   │   │       │   ├── edits-image-bytes-and-returns-png.json
-│   │   │   │   │       │   ├── generates-default-webp-bytes.json
-│   │   │   │   │       │   └── replays-a-signed-image-handle-for-a-responses-edit.json
-│   │   │   │   │       ├── meta-messages
-│   │   │   │   │       │   ├── replays-encrypted-thinking-through-a-tool-loop.json
-│   │   │   │   │       │   ├── streams-text-with-adaptive-thinking.json
-│   │   │   │   │       │   └── streams-text-with-enabled-thinking.json
-│   │   │   │   │       ├── meta-responses
-│   │   │   │   │       │   ├── replays-encrypted-reasoning-through-a-tool-loop.json
-│   │   │   │   │       │   ├── streams-text-with-default-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-high-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-low-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-max-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-medium-reasoning.json
-│   │   │   │   │       │   ├── streams-text-with-minimal-reasoning.json
-│   │   │   │   │       │   └── streams-text-with-xhigh-reasoning.json
-│   │   │   │   │       ├── meta-search
-│   │   │   │   │       │   ├── searches-and-replays-grounded-messages.json
-│   │   │   │   │       │   └── searches-and-replays-grounded-responses.json
-│   │   │   │   │       ├── minimax-chat
-│   │   │   │   │       │   ├── m3-continues-a-tool-loop-with-default-thinking.json
-│   │   │   │   │       │   └── m3-streams-text-with-thinking-disabled.json
-│   │   │   │   │       ├── minimax-messages
-│   │   │   │   │       │   ├── m2-7-streams-default-thinking.json
-│   │   │   │   │       │   ├── m3-continues-a-tool-loop-with-adaptive-thinking.json
-│   │   │   │   │       │   ├── m3-generates-a-named-tool-call-with-default-thinking-off.json
-│   │   │   │   │       │   ├── m3-streams-adaptive-thinking.json
-│   │   │   │   │       │   └── m3-streams-text-with-thinking-disabled.json
-│   │   │   │   │       ├── minimax-responses
-│   │   │   │   │       │   ├── m3-continues-a-tool-loop-with-effort-minimal.json
-│   │   │   │   │       │   └── m3-streams-text-with-effort-none.json
-│   │   │   │   │       ├── mistral-chat
-│   │   │   │   │       │   ├── drives-a-tool-loop.json
-│   │   │   │   │       │   ├── replays-native-reasoning.json
-│   │   │   │   │       │   └── streams-text-with-usage.json
-│   │   │   │   │       ├── mistral-chat-glm
-│   │   │   │   │       │   └── streams-an-indexed-tool-call.json
-│   │   │   │   │       ├── moonshot-chat
-│   │   │   │   │       │   ├── k3-reads-image-bytes.json
-│   │   │   │   │       │   ├── k3-respects-tool-choice-none.json
-│   │   │   │   │       │   ├── k3-respects-tool-choice-required.json
-│   │   │   │   │       │   ├── k3-returns-native-structured-output.json
-│   │   │   │   │       │   ├── k3-streams-text-with-default-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-high-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-low-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-max-effort.json
-│   │   │   │   │       │   ├── kimi-k2-6-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── kimi-k2-6-streams-text-with-default-thinking.json
-│   │   │   │   │       │   ├── kimi-k2-6-streams-text-with-disabled-thinking.json
-│   │   │   │   │       │   ├── kimi-k2-6-streams-text-with-enabled-thinking.json
-│   │   │   │   │       │   ├── kimi-k2-7-code-highspeed-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── kimi-k2-7-code-highspeed-streams-text-with-default-thinking.json
-│   │   │   │   │       │   ├── kimi-k2-7-code-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── kimi-k2-7-code-streams-text-with-default-thinking.json
-│   │   │   │   │       │   └── kimi-k3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       ├── moonshot-messages
-│   │   │   │   │       │   ├── k3-reads-image-bytes.json
-│   │   │   │   │       │   ├── k3-respects-tool-choice-none.json
-│   │   │   │   │       │   ├── k3-respects-tool-choice-required.json
-│   │   │   │   │       │   ├── k3-returns-native-structured-output.json
-│   │   │   │   │       │   ├── k3-streams-text-with-default-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-high-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-low-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-max-effort.json
-│   │   │   │   │       │   └── kimi-k3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       ├── moonshot-responses
-│   │   │   │   │       │   ├── k3-reads-image-bytes.json
-│   │   │   │   │       │   ├── k3-rejects-unsupported-tool-choice-none.json
-│   │   │   │   │       │   ├── k3-rejects-unsupported-tool-choice-required.json
-│   │   │   │   │       │   ├── k3-returns-native-structured-output.json
-│   │   │   │   │       │   ├── k3-streams-text-with-default-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-high-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-low-effort.json
-│   │   │   │   │       │   ├── k3-streams-text-with-max-effort.json
-│   │   │   │   │       │   └── kimi-k3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       ├── openai-compatible-chat
-│   │   │   │   │       │   ├── gemini-parallel-tool-signatures.json
-│   │   │   │   │       │   ├── togetherai-streams-text.json
-│   │   │   │   │       │   └── togetherai-streams-tool-call.json
-│   │   │   │   │       ├── openai-images
-│   │   │   │   │       │   ├── edits-an-image.json
-│   │   │   │   │       │   ├── generates-an-image.json
-│   │   │   │   │       │   └── streams-a-partial-image-before-the-final-image.json
-│   │   │   │   │       ├── openai-responses
-│   │   │   │   │       │   ├── openai-responses-gpt-5-5-image-tool-result.json
-│   │   │   │   │       │   ├── openai-responses-gpt-5-5-reasoning-continuation.json
-│   │   │   │   │       │   ├── openai-responses-gpt-5-5-reasoning.json
-│   │   │   │   │       │   └── openai-responses-gpt-5-5-tool-loop.json
-│   │   │   │   │       ├── openai-responses-cache
-│   │   │   │   │       │   └── reports-cached-tokens-on-identical-second-call.json
-│   │   │   │   │       ├── openai-responses-images
-│   │   │   │   │       │   └── generates-and-edits-an-image-with-the-hosted-tool.json
-│   │   │   │   │       ├── openai-responses-websocket
-│   │   │   │   │       │   ├── continues-a-tool-call-over-one-socket.json
-│   │   │   │   │       │   ├── reconstructs-full-context-after-reconnect.json
-│   │   │   │   │       │   └── recovers-from-explicit-continuation-rejection.json
-│   │   │   │   │       ├── openai-speech
-│   │   │   │   │       │   ├── generates-speech.json
-│   │   │   │   │       │   └── streams-speech.json
-│   │   │   │   │       ├── openai-transcription
-│   │   │   │   │       │   ├── diarizes-speakers-into-segments.json
-│   │   │   │   │       │   ├── returns-whisper-word-timestamps.json
-│   │   │   │   │       │   ├── streams-text-deltas.json
-│   │   │   │   │       │   └── transcribes-with-a-language-hint.json
-│   │   │   │   │       ├── opencode-zen-evaluation
-│   │   │   │   │       │   └── evaluates-choice-score-and-boolean-questions.json
-│   │   │   │   │       ├── openrouter-evaluation
-│   │   │   │   │       │   └── evaluates-choice-score-and-boolean-questions.json
-│   │   │   │   │       ├── pdf
-│   │   │   │   │       │   ├── anthropic-tool-result.json
-│   │   │   │   │       │   ├── anthropic-user-input.json
-│   │   │   │   │       │   ├── bedrock-tool-result.json
-│   │   │   │   │       │   ├── bedrock-user-input.json
-│   │   │   │   │       │   ├── gemini-tool-result.json
-│   │   │   │   │       │   ├── gemini-user-input.json
-│   │   │   │   │       │   ├── openai-tool-result.json
-│   │   │   │   │       │   ├── openai-user-input.json
-│   │   │   │   │       │   ├── xai-tool-result.json
-│   │   │   │   │       │   └── xai-user-input.json
-│   │   │   │   │       ├── replicate-images
-│   │   │   │   │       │   └── waits-for-a-prediction-and-reads-its-output.json
-│   │   │   │   │       ├── runway-video
-│   │   │   │   │       │   └── generates-a-video.json
-│   │   │   │   │       ├── stability-images
-│   │   │   │   │       │   ├── generates-an-image-inline.json
-│   │   │   │   │       │   └── upscales-an-image-through-the-results-queue.json
-│   │   │   │   │       ├── typesafe-evaluation
-│   │   │   │   │       │   └── evaluates-choice-score-and-boolean-questions.json
-│   │   │   │   │       ├── venice-chat
-│   │   │   │   │       │   ├── claude-opus-4-8-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── deepseek-v4-flash-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── gemini-3-1-pro-preview-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── gemini-preserves-per-call-signatures-through-parallel-tools.json
-│   │   │   │   │       │   ├── openai-gpt-54-mini-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── qwen-disables-reasoning.json
-│   │   │   │   │       │   └── surfaces-venice-model-errors.json
-│   │   │   │   │       ├── vercel-native
-│   │   │   │   │       │   ├── automatically-caches-distinct-claude-system-blocks.json
-│   │   │   │   │       │   ├── continues-chat-claude-reasoning-and-tools.json
-│   │   │   │   │       │   ├── continues-chat-muse-reasoning-and-tools.json
-│   │   │   │   │       │   ├── continues-messages-claude-reasoning-and-tools.json
-│   │   │   │   │       │   ├── continues-messages-deepseek-reasoning-and-tools.json
-│   │   │   │   │       │   ├── continues-messages-gemini-reasoning-and-tools.json
-│   │   │   │   │       │   ├── continues-responses-gpt-reasoning-and-tools.json
-│   │   │   │   │       │   ├── continues-responses-grok-reasoning-and-tools.json
-│   │   │   │   │       │   └── rejects-invalid-credentials-without-retryable-classification.json
-│   │   │   │   │       ├── xai-images
-│   │   │   │   │       │   ├── edits-an-image.json
-│   │   │   │   │       │   └── generates-an-image.json
-│   │   │   │   │       ├── xai-video
-│   │   │   │   │       │   └── generates-a-video.json
-│   │   │   │   │       ├── zai-chat
-│   │   │   │   │       │   ├── glm-4-5-calls-a-tool-without-streaming-arguments.json
-│   │   │   │   │       │   ├── glm-4-7-streams-thinking-disabled.json
-│   │   │   │   │       │   ├── glm-4-7-streams-thinking-enabled.json
-│   │   │   │   │       │   ├── glm-5-2-streams-high-effort.json
-│   │   │   │   │       │   ├── glm-5-2-streams-low-effort.json
-│   │   │   │   │       │   ├── glm-5-2-streams-max-effort.json
-│   │   │   │   │       │   ├── glm-5-2-streams-medium-effort.json
-│   │   │   │   │       │   ├── glm-5-2-streams-minimal-effort.json
-│   │   │   │   │       │   ├── glm-5-2-streams-none-effort.json
-│   │   │   │   │       │   ├── glm-5-2-streams-thinking-disabled.json
-│   │   │   │   │       │   ├── glm-5-2-streams-thinking-enabled.json
-│   │   │   │   │       │   ├── glm-5-2-streams-xhigh-effort.json
-│   │   │   │   │       │   ├── glm-5-3-flash-reads-image-bytes.json
-│   │   │   │   │       │   ├── glm-5-3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
-│   │   │   │   │       │   ├── glm-5-3-rejects-disabled-thinking.json
-│   │   │   │   │       │   ├── glm-5-3-returns-a-json-object.json
-│   │   │   │   │       │   ├── glm-5-3-streams-default-effort.json
-│   │   │   │   │       │   ├── glm-5-3-streams-high-effort.json
-│   │   │   │   │       │   ├── glm-5-3-streams-low-effort.json
-│   │   │   │   │       │   └── glm-5-3-streams-max-effort.json
-│   │   │   │   │       ├── zai-images
-│   │   │   │   │       │   └── generates-an-image.json
-│   │   │   │   │       ├── openrouter-reasoning-tool-loop.json
-│   │   │   │   │       ├── openrouter-reasoning.json
-│   │   │   │   │       ├── vercel-ai-gateway-reasoning-tool-loop.json
-│   │   │   │   │       └── vercel-ai-gateway-reasoning.json
-│   │   │   │   ├── lib
-│   │   │   │   │   ├── effect.ts
-│   │   │   │   │   ├── env.ts
-│   │   │   │   │   ├── http.ts
-│   │   │   │   │   ├── image.ts
-│   │   │   │   │   ├── openai-chunks.ts
-│   │   │   │   │   ├── sse.ts
-│   │   │   │   │   └── tool-runtime.ts
-│   │   │   │   ├── provider
-│   │   │   │   │   ├── alibaba-capabilities.recorded.test.ts
-│   │   │   │   │   ├── alibaba.recorded.test.ts
-│   │   │   │   │   ├── alibaba.test.ts
-│   │   │   │   │   ├── anthropic-compaction.test.ts
-│   │   │   │   │   ├── anthropic-messages-cache.recorded.test.ts
-│   │   │   │   │   ├── anthropic-messages.recorded.test.ts
-│   │   │   │   │   ├── anthropic-messages.test.ts
-│   │   │   │   │   ├── anthropic-thinking-binding.test.ts
-│   │   │   │   │   ├── assemblyai-transcription.recorded.test.ts
-│   │   │   │   │   ├── azure.recorded.test.ts
-│   │   │   │   │   ├── bedrock-converse-cache.recorded.test.ts
-│   │   │   │   │   ├── bedrock-converse-cache.test.ts
-│   │   │   │   │   ├── bedrock-converse-thinking-binding.recorded.test.ts
-│   │   │   │   │   ├── bedrock-converse-thinking-binding.test.ts
-│   │   │   │   │   ├── bedrock-converse.test.ts
-│   │   │   │   │   ├── bedrock-mantle.test.ts
-│   │   │   │   │   ├── bedrock-mistral-ids.test.ts
-│   │   │   │   │   ├── bfl-images.recorded.test.ts
-│   │   │   │   │   ├── cartesia-speech.recorded.test.ts
-│   │   │   │   │   ├── checkpoint.test.ts
-│   │   │   │   │   ├── cloudflare.test.ts
-│   │   │   │   │   ├── cohere.recorded.test.ts
-│   │   │   │   │   ├── cohere.test.ts
-│   │   │   │   │   ├── compaction-websocket.test.ts
-│   │   │   │   │   ├── compaction.recorded.test.ts
-│   │   │   │   │   ├── compaction.test.ts
-│   │   │   │   │   ├── conversation-lowering.test.ts
-│   │   │   │   │   ├── deepgram-speech.recorded.test.ts
-│   │   │   │   │   ├── deepgram-transcription.recorded.test.ts
-│   │   │   │   │   ├── digitalocean.recorded.test.ts
-│   │   │   │   │   ├── digitalocean.test.ts
-│   │   │   │   │   ├── elevenlabs-speech.recorded.test.ts
-│   │   │   │   │   ├── elevenlabs-transcription.recorded.test.ts
-│   │   │   │   │   ├── empty-tool-choice.test.ts
-│   │   │   │   │   ├── error-retention.test.ts
-│   │   │   │   │   ├── evaluation.recorded.test.ts
-│   │   │   │   │   ├── explicit-compaction.test.ts
-│   │   │   │   │   ├── fal-images.recorded.test.ts
-│   │   │   │   │   ├── fal-video.recorded.test.ts
-│   │   │   │   │   ├── gemini-cache.recorded.test.ts
-│   │   │   │   │   ├── gemini-openai-chat.recorded.test.ts
-│   │   │   │   │   ├── gemini.test.ts
-│   │   │   │   │   ├── golden.recorded.test.ts
-│   │   │   │   │   ├── google-images.recorded.test.ts
-│   │   │   │   │   ├── google-interactions.recorded.test.ts
-│   │   │   │   │   ├── google-speech.recorded.test.ts
-│   │   │   │   │   ├── google-transcription.recorded.test.ts
-│   │   │   │   │   ├── google-vertex-interactions.test.ts
-│   │   │   │   │   ├── google-vertex.recorded.test.ts
-│   │   │   │   │   ├── google-vertex.test.ts
-│   │   │   │   │   ├── google-video.recorded.test.ts
-│   │   │   │   │   ├── groq.recorded.test.ts
-│   │   │   │   │   ├── groq.test.ts
-│   │   │   │   │   ├── image-detail.test.ts
-│   │   │   │   │   ├── meta-capabilities.test.ts
-│   │   │   │   │   ├── meta-images.recorded.test.ts
-│   │   │   │   │   ├── meta-messages.recorded.test.ts
-│   │   │   │   │   ├── meta-search.recorded.test.ts
-│   │   │   │   │   ├── meta.recorded.test.ts
-│   │   │   │   │   ├── meta.test.ts
-│   │   │   │   │   ├── minimax.recorded.test.ts
-│   │   │   │   │   ├── minimax.test.ts
-│   │   │   │   │   ├── missing-tool-input.test.ts
-│   │   │   │   │   ├── mistral-chat.test.ts
-│   │   │   │   │   ├── mistral.recorded.test.ts
-│   │   │   │   │   ├── moonshot-capabilities.recorded.test.ts
-│   │   │   │   │   ├── moonshot.recorded.test.ts
-│   │   │   │   │   ├── moonshot.test.ts
-│   │   │   │   │   ├── native-providers.test.ts
-│   │   │   │   │   ├── open-responses-errors.test.ts
-│   │   │   │   │   ├── open-responses-finals.test.ts
-│   │   │   │   │   ├── open-responses-lifecycle.test.ts
-│   │   │   │   │   ├── open-responses-replay.test.ts
-│   │   │   │   │   ├── openai-chat-reasoning.recorded.test.ts
-│   │   │   │   │   ├── openai-chat.test.ts
-│   │   │   │   │   ├── openai-compatible-chat.test.ts
-│   │   │   │   │   ├── openai-compatible-responses.test.ts
-│   │   │   │   │   ├── openai-images.recorded.test.ts
-│   │   │   │   │   ├── openai-responses-cache.recorded.test.ts
-│   │   │   │   │   ├── openai-responses-images.recorded.test.ts
-│   │   │   │   │   ├── openai-responses-websocket.recorded.test.ts
-│   │   │   │   │   ├── openai-responses.test.ts
-│   │   │   │   │   ├── openai-speech.recorded.test.ts
-│   │   │   │   │   ├── openai-transcription.recorded.test.ts
-│   │   │   │   │   ├── openrouter.test.ts
-│   │   │   │   │   ├── pdf.recorded.test.ts
-│   │   │   │   │   ├── queued-recording.ts
-│   │   │   │   │   ├── replicate-images.recorded.test.ts
-│   │   │   │   │   ├── runway-video.recorded.test.ts
-│   │   │   │   │   ├── speech-recording.ts
-│   │   │   │   │   ├── stability-images.recorded.test.ts
-│   │   │   │   │   ├── transcription-recording.ts
-│   │   │   │   │   ├── venice.recorded.test.ts
-│   │   │   │   │   ├── venice.test.ts
-│   │   │   │   │   ├── vercel-ai-gateway.recorded.test.ts
-│   │   │   │   │   ├── vercel-ai-gateway.test.ts
-│   │   │   │   │   ├── xai-images.recorded.test.ts
-│   │   │   │   │   ├── xai-images.test.ts
-│   │   │   │   │   ├── xai-responses.test.ts
-│   │   │   │   │   ├── xai-video.recorded.test.ts
-│   │   │   │   │   ├── zai-capabilities.recorded.test.ts
-│   │   │   │   │   ├── zai-images.recorded.test.ts
-│   │   │   │   │   ├── zai-images.test.ts
-│   │   │   │   │   ├── zai.recorded.test.ts
-│   │   │   │   │   └── zai.test.ts
-│   │   │   │   ├── provider-options
-│   │   │   │   │   ├── alibaba.types.ts
-│   │   │   │   │   ├── anthropic-compatible.types.ts
-│   │   │   │   │   ├── anthropic.types.ts
-│   │   │   │   │   ├── azure.types.ts
-│   │   │   │   │   ├── checkpoint.types.ts
-│   │   │   │   │   ├── cloudflare.types.ts
-│   │   │   │   │   ├── compaction.types.ts
-│   │   │   │   │   ├── google-vertex-chat.types.ts
-│   │   │   │   │   ├── google-vertex-interactions.types.ts
-│   │   │   │   │   ├── google-vertex-messages.types.ts
-│   │   │   │   │   ├── google-vertex-responses.types.ts
-│   │   │   │   │   ├── google-vertex.types.ts
-│   │   │   │   │   ├── google.types.ts
-│   │   │   │   │   ├── minimax.types.ts
-│   │   │   │   │   ├── mistral.types.ts
-│   │   │   │   │   ├── moonshot.types.ts
-│   │   │   │   │   ├── openai-compatible-responses.types.ts
-│   │   │   │   │   ├── openai-compatible.types.ts
-│   │   │   │   │   ├── openai.types.ts
-│   │   │   │   │   ├── openrouter.types.ts
-│   │   │   │   │   ├── venice.types.ts
-│   │   │   │   │   ├── vercel-ai-gateway.types.ts
-│   │   │   │   │   ├── xai.types.ts
-│   │   │   │   │   └── zai.types.ts
-│   │   │   │   ├── adapter.test.ts
-│   │   │   │   ├── auth-options.types.ts
-│   │   │   │   ├── auth.test.ts
-│   │   │   │   ├── cache-policy.test.ts
-│   │   │   │   ├── compaction-http.test.ts
-│   │   │   │   ├── compaction.test.ts
-│   │   │   │   ├── compile.test.ts
-│   │   │   │   ├── continuation-scenarios.ts
-│   │   │   │   ├── effort-updates.test.ts
-│   │   │   │   ├── endpoint.test.ts
-│   │   │   │   ├── evaluation.test.ts
-│   │   │   │   ├── evaluation.types.ts
-│   │   │   │   ├── executor.test.ts
-│   │   │   │   ├── exports.test.ts
-│   │   │   │   ├── generate-object.test.ts
-│   │   │   │   ├── generation.test.ts
-│   │   │   │   ├── http-timeout.test.ts
-│   │   │   │   ├── image.test.ts
-│   │   │   │   ├── image.types.ts
-│   │   │   │   ├── llm-option-types.types.ts
-│   │   │   │   ├── llm.test.ts
-│   │   │   │   ├── media.test.ts
-│   │   │   │   ├── partial-json.test.ts
-│   │   │   │   ├── promise.test.ts
-│   │   │   │   ├── provider-error.test.ts
-│   │   │   │   ├── provider-package.test.ts
-│   │   │   │   ├── provider.types.ts
-│   │   │   │   ├── recorded-golden.ts
-│   │   │   │   ├── recorded-runner.ts
-│   │   │   │   ├── recorded-scenarios.ts
-│   │   │   │   ├── recorded-test.ts
-│   │   │   │   ├── recorded-utils.ts
-│   │   │   │   ├── response.test.ts
-│   │   │   │   ├── route.test.ts
-│   │   │   │   ├── schema.test.ts
-│   │   │   │   ├── speech.test.ts
-│   │   │   │   ├── speech.types.ts
-│   │   │   │   ├── testing.test.ts
-│   │   │   │   ├── tool-history.test.ts
-│   │   │   │   ├── tool-runtime.test.ts
-│   │   │   │   ├── tool-schema-projection.test.ts
-│   │   │   │   ├── tool-stream.test.ts
-│   │   │   │   ├── tool.types.ts
-│   │   │   │   ├── transcription.test.ts
-│   │   │   │   ├── transcription.types.ts
-│   │   │   │   ├── video.test.ts
-│   │   │   │   └── video.types.ts
-│   │   │   ├── AGENTS.md
-│   │   │   ├── README.md
-│   │   │   ├── package.json
-│   │   │   ├── sst-env.d.ts
-│   │   │   ├── tsconfig.build.json
-│   │   │   ├── tsconfig.json
-│   │   │   └── tsconfig.types.json
-│   │   ├── app
-│   │   │   ├── component-tests
-│   │   │   │   ├── browser-pane-restore.spec.ts
-│   │   │   │   ├── browser-pane.spec.ts
-│   │   │   │   ├── composer.spec.ts
-│   │   │   │   ├── extension-graph.spec.ts
-│   │   │   │   ├── extension-host.fixture.tsx
-│   │   │   │   ├── extension-host.spec.ts
-│   │   │   │   ├── line-comment.spec.ts
-│   │   │   │   ├── new-session-wordmark.spec.ts
-│   │   │   │   ├── open-in-border.spec.ts
-│   │   │   │   ├── session-question-dock.spec.ts
-│   │   │   │   ├── ssh-reconnect.spec.ts
-│   │   │   │   ├── timeline-detail.spec.ts
-│   │   │   │   ├── timeline-virtualizer.fixture.tsx
-│   │   │   │   ├── timeline-virtualizer.spec.ts
-│   │   │   │   └── websearch.spec.ts
-│   │   │   ├── e2e
-│   │   │   │   ├── performance
-│   │   │   │   │   ├── composer-history
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── composer-history.bench.ts
-│   │   │   │   │   │   ├── fixture.tsx
-│   │   │   │   │   │   ├── index.html
-│   │   │   │   │   │   ├── playwright.config.ts
-│   │   │   │   │   │   └── vite.config.ts
-│   │   │   │   │   ├── devex
-│   │   │   │   │   │   ├── desktop-startup-benchmark.spec.ts
-│   │   │   │   │   │   ├── desktop-startup.ts
-│   │   │   │   │   │   └── playwright.config.ts
-│   │   │   │   │   ├── markdown
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── lifetime.bench.ts
-│   │   │   │   │   │   ├── playwright.config.ts
-│   │   │   │   │   │   └── probe.ts
-│   │   │   │   │   ├── patch-groups
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── fixture.tsx
-│   │   │   │   │   │   ├── index.html
-│   │   │   │   │   │   ├── patch-groups.bench.ts
-│   │   │   │   │   │   ├── playwright.config.ts
-│   │   │   │   │   │   ├── serve.ts
-│   │   │   │   │   │   └── vite.config.ts
-│   │   │   │   │   ├── terminals
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── playwright.config.ts
-│   │   │   │   │   │   ├── probe.ts
-│   │   │   │   │   │   ├── shell.ps1
-│   │   │   │   │   │   ├── terminal-benchmark.spec.ts
-│   │   │   │   │   │   └── vite.config.ts
-│   │   │   │   │   ├── timeline
-│   │   │   │   │   │   ├── composer-write-batch-benchmark.spec.ts
-│   │   │   │   │   │   ├── first-navigation-benchmark.spec.ts
-│   │   │   │   │   │   ├── first-navigation-metrics.ts
-│   │   │   │   │   │   ├── first-navigation-probe.ts
-│   │   │   │   │   │   ├── home-session-index-benchmark.spec.ts
-│   │   │   │   │   │   ├── home-session-index.fixture.ts
-│   │   │   │   │   │   ├── home-tab-navigation-benchmark.spec.ts
-│   │   │   │   │   │   ├── inactive-tab-prefetch-benchmark.spec.ts
-│   │   │   │   │   │   ├── laggy-session-benchmark.md
-│   │   │   │   │   │   ├── laggy-session-benchmark.spec.ts
-│   │   │   │   │   │   ├── laggy-session-report.ts
-│   │   │   │   │   │   ├── navigation-milestones.spec.ts
-│   │   │   │   │   │   ├── navigation-milestones.ts
-│   │   │   │   │   │   ├── projection.playwright.config.ts
-│   │   │   │   │   │   ├── projection.vite.config.ts
-│   │   │   │   │   │   ├── provider-memory-benchmark.spec.ts
-│   │   │   │   │   │   ├── review-pane-scaling-benchmark.spec.ts
-│   │   │   │   │   │   ├── session-entry-benchmark.spec.ts
-│   │   │   │   │   │   ├── session-parent-hydration-benchmark.spec.ts
-│   │   │   │   │   │   ├── session-tab-flash.spec.ts
-│   │   │   │   │   │   ├── session-tab-repaint-probe.ts
-│   │   │   │   │   │   ├── session-tab-switch-benchmark.spec.ts
-│   │   │   │   │   │   ├── session-tab-switch-metrics.ts
-│   │   │   │   │   │   ├── session-tab-switch-probe.spec.ts
-│   │   │   │   │   │   ├── session-tab-switch-probe.ts
-│   │   │   │   │   │   ├── session-tab-switch.fixture.ts
-│   │   │   │   │   │   ├── session-timeline-benchmark.fixture.ts
-│   │   │   │   │   │   ├── session-timeline-benchmark.spec.ts
-│   │   │   │   │   │   ├── session-timeline-profile.ts
-│   │   │   │   │   │   ├── session-timeline-search-benchmark.spec.ts
-│   │   │   │   │   │   ├── session-timeline-search-probe.ts
-│   │   │   │   │   │   ├── session-timeline-stream-probe.ts
-│   │   │   │   │   │   ├── timeline-projection-benchmark.spec.ts
-│   │   │   │   │   │   ├── timeline-projection.md
-│   │   │   │   │   │   └── timeline-test-helpers.ts
-│   │   │   │   │   ├── timeline-stability
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── adverse.spec.ts
-│   │   │   │   │   │   ├── environment-matrix.spec.ts
-│   │   │   │   │   │   ├── file-matrix.spec.ts
-│   │   │   │   │   │   ├── file-mutation.spec.ts
-│   │   │   │   │   │   ├── fixture.test.ts
-│   │   │   │   │   │   ├── interaction.spec.ts
-│   │   │   │   │   │   ├── lifecycle.spec.ts
-│   │   │   │   │   │   ├── oracle-browser.spec.ts
-│   │   │   │   │   │   ├── playwright.config.ts
-│   │   │   │   │   │   ├── scroll-interaction.spec.ts
-│   │   │   │   │   │   ├── shell-matrix.spec.ts
-│   │   │   │   │   │   ├── tool-mutation.spec.ts
-│   │   │   │   │   │   ├── tools.spec.ts
-│   │   │   │   │   │   └── transition-matrix.spec.ts
-│   │   │   │   │   ├── unit
-│   │   │   │   │   │   ├── chrome-trace-write.test.ts
-│   │   │   │   │   │   ├── desktop-startup.test.ts
-│   │   │   │   │   │   ├── first-navigation-metrics.test.ts
-│   │   │   │   │   │   ├── home-session-index-fixture.test.ts
-│   │   │   │   │   │   ├── mock-server.test.ts
-│   │   │   │   │   │   ├── navigation-milestones.test.ts
-│   │   │   │   │   │   ├── session-tab-repaint-probe.test.ts
-│   │   │   │   │   │   ├── session-tab-switch-metrics.test.ts
-│   │   │   │   │   │   ├── session-tab-switch-probe.test.ts
-│   │   │   │   │   │   ├── session-timeline-stream-probe.test.ts
-│   │   │   │   │   │   ├── session-timeline-visual-tracking.test.ts
-│   │   │   │   │   │   ├── tab-switch-reporter.test.ts
-│   │   │   │   │   │   └── visual-stability.test.ts
-│   │   │   │   │   ├── AGENTS.md
-│   │   │   │   │   ├── README.md
-│   │   │   │   │   ├── benchmark.ts
-│   │   │   │   │   ├── chrome-trace.ts
-│   │   │   │   │   ├── command-palette-benchmark.spec.ts
-│   │   │   │   │   ├── playwright.config.ts
-│   │   │   │   │   ├── playwright.uncapped.config.ts
-│   │   │   │   │   ├── tab-switch-reporter.ts
-│   │   │   │   │   └── tab-switch-server.ts
-│   │   │   │   ├── regression
-│   │   │   │   │   ├── background-read-failure.spec.ts
-│   │   │   │   │   ├── btw-sidebar.spec.ts
-│   │   │   │   │   ├── command-palette.spec.ts
-│   │   │   │   │   ├── composer.spec.ts
-│   │   │   │   │   ├── home.spec.ts
-│   │   │   │   │   ├── mcp-workspace-toggle.spec.ts
-│   │   │   │   │   ├── mobile-composer-submit-focus.spec.ts
-│   │   │   │   │   ├── mobile-extension-drawers.spec.ts
-│   │   │   │   │   ├── mobile-extensions.spec.ts
-│   │   │   │   │   ├── mobile-model-pickers.spec.ts
-│   │   │   │   │   ├── mobile-session-options.spec.ts
-│   │   │   │   │   ├── mobile-session.spec.ts
-│   │   │   │   │   ├── mobile-timeline-scroll.spec.ts
-│   │   │   │   │   ├── multi-server.spec.ts
-│   │   │   │   │   ├── new-session.spec.ts
-│   │   │   │   │   ├── patch-border.spec.ts
-│   │   │   │   │   ├── patch-sticky-header.spec.ts
-│   │   │   │   │   ├── review.spec.ts
-│   │   │   │   │   ├── session-header.spec.ts
-│   │   │   │   │   ├── session-location-sync.spec.ts
-│   │   │   │   │   ├── session-notice-truncation.spec.ts
-│   │   │   │   │   ├── session-panel-scrollbar.spec.ts
-│   │   │   │   │   ├── session-queue.spec.ts
-│   │   │   │   │   ├── session-request-docks.spec.ts
-│   │   │   │   │   ├── session-summary.spec.ts
-│   │   │   │   │   ├── session-timeline-accessibility.spec.ts
-│   │   │   │   │   ├── session-timeline-locale-projection.spec.ts
-│   │   │   │   │   ├── session-timeline-reducer-projection.spec.ts
-│   │   │   │   │   ├── session-timeline-tool-projection.spec.ts
-│   │   │   │   │   ├── settings-search.spec.ts
-│   │   │   │   │   ├── settings-wsl.spec.ts
-│   │   │   │   │   ├── settings.spec.ts
-│   │   │   │   │   ├── shell-panel-spacing.spec.ts
-│   │   │   │   │   ├── side-panels.spec.ts
-│   │   │   │   │   ├── subagent-child-navigation.spec.ts
-│   │   │   │   │   ├── tabs.spec.ts
-│   │   │   │   │   ├── terminal-input.spec.ts
-│   │   │   │   │   ├── timeline-cache.spec.ts
-│   │   │   │   │   ├── timeline-geometry.spec.ts
-│   │   │   │   │   ├── timeline-history.spec.ts
-│   │   │   │   │   ├── timeline-stream.spec.ts
-│   │   │   │   │   └── whats-new.spec.ts
-│   │   │   │   ├── reproduction
-│   │   │   │   │   └── timeline-suspense
-│   │   │   │   │       ├── index.html
-│   │   │   │   │       ├── main.tsx
-│   │   │   │   │       ├── playwright.config.ts
-│   │   │   │   │       ├── timeline-suspense.repro.ts
-│   │   │   │   │       └── vite.config.ts
-│   │   │   │   ├── screenshots
-│   │   │   │   │   └── session-project-menu.png
-│   │   │   │   ├── service-worker
-│   │   │   │   │   ├── cache.spec.ts
-│   │   │   │   │   └── playwright.config.ts
-│   │   │   │   ├── user-story
-│   │   │   │   │   └── model-selection-flow.spec.ts
-│   │   │   │   ├── utils
-│   │   │   │   │   ├── visual-stability
-│   │   │   │   │   │   ├── analyzer.ts
-│   │   │   │   │   │   ├── capture.ts
-│   │   │   │   │   │   ├── index.ts
-│   │   │   │   │   │   ├── invariant.ts
-│   │   │   │   │   │   ├── model.ts
-│   │   │   │   │   │   ├── probe.ts
-│   │   │   │   │   │   ├── regions.ts
-│   │   │   │   │   │   ├── reporter.ts
-│   │   │   │   │   │   └── scenario.ts
-│   │   │   │   │   ├── app-direction.fixture.tsx
-│   │   │   │   │   ├── app-direction.html
-│   │   │   │   │   ├── app.ts
-│   │   │   │   │   ├── command-palette.ts
-│   │   │   │   │   ├── direction.ts
-│   │   │   │   │   ├── errors.ts
-│   │   │   │   │   ├── markdown-sessions.ts
-│   │   │   │   │   ├── mock-api.ts
-│   │   │   │   │   ├── mock-server.ts
-│   │   │   │   │   ├── prompt-motion.ts
-│   │   │   │   │   ├── session-fixture.ts
-│   │   │   │   │   ├── settings-wsl.fixture.tsx
-│   │   │   │   │   ├── settings-wsl.html
-│   │   │   │   │   ├── sse-transport.ts
-│   │   │   │   │   ├── timeline.ts
-│   │   │   │   │   ├── visual-stability.ts
-│   │   │   │   │   ├── waits.ts
-│   │   │   │   │   ├── windows-menu.fixture.tsx
-│   │   │   │   │   ├── windows-menu.html
-│   │   │   │   │   └── workspace.ts
-│   │   │   │   ├── AGENTS.md
-│   │   │   │   └── tsconfig.json
-│   │   │   ├── public
-│   │   │   │   ├── assets
-│   │   │   │   │   ├── Inter.ttf
-│   │   │   │   │   └── JetBrainsMonoNerdFontMono-Regular.woff2
-│   │   │   │   ├── _headers
-│   │   │   │   ├── apple-touch-icon-v3.png
-│   │   │   │   ├── apple-touch-icon.png
-│   │   │   │   ├── favicon-96x96-v3.png
-│   │   │   │   ├── favicon-96x96.png
-│   │   │   │   ├── favicon-v3.ico
-│   │   │   │   ├── favicon-v3.svg
-│   │   │   │   ├── favicon.ico
-│   │   │   │   ├── favicon.svg
-│   │   │   │   ├── oc-theme-preload.js
-│   │   │   │   ├── social-share-zen.png
-│   │   │   │   ├── social-share.png
-│   │   │   │   ├── web-app-manifest-192x192.png
-│   │   │   │   └── web-app-manifest-512x512.png
-│   │   │   ├── src
-│   │   │   │   ├── composer
-│   │   │   │   │   ├── attachments
-│   │   │   │   │   │   ├── attachments.css
-│   │   │   │   │   │   ├── attachments.ts
-│   │   │   │   │   │   ├── destination.ts
-│   │   │   │   │   │   └── uploads.tsx
-│   │   │   │   │   ├── editor
-│   │   │   │   │   │   ├── actions.test.ts
-│   │   │   │   │   │   ├── actions.ts
-│   │   │   │   │   │   ├── dom.test.ts
-│   │   │   │   │   │   ├── dom.ts
-│   │   │   │   │   │   ├── editor.css
-│   │   │   │   │   │   ├── editor.tsx
-│   │   │   │   │   │   ├── interaction.test.ts
-│   │   │   │   │   │   └── interaction.ts
-│   │   │   │   │   ├── history
-│   │   │   │   │   │   ├── entry.test.ts
-│   │   │   │   │   │   ├── entry.ts
-│   │   │   │   │   │   └── store.ts
-│   │   │   │   │   ├── suggestions
-│   │   │   │   │   │   ├── machine.test.ts
-│   │   │   │   │   │   └── machine.ts
-│   │   │   │   │   ├── adapter.ts
-│   │   │   │   │   ├── client-slash-command.test.ts
-│   │   │   │   │   ├── client-slash-command.ts
-│   │   │   │   │   ├── commands.tsx
-│   │   │   │   │   ├── comment-note.test.ts
-│   │   │   │   │   ├── comment-note.ts
-│   │   │   │   │   ├── comments.test.ts
-│   │   │   │   │   ├── comments.tsx
-│   │   │   │   │   ├── composer.stories.tsx
-│   │   │   │   │   ├── composer.tsx
-│   │   │   │   │   ├── dropzone.tsx
-│   │   │   │   │   ├── model.ts
-│   │   │   │   │   ├── persistence.tsx
-│   │   │   │   │   ├── prompt-parts.ts
-│   │   │   │   │   ├── prompt.test.ts
-│   │   │   │   │   ├── prompt.ts
-│   │   │   │   │   ├── request.test.ts
-│   │   │   │   │   ├── request.ts
-│   │   │   │   │   ├── schema.test.ts
-│   │   │   │   │   ├── schema.ts
-│   │   │   │   │   ├── selection.ts
-│   │   │   │   │   ├── state.ts
-│   │   │   │   │   ├── submission-state.ts
-│   │   │   │   │   ├── submit.test.ts
-│   │   │   │   │   ├── submit.ts
-│   │   │   │   │   └── types.ts
-│   │   │   │   ├── home
-│   │   │   │   │   ├── projects
-│   │   │   │   │   │   ├── add.ts
-│   │   │   │   │   │   ├── controller.tsx
-│   │   │   │   │   │   ├── file-manager.ts
-│   │   │   │   │   │   ├── region.tsx
-│   │   │   │   │   │   ├── reveal.ts
-│   │   │   │   │   │   ├── view.css
-│   │   │   │   │   │   └── view.tsx
-│   │   │   │   │   ├── sessions
-│   │   │   │   │   │   ├── alt-hold.test.ts
-│   │   │   │   │   │   ├── alt-hold.ts
-│   │   │   │   │   │   ├── archive.test.ts
-│   │   │   │   │   │   ├── archive.ts
-│   │   │   │   │   │   ├── command-palette.tsx
-│   │   │   │   │   │   ├── controller.tsx
-│   │   │   │   │   │   ├── index.test.ts
-│   │   │   │   │   │   ├── index.ts
-│   │   │   │   │   │   ├── open.test.ts
-│   │   │   │   │   │   ├── open.ts
-│   │   │   │   │   │   ├── records.test.ts
-│   │   │   │   │   │   ├── records.ts
-│   │   │   │   │   │   ├── region.tsx
-│   │   │   │   │   │   ├── search.ts
-│   │   │   │   │   │   ├── view.css
-│   │   │   │   │   │   └── view.tsx
-│   │   │   │   │   ├── model.ts
-│   │   │   │   │   ├── route.tsx
-│   │   │   │   │   └── scroll.ts
-│   │   │   │   ├── new-session
-│   │   │   │   │   ├── project
-│   │   │   │   │   │   ├── controller.ts
-│   │   │   │   │   │   ├── selector.test.tsx
-│   │   │   │   │   │   └── selector.tsx
-│   │   │   │   │   ├── workspace
-│   │   │   │   │   │   ├── controller.test.ts
-│   │   │   │   │   │   ├── controller.ts
-│   │   │   │   │   │   └── selector.tsx
-│   │   │   │   │   ├── commands.tsx
-│   │   │   │   │   ├── composer-adapter.ts
-│   │   │   │   │   ├── layout.ts
-│   │   │   │   │   ├── mcp.ts
-│   │   │   │   │   ├── route.tsx
-│   │   │   │   │   ├── screen.tsx
-│   │   │   │   │   ├── view.tsx
-│   │   │   │   │   ├── wordmark.css
-│   │   │   │   │   ├── wordmark.stories.tsx
-│   │   │   │   │   └── wordmark.tsx
-│   │   │   │   ├── providers
-│   │   │   │   │   ├── catalog
-│   │   │   │   │   │   ├── console.test.ts
-│   │   │   │   │   │   ├── console.ts
-│   │   │   │   │   │   ├── integrations.ts
-│   │   │   │   │   │   ├── order.ts
-│   │   │   │   │   │   ├── plugin.ts
-│   │   │   │   │   │   └── providers.ts
-│   │   │   │   │   ├── connect
-│   │   │   │   │   │   ├── chatgpt-usage-limit.stories.tsx
-│   │   │   │   │   │   ├── chatgpt-usage-limit.tsx
-│   │   │   │   │   │   ├── chatgpt-welcome.stories.tsx
-│   │   │   │   │   │   ├── chatgpt-welcome.tsx
-│   │   │   │   │   │   ├── console.tsx
-│   │   │   │   │   │   ├── controller.ts
-│   │   │   │   │   │   ├── dialog.stories.tsx
-│   │   │   │   │   │   ├── dialog.tsx
-│   │   │   │   │   │   ├── mcp-dialog.tsx
-│   │   │   │   │   │   ├── mcp.ts
-│   │   │   │   │   │   ├── models.css
-│   │   │   │   │   │   ├── remote.test.ts
-│   │   │   │   │   │   ├── remote.tsx
-│   │   │   │   │   │   └── usage-exceeded.tsx
-│   │   │   │   │   ├── credentials
-│   │   │   │   │   │   ├── dialog.tsx
-│   │   │   │   │   │   ├── form.test.ts
-│   │   │   │   │   │   └── form.ts
-│   │   │   │   │   ├── models
-│   │   │   │   │   │   ├── agent.test.ts
-│   │   │   │   │   │   ├── agent.ts
-│   │   │   │   │   │   ├── configured.ts
-│   │   │   │   │   │   ├── manage.tsx
-│   │   │   │   │   │   ├── models.tsx
-│   │   │   │   │   │   ├── provider-group.tsx
-│   │   │   │   │   │   ├── search.test.ts
-│   │   │   │   │   │   ├── search.ts
-│   │   │   │   │   │   ├── select-dialog.css
-│   │   │   │   │   │   ├── select-dialog.stories.tsx
-│   │   │   │   │   │   ├── select-dialog.tsx
-│   │   │   │   │   │   ├── selection.tsx
-│   │   │   │   │   │   ├── tooltip.tsx
-│   │   │   │   │   │   ├── unpaid.stories.tsx
-│   │   │   │   │   │   ├── unpaid.tsx
-│   │   │   │   │   │   ├── variant.test.ts
-│   │   │   │   │   │   └── variant.ts
-│   │   │   │   │   ├── custom-managed-provider.svg
-│   │   │   │   │   └── opencode-logo.tsx
-│   │   │   │   ├── runtime
-│   │   │   │   │   ├── extension
-│   │   │   │   │   │   ├── attachment.ts
-│   │   │   │   │   │   ├── builtins.ts
-│   │   │   │   │   │   ├── commands.tsx
-│   │   │   │   │   │   ├── embeds.tsx
-│   │   │   │   │   │   ├── hmr.tsx
-│   │   │   │   │   │   ├── host-apis.tsx
-│   │   │   │   │   │   ├── host.tsx
-│   │   │   │   │   │   ├── installed.ts
-│   │   │   │   │   │   ├── ipc.test.ts
-│   │   │   │   │   │   ├── ipc.ts
-│   │   │   │   │   │   ├── located.ts
-│   │   │   │   │   │   ├── menubar-items.ts
-│   │   │   │   │   │   ├── mobile.tsx
-│   │   │   │   │   │   ├── mounted-session.ts
-│   │   │   │   │   │   ├── panel-keys.ts
-│   │   │   │   │   │   ├── panel-trigger.tsx
-│   │   │   │   │   │   ├── panels.tsx
-│   │   │   │   │   │   ├── render.tsx
-│   │   │   │   │   │   ├── root.tsx
-│   │   │   │   │   │   ├── server-shell.tsx
-│   │   │   │   │   │   ├── servers.tsx
-│   │   │   │   │   │   ├── settings-page-dev.tsx
-│   │   │   │   │   │   ├── settings-page-view.tsx
-│   │   │   │   │   │   ├── settings-pages.ts
-│   │   │   │   │   │   ├── side-region.tsx
-│   │   │   │   │   │   ├── stores.ts
-│   │   │   │   │   │   ├── tab-strip-scroll.test.ts
-│   │   │   │   │   │   ├── tab-strip-scroll.ts
-│   │   │   │   │   │   └── titlebar-items.tsx
-│   │   │   │   │   ├── i18n
-│   │   │   │   │   │   ├── am.ts
-│   │   │   │   │   │   ├── ar.ts
-│   │   │   │   │   │   ├── az.ts
-│   │   │   │   │   │   ├── bg.ts
-│   │   │   │   │   │   ├── bn.ts
-│   │   │   │   │   │   ├── br.ts
-│   │   │   │   │   │   ├── bs.ts
-│   │   │   │   │   │   ├── ca.ts
-│   │   │   │   │   │   ├── cs.ts
-│   │   │   │   │   │   ├── da.ts
-│   │   │   │   │   │   ├── de.ts
-│   │   │   │   │   │   ├── desktop-native.test.ts
-│   │   │   │   │   │   ├── desktop-native.ts
-│   │   │   │   │   │   ├── dv.ts
-│   │   │   │   │   │   ├── dz.ts
-│   │   │   │   │   │   ├── el.ts
-│   │   │   │   │   │   ├── en.ts
-│   │   │   │   │   │   ├── es.ts
-│   │   │   │   │   │   ├── et.ts
-│   │   │   │   │   │   ├── fa.ts
-│   │   │   │   │   │   ├── fi.ts
-│   │   │   │   │   │   ├── fo.ts
-│   │   │   │   │   │   ├── fr.ts
-│   │   │   │   │   │   ├── he.ts
-│   │   │   │   │   │   ├── hi.ts
-│   │   │   │   │   │   ├── hr.ts
-│   │   │   │   │   │   ├── hu.ts
-│   │   │   │   │   │   ├── hy.ts
-│   │   │   │   │   │   ├── id.ts
-│   │   │   │   │   │   ├── is.ts
-│   │   │   │   │   │   ├── it.ts
-│   │   │   │   │   │   ├── ja.ts
-│   │   │   │   │   │   ├── ka.ts
-│   │   │   │   │   │   ├── km.ts
-│   │   │   │   │   │   ├── ko.ts
-│   │   │   │   │   │   ├── language.test.ts
-│   │   │   │   │   │   ├── language.tsx
-│   │   │   │   │   │   ├── lo.ts
-│   │   │   │   │   │   ├── lt.ts
-│   │   │   │   │   │   ├── lv.ts
-│   │   │   │   │   │   ├── mk.ts
-│   │   │   │   │   │   ├── mn.ts
-│   │   │   │   │   │   ├── ms.ts
-│   │   │   │   │   │   ├── my.ts
-│   │   │   │   │   │   ├── ne.ts
-│   │   │   │   │   │   ├── nl.ts
-│   │   │   │   │   │   ├── no.ts
-│   │   │   │   │   │   ├── pa.ts
-│   │   │   │   │   │   ├── pl.ts
-│   │   │   │   │   │   ├── ro.ts
-│   │   │   │   │   │   ├── ru.ts
-│   │   │   │   │   │   ├── si.ts
-│   │   │   │   │   │   ├── sk.ts
-│   │   │   │   │   │   ├── sl.ts
-│   │   │   │   │   │   ├── sq.ts
-│   │   │   │   │   │   ├── sr.ts
-│   │   │   │   │   │   ├── sv.ts
-│   │   │   │   │   │   ├── tg.ts
-│   │   │   │   │   │   ├── th.ts
-│   │   │   │   │   │   ├── tk.ts
-│   │   │   │   │   │   ├── tr.ts
-│   │   │   │   │   │   ├── uk.ts
-│   │   │   │   │   │   ├── ur.ts
-│   │   │   │   │   │   ├── uz.ts
-│   │   │   │   │   │   ├── vi.ts
-│   │   │   │   │   │   ├── zh.ts
-│   │   │   │   │   │   └── zht.ts
-│   │   │   │   │   ├── persistence
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── base64.ts
-│   │   │   │   │   │   ├── consumers.test.ts
-│   │   │   │   │   │   ├── drafts.test.ts
-│   │   │   │   │   │   ├── drafts.ts
-│   │   │   │   │   │   ├── equality.ts
-│   │   │   │   │   │   ├── namespace.test.ts
-│   │   │   │   │   │   ├── namespace.ts
-│   │   │   │   │   │   ├── persist.test.ts
-│   │   │   │   │   │   ├── persist.ts
-│   │   │   │   │   │   ├── schema.test.ts
-│   │   │   │   │   │   ├── schema.ts
-│   │   │   │   │   │   ├── storage.test.ts
-│   │   │   │   │   │   ├── storage.ts
-│   │   │   │   │   │   ├── uuid.test.ts
-│   │   │   │   │   │   └── uuid.ts
-│   │   │   │   │   ├── platform
-│   │   │   │   │   │   ├── external-link.tsx
-│   │   │   │   │   │   ├── keyboard.ts
-│   │   │   │   │   │   ├── platform.tsx
-│   │   │   │   │   │   ├── pwa.ts
-│   │   │   │   │   │   └── web.ts
-│   │   │   │   │   ├── server
-│   │   │   │   │   │   ├── global-sync
-│   │   │   │   │   │   │   ├── bootstrap.test.ts
-│   │   │   │   │   │   │   ├── bootstrap.ts
-│   │   │   │   │   │   │   ├── child-store.test.ts
-│   │   │   │   │   │   │   ├── child-store.ts
-│   │   │   │   │   │   │   ├── eviction.test.ts
-│   │   │   │   │   │   │   ├── eviction.ts
-│   │   │   │   │   │   │   ├── mcp.test.ts
-│   │   │   │   │   │   │   ├── mcp.ts
-│   │   │   │   │   │   │   ├── queue.test.ts
-│   │   │   │   │   │   │   ├── queue.ts
-│   │   │   │   │   │   │   ├── types.ts
-│   │   │   │   │   │   │   ├── utils.test.ts
-│   │   │   │   │   │   │   └── utils.ts
-│   │   │   │   │   │   ├── server-sync
-│   │   │   │   │   │   │   ├── connection.test.ts
-│   │   │   │   │   │   │   └── connection.ts
-│   │   │   │   │   │   ├── api.test.ts
-│   │   │   │   │   │   ├── api.ts
-│   │   │   │   │   │   ├── client.test.ts
-│   │   │   │   │   │   ├── client.tsx
-│   │   │   │   │   │   ├── current.tsx
-│   │   │   │   │   │   ├── data.test.ts
-│   │   │   │   │   │   ├── data.ts
-│   │   │   │   │   │   ├── errors.test.ts
-│   │   │   │   │   │   ├── errors.ts
-│   │   │   │   │   │   ├── health.test.ts
-│   │   │   │   │   │   ├── health.ts
-│   │   │   │   │   │   ├── image.test.ts
-│   │   │   │   │   │   ├── image.ts
-│   │   │   │   │   │   ├── persistence.test.ts
-│   │   │   │   │   │   ├── persistence.ts
-│   │   │   │   │   │   ├── refcount.test.ts
-│   │   │   │   │   │   ├── refcount.ts
-│   │   │   │   │   │   ├── registry.test.ts
-│   │   │   │   │   │   ├── registry.tsx
-│   │   │   │   │   │   ├── request-queue.test.ts
-│   │   │   │   │   │   ├── request-queue.ts
-│   │   │   │   │   │   ├── runtime.tsx
-│   │   │   │   │   │   ├── scope.test.ts
-│   │   │   │   │   │   ├── scope.ts
-│   │   │   │   │   │   ├── scoped-cache.test.ts
-│   │   │   │   │   │   ├── scoped-cache.ts
-│   │   │   │   │   │   ├── sync.tsx
-│   │   │   │   │   │   └── types.ts
-│   │   │   │   │   ├── animated-presence.ts
-│   │   │   │   │   └── polyfills.ts
-│   │   │   │   ├── servers
-│   │   │   │   │   ├── connect
-│   │   │   │   │   │   ├── browser.ts
-│   │   │   │   │   │   ├── camera.ts
-│   │   │   │   │   │   ├── dialog.tsx
-│   │   │   │   │   │   ├── method.tsx
-│   │   │   │   │   │   ├── pairing.test.ts
-│   │   │   │   │   │   ├── pairing.ts
-│   │   │   │   │   │   ├── redeem.ts
-│   │   │   │   │   │   ├── scanner.css
-│   │   │   │   │   │   ├── scanner.tsx
-│   │   │   │   │   │   ├── screen.css
-│   │   │   │   │   │   └── screen.tsx
-│   │   │   │   │   └── registry
-│   │   │   │   │       ├── add-menu.tsx
-│   │   │   │   │       ├── controller.test.ts
-│   │   │   │   │       ├── controller.ts
-│   │   │   │   │       ├── extension-row.tsx
-│   │   │   │   │       ├── management.test.ts
-│   │   │   │   │       ├── management.ts
-│   │   │   │   │       ├── row-items.tsx
-│   │   │   │   │       ├── row-menu.tsx
-│   │   │   │   │       ├── row.stories.tsx
-│   │   │   │   │       └── row.tsx
-│   │   │   │   ├── session
-│   │   │   │   │   ├── commands
-│   │   │   │   │   │   ├── export.test.ts
-│   │   │   │   │   │   ├── export.ts
-│   │   │   │   │   │   ├── fork-dialog.tsx
-│   │   │   │   │   │   └── use-session-commands.tsx
-│   │   │   │   │   ├── composer
-│   │   │   │   │   │   ├── adapter.ts
-│   │   │   │   │   │   ├── controller.ts
-│   │   │   │   │   │   ├── location-missing.tsx
-│   │   │   │   │   │   ├── queue-panel.tsx
-│   │   │   │   │   │   ├── queue.test.ts
-│   │   │   │   │   │   ├── queue.ts
-│   │   │   │   │   │   ├── region.tsx
-│   │   │   │   │   │   ├── selection.test.ts
-│   │   │   │   │   │   ├── selection.ts
-│   │   │   │   │   │   ├── session-composer-region-controller.ts
-│   │   │   │   │   │   └── session-composer-region.tsx
-│   │   │   │   │   ├── header
-│   │   │   │   │   │   ├── session-header-actions.tsx
-│   │   │   │   │   │   ├── session-header.tsx
-│   │   │   │   │   │   ├── session-running-menu.tsx
-│   │   │   │   │   │   └── session-working-indicator.tsx
-│   │   │   │   │   ├── requests
-│   │   │   │   │   │   ├── auto-approve.ts
-│   │   │   │   │   │   ├── background.ts
-│   │   │   │   │   │   ├── model.ts
-│   │   │   │   │   │   ├── session-permission-dock.tsx
-│   │   │   │   │   │   ├── session-question-dock.tsx
-│   │   │   │   │   │   ├── session-request-tree.test.ts
-│   │   │   │   │   │   ├── session-request-tree.ts
-│   │   │   │   │   │   ├── session-websearch-dock.css
-│   │   │   │   │   │   ├── session-websearch-dock.tsx
-│   │   │   │   │   │   ├── websearch.test.ts
-│   │   │   │   │   │   └── websearch.ts
-│   │   │   │   │   ├── timeline
-│   │   │   │   │   │   ├── background-work.stories.tsx
-│   │   │   │   │   │   ├── cache.ts
-│   │   │   │   │   │   ├── controller-projection.test.ts
-│   │   │   │   │   │   ├── controller-projection.ts
-│   │   │   │   │   │   ├── controller.tsx
-│   │   │   │   │   │   ├── interaction.ts
-│   │   │   │   │   │   ├── message-timeline.tsx
-│   │   │   │   │   │   ├── model.test.ts
-│   │   │   │   │   │   ├── model.ts
-│   │   │   │   │   │   ├── observe-element-offset.test.ts
-│   │   │   │   │   │   ├── observe-element-offset.ts
-│   │   │   │   │   │   ├── projection.ts
-│   │   │   │   │   │   ├── search-bar.css
-│   │   │   │   │   │   ├── search-bar.tsx
-│   │   │   │   │   │   ├── search-controller.ts
-│   │   │   │   │   │   ├── virtual-items.ts
-│   │   │   │   │   │   └── virtualizer.tsx
-│   │   │   │   │   ├── handoff.ts
-│   │   │   │   │   ├── helpers.ts
-│   │   │   │   │   ├── incompatible-server-panel.tsx
-│   │   │   │   │   ├── list.test.ts
-│   │   │   │   │   ├── list.ts
-│   │   │   │   │   ├── message-id-from-hash.ts
-│   │   │   │   │   ├── model.ts
-│   │   │   │   │   ├── preparing-composer.tsx
-│   │   │   │   │   ├── revert.ts
-│   │   │   │   │   ├── route-error.tsx
-│   │   │   │   │   ├── route.tsx
-│   │   │   │   │   ├── screen-layout.ts
-│   │   │   │   │   ├── screen.tsx
-│   │   │   │   │   ├── search.ts
-│   │   │   │   │   ├── session-domain.test.ts
-│   │   │   │   │   ├── session-domain.ts
-│   │   │   │   │   ├── session-frame.tsx
-│   │   │   │   │   ├── session-identity-header.css
-│   │   │   │   │   ├── session-identity-header.tsx
-│   │   │   │   │   ├── session-layout.ts
-│   │   │   │   │   ├── session-model-helpers.test.ts
-│   │   │   │   │   ├── session-model-helpers.ts
-│   │   │   │   │   ├── session-ownership.test.ts
-│   │   │   │   │   ├── session-ownership.ts
-│   │   │   │   │   ├── session-panel-width.test.ts
-│   │   │   │   │   ├── session-panel-width.ts
-│   │   │   │   │   ├── session-resolution.ts
-│   │   │   │   │   ├── session-screen.stories.tsx
-│   │   │   │   │   ├── story-model.tsx
-│   │   │   │   │   ├── title.ts
-│   │   │   │   │   ├── usage-exceeded-dialogs.test.ts
-│   │   │   │   │   ├── usage-exceeded-dialogs.tsx
-│   │   │   │   │   ├── use-session-hash-scroll.test.ts
-│   │   │   │   │   └── use-session-hash-scroll.ts
-│   │   │   │   ├── settings
-│   │   │   │   │   ├── about
-│   │   │   │   │   │   ├── notices
-│   │   │   │   │   │   │   ├── fonts
-│   │   │   │   │   │   │   │   └── OFL-1.1.txt
-│   │   │   │   │   │   │   ├── apache-2.0.txt
-│   │   │   │   │   │   │   ├── betteroffice-notice.txt
-│   │   │   │   │   │   │   ├── crates.ts
-│   │   │   │   │   │   │   ├── dialog.tsx
-│   │   │   │   │   │   │   ├── fonts.ts
-│   │   │   │   │   │   │   └── notices.ts
-│   │   │   │   │   │   ├── about.tsx
-│   │   │   │   │   │   ├── animated-wordmark.tsx
-│   │   │   │   │   │   ├── anomaly-brush.svg
-│   │   │   │   │   │   ├── contributors.test.ts
-│   │   │   │   │   │   ├── contributors.ts
-│   │   │   │   │   │   └── legal.svg
-│   │   │   │   │   ├── appearance
-│   │   │   │   │   │   └── appearance.tsx
-│   │   │   │   │   ├── experimental
-│   │   │   │   │   │   └── experimental.tsx
-│   │   │   │   │   ├── general
-│   │   │   │   │   │   ├── behavior.ts
-│   │   │   │   │   │   ├── controllers.test.ts
-│   │   │   │   │   │   ├── controllers.ts
-│   │   │   │   │   │   └── general.tsx
-│   │   │   │   │   ├── keybinds
-│   │   │   │   │   │   ├── keybinds.tsx
-│   │   │   │   │   │   └── migration.ts
-│   │   │   │   │   ├── models
-│   │   │   │   │   │   └── models.tsx
-│   │   │   │   │   ├── notifications
-│   │   │   │   │   │   └── notifications.tsx
-│   │   │   │   │   ├── providers
-│   │   │   │   │   │   ├── accounts.test.ts
-│   │   │   │   │   │   ├── accounts.ts
-│   │   │   │   │   │   ├── extensions.tsx
-│   │   │   │   │   │   └── providers.tsx
-│   │   │   │   │   ├── servers
-│   │   │   │   │   │   ├── inventory.test.ts
-│   │   │   │   │   │   ├── inventory.ts
-│   │   │   │   │   │   └── servers.tsx
-│   │   │   │   │   ├── workspaces
-│   │   │   │   │   │   ├── project-extensions.tsx
-│   │   │   │   │   │   ├── project-lsp.test.ts
-│   │   │   │   │   │   ├── project-lsp.ts
-│   │   │   │   │   │   ├── project-model.ts
-│   │   │   │   │   │   ├── project-options.tsx
-│   │   │   │   │   │   ├── project-row.tsx
-│   │   │   │   │   │   ├── project.css
-│   │   │   │   │   │   ├── project.tsx
-│   │   │   │   │   │   ├── projects.tsx
-│   │   │   │   │   │   ├── queries.ts
-│   │   │   │   │   │   └── workspaces.tsx
-│   │   │   │   │   ├── command.tsx
-│   │   │   │   │   ├── list.tsx
-│   │   │   │   │   ├── model.test.ts
-│   │   │   │   │   ├── model.tsx
-│   │   │   │   │   ├── navigation.tsx
-│   │   │   │   │   ├── pages.ts
-│   │   │   │   │   ├── route.test.ts
-│   │   │   │   │   ├── route.ts
-│   │   │   │   │   ├── row.tsx
-│   │   │   │   │   ├── search-catalog.ts
-│   │   │   │   │   ├── search-empty.tsx
-│   │   │   │   │   ├── search-field.tsx
-│   │   │   │   │   ├── search-index.ts
-│   │   │   │   │   ├── search-results.test.ts
-│   │   │   │   │   ├── search-results.ts
-│   │   │   │   │   ├── search-reveal.ts
-│   │   │   │   │   ├── search.css
-│   │   │   │   │   ├── search.tsx
-│   │   │   │   │   ├── server-scope.tsx
-│   │   │   │   │   ├── settings.css
-│   │   │   │   │   ├── shell.tsx
-│   │   │   │   │   ├── surface.tsx
-│   │   │   │   │   ├── timeline-detail.css
-│   │   │   │   │   ├── timeline-detail.stories.tsx
-│   │   │   │   │   └── timeline-detail.tsx
-│   │   │   │   ├── shell
-│   │   │   │   │   ├── commands
-│   │   │   │   │   │   ├── command.test.ts
-│   │   │   │   │   │   ├── command.tsx
-│   │   │   │   │   │   ├── desktop-menu.ts
-│   │   │   │   │   │   ├── desktop.tsx
-│   │   │   │   │   │   ├── dialog.css
-│   │   │   │   │   │   ├── dialog.tsx
-│   │   │   │   │   │   ├── menu-dismiss.ts
-│   │   │   │   │   │   ├── palette.ts
-│   │   │   │   │   │   ├── search-keydown.ts
-│   │   │   │   │   │   └── search.ts
-│   │   │   │   │   ├── errors
-│   │   │   │   │   │   ├── description.test.ts
-│   │   │   │   │   │   ├── description.ts
-│   │   │   │   │   │   └── error.tsx
-│   │   │   │   │   ├── layout
-│   │   │   │   │   │   ├── helpers.test.ts
-│   │   │   │   │   │   ├── helpers.ts
-│   │   │   │   │   │   ├── project-avatar-state.ts
-│   │   │   │   │   │   ├── project-icon.tsx
-│   │   │   │   │   │   └── session-tab-avatar.tsx
-│   │   │   │   │   ├── notifications
-│   │   │   │   │   │   ├── coordinator.ts
-│   │   │   │   │   │   ├── notification-alert.test.ts
-│   │   │   │   │   │   ├── notification.test.ts
-│   │   │   │   │   │   ├── notification.tsx
-│   │   │   │   │   │   ├── sound.ts
-│   │   │   │   │   │   └── toast.tsx
-│   │   │   │   │   ├── routes
-│   │   │   │   │   │   ├── routes.tsx
-│   │   │   │   │   │   ├── session-ui-provider.tsx
-│   │   │   │   │   │   ├── session.test.ts
-│   │   │   │   │   │   └── session.ts
-│   │   │   │   │   ├── state
-│   │   │   │   │   │   ├── helpers.ts
-│   │   │   │   │   │   ├── layout.test.ts
-│   │   │   │   │   │   ├── layout.tsx
-│   │   │   │   │   │   ├── scroll.test.ts
-│   │   │   │   │   │   ├── scroll.ts
-│   │   │   │   │   │   ├── session-tabs.test.ts
-│   │   │   │   │   │   └── session-tabs.ts
-│   │   │   │   │   ├── tabs
-│   │   │   │   │   │   ├── closed.ts
-│   │   │   │   │   │   ├── memory.ts
-│   │   │   │   │   │   ├── schema.ts
-│   │   │   │   │   │   ├── tabs.test.ts
-│   │   │   │   │   │   └── tabs.tsx
-│   │   │   │   │   ├── titlebar
-│   │   │   │   │   │   ├── history.test.ts
-│   │   │   │   │   │   ├── history.ts
-│   │   │   │   │   │   ├── recently-closed-tabs-menu.tsx
-│   │   │   │   │   │   ├── right-slot.test.ts
-│   │   │   │   │   │   ├── right-slot.tsx
-│   │   │   │   │   │   ├── session-events.test.ts
-│   │   │   │   │   │   ├── session-events.ts
-│   │   │   │   │   │   ├── tab-nav.css
-│   │   │   │   │   │   ├── tab-nav.tsx
-│   │   │   │   │   │   ├── tab-order.test.ts
-│   │   │   │   │   │   ├── tab-order.ts
-│   │   │   │   │   │   ├── tab-popover.css
-│   │   │   │   │   │   ├── tab-popover.tsx
-│   │   │   │   │   │   ├── tab-strip.tsx
-│   │   │   │   │   │   ├── tab-title.test.ts
-│   │   │   │   │   │   ├── tab-title.ts
-│   │   │   │   │   │   ├── titlebar.css
-│   │   │   │   │   │   ├── titlebar.tsx
-│   │   │   │   │   │   ├── windows-menu.test.ts
-│   │   │   │   │   │   └── windows-menu.tsx
-│   │   │   │   │   ├── mobile-drawer.css
-│   │   │   │   │   ├── mobile-drawer.tsx
-│   │   │   │   │   ├── mobile-panel-drawer.css
-│   │   │   │   │   ├── mobile-panel-drawer.tsx
-│   │   │   │   │   ├── shell.tsx
-│   │   │   │   │   └── time.ts
-│   │   │   │   ├── workspaces
-│   │   │   │   │   ├── files
-│   │   │   │   │   │   ├── artifact.test.ts
-│   │   │   │   │   │   ├── artifact.ts
-│   │   │   │   │   │   ├── content-cache-accounting.test.ts
-│   │   │   │   │   │   ├── content-cache.ts
-│   │   │   │   │   │   ├── model.tsx
-│   │   │   │   │   │   ├── path.test.ts
-│   │   │   │   │   │   ├── path.ts
-│   │   │   │   │   │   ├── tree-store.ts
-│   │   │   │   │   │   ├── types.ts
-│   │   │   │   │   │   ├── view-cache.ts
-│   │   │   │   │   │   ├── watcher.test.ts
-│   │   │   │   │   │   └── watcher.ts
-│   │   │   │   │   ├── selection
-│   │   │   │   │   │   ├── dialog.css
-│   │   │   │   │   │   ├── dialog.tsx
-│   │   │   │   │   │   ├── domain.test.ts
-│   │   │   │   │   │   ├── domain.ts
-│   │   │   │   │   │   ├── picker.test.ts
-│   │   │   │   │   │   ├── picker.tsx
-│   │   │   │   │   │   └── policy.ts
-│   │   │   │   │   ├── create.test.ts
-│   │   │   │   │   ├── create.ts
-│   │   │   │   │   ├── inventory.test.ts
-│   │   │   │   │   ├── inventory.ts
-│   │   │   │   │   ├── location.tsx
-│   │   │   │   │   ├── path-key.ts
-│   │   │   │   │   ├── paths.test.ts
-│   │   │   │   │   └── paths.ts
-│   │   │   │   ├── app.tsx
-│   │   │   │   ├── custom-elements.d.ts
-│   │   │   │   ├── desktop.ts
-│   │   │   │   ├── entry.tsx
-│   │   │   │   ├── env.d.ts
-│   │   │   │   ├── index.css
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── sst-env.d.ts
-│   │   │   │   └── theme-preload.test.ts
-│   │   │   ├── test-browser
-│   │   │   │   ├── fixtures
-│   │   │   │   │   └── model-selection.ts
-│   │   │   │   ├── animated-presence-state.test.ts
-│   │   │   │   ├── auto-scroll.test.ts
-│   │   │   │   ├── command-palette-search.test.ts
-│   │   │   │   ├── command-palette.test.ts
-│   │   │   │   ├── composer-attachment-ownership.test.tsx
-│   │   │   │   ├── composer-drag-cancel.test.tsx
-│   │   │   │   ├── composer-write-batch.test.ts
-│   │   │   │   ├── draft-history-cache.test.ts
-│   │   │   │   ├── extension-installed.test.ts
-│   │   │   │   ├── extension-migrations.test.ts
-│   │   │   │   ├── extension-primitives.test.ts
-│   │   │   │   ├── message-page-publication.test.ts
-│   │   │   │   ├── model-selection.test.ts
-│   │   │   │   ├── motion-spring.test.ts
-│   │   │   │   ├── persisted-consumers.test.ts
-│   │   │   │   ├── playwright-config.test.ts
-│   │   │   │   ├── prompt-motion.test.ts
-│   │   │   │   ├── prompt-persistence.test.ts
-│   │   │   │   ├── prompt-scope.test.ts
-│   │   │   │   ├── prompt-submission-state.test.ts
-│   │   │   │   ├── provider-catalog.test.ts
-│   │   │   │   ├── pwa-route.test.ts
-│   │   │   │   ├── schema-persistence.test.ts
-│   │   │   │   ├── server-connection-sync.test.ts
-│   │   │   │   ├── session-background.test.ts
-│   │   │   │   ├── session-ownership.test.ts
-│   │   │   │   ├── session-resolution.test.ts
-│   │   │   │   ├── session-router.test.ts
-│   │   │   │   ├── settings-keybinds.test.ts
-│   │   │   │   ├── solid-router-cleanup.test.ts
-│   │   │   │   ├── solid-runtime.test.ts
-│   │   │   │   ├── solid-virtual.test.ts
-│   │   │   │   ├── ssh-composer.test.ts
-│   │   │   │   ├── ssh-health.test.ts
-│   │   │   │   ├── timeline-cache.test.ts
-│   │   │   │   ├── timeline-projection.test.ts
-│   │   │   │   ├── toast-owner.test.ts
-│   │   │   │   └── websearch-request.test.ts
-│   │   │   ├── .gitignore
-│   │   │   ├── AGENTS.md
-│   │   │   ├── README.md
-│   │   │   ├── bunfig.toml
-│   │   │   ├── happydom.ts
-│   │   │   ├── index.html
-│   │   │   ├── manifest.json
-│   │   │   ├── package.json
-│   │   │   ├── playwright.components.config.ts
-│   │   │   ├── playwright.config.ts
-│   │   │   ├── sst-env.d.ts
-│   │   │   ├── tsconfig.json
-│   │   │   ├── vite.config.ts
-│   │   │   ├── vite.icons.test.ts
-│   │   │   ├── vite.icons.ts
-│   │   │   ├── vite.js
-│   │   │   └── vite.pwa.ts
-│   │   ├── cli
-│   │   │   ├── bin
-│   │   │   │   ├── opencode.cjs
-│   │   │   │   └── opencode2.cjs
-│   │   │   ├── dev
-│   │   │   │   ├── README.md
-│   │   │   │   ├── entry.ts
-│   │   │   │   ├── error-overlay.tsx
-│   │   │   │   ├── host.d.ts
-│   │   │   │   ├── host.js
-│   │   │   │   ├── refresh-runtime.d.ts
-│   │   │   │   ├── refresh.ts
-│   │   │   │   ├── route.tsx
-│   │   │   │   ├── tui.ts
-│   │   │   │   └── vite.ts
-│   │   │   ├── script
-│   │   │   │   ├── app-assets.ts
-│   │   │   │   ├── build-node.ts
-│   │   │   │   ├── build.ts
-│   │   │   │   ├── entitlements.plist
-│   │   │   │   ├── files.ts
-│   │   │   │   ├── node-assets.ts
-│   │   │   │   ├── opencode-pty.ts
-│   │   │   │   ├── postinstall.mjs
-│   │   │   │   ├── publish-aur.ts
-│   │   │   │   ├── publish-homebrew.ts
-│   │   │   │   ├── publish.ts
-│   │   │   │   ├── schema.ts
-│   │   │   │   ├── service-smoke.ts
-│   │   │   │   └── verify-artifact.ts
-│   │   │   ├── src
-│   │   │   │   ├── acp
-│   │   │   │   │   ├── agent.ts
-│   │   │   │   │   ├── capabilities.ts
-│   │   │   │   │   ├── catalog.ts
-│   │   │   │   │   ├── child.ts
-│   │   │   │   │   ├── client.ts
-│   │   │   │   │   ├── compaction.ts
-│   │   │   │   │   ├── config-option.ts
-│   │   │   │   │   ├── connection.ts
-│   │   │   │   │   ├── content.ts
-│   │   │   │   │   ├── directories.ts
-│   │   │   │   │   ├── elicitation.ts
-│   │   │   │   │   ├── error.ts
-│   │   │   │   │   ├── permission.ts
-│   │   │   │   │   ├── prompt.ts
-│   │   │   │   │   ├── replay.ts
-│   │   │   │   │   ├── service.ts
-│   │   │   │   │   ├── sessions.ts
-│   │   │   │   │   ├── tool.ts
-│   │   │   │   │   ├── translate.ts
-│   │   │   │   │   └── turn.ts
-│   │   │   │   ├── commands
-│   │   │   │   │   ├── handlers
-│   │   │   │   │   │   ├── auth
-│   │   │   │   │   │   │   ├── account.ts
-│   │   │   │   │   │   │   ├── export.ts
-│   │   │   │   │   │   │   ├── form.ts
-│   │   │   │   │   │   │   ├── import.ts
-│   │   │   │   │   │   │   ├── list.ts
-│   │   │   │   │   │   │   ├── login.ts
-│   │   │   │   │   │   │   ├── logout.ts
-│   │   │   │   │   │   │   ├── shared.ts
-│   │   │   │   │   │   │   └── switch.ts
-│   │   │   │   │   │   ├── debug
-│   │   │   │   │   │   │   ├── agents.ts
-│   │   │   │   │   │   │   ├── config.ts
-│   │   │   │   │   │   │   ├── paths.ts
-│   │   │   │   │   │   │   └── redact.ts
-│   │   │   │   │   │   ├── mcp
-│   │   │   │   │   │   │   ├── add.ts
-│   │   │   │   │   │   │   ├── auth.ts
-│   │   │   │   │   │   │   ├── list.ts
-│   │   │   │   │   │   │   ├── logout.ts
-│   │   │   │   │   │   │   └── resolve.ts
-│   │   │   │   │   │   ├── plugin
-│   │   │   │   │   │   │   ├── add.ts
-│   │   │   │   │   │   │   ├── check.ts
-│   │   │   │   │   │   │   ├── inventory.ts
-│   │   │   │   │   │   │   ├── list.ts
-│   │   │   │   │   │   │   ├── remove.ts
-│   │   │   │   │   │   │   └── update.ts
-│   │   │   │   │   │   ├── service
-│   │   │   │   │   │   │   ├── get.ts
-│   │   │   │   │   │   │   ├── restart.ts
-│   │   │   │   │   │   │   ├── set.ts
-│   │   │   │   │   │   │   ├── start.ts
-│   │   │   │   │   │   │   ├── status.ts
-│   │   │   │   │   │   │   ├── stop.ts
-│   │   │   │   │   │   │   └── unset.ts
-│   │   │   │   │   │   ├── session
-│   │   │   │   │   │   │   ├── delete.ts
-│   │   │   │   │   │   │   ├── export.ts
-│   │   │   │   │   │   │   ├── import.ts
-│   │   │   │   │   │   │   └── list.ts
-│   │   │   │   │   │   ├── acp.ts
-│   │   │   │   │   │   ├── api.test.ts
-│   │   │   │   │   │   ├── api.ts
-│   │   │   │   │   │   ├── default.ts
-│   │   │   │   │   │   ├── mini.ts
-│   │   │   │   │   │   ├── models.ts
-│   │   │   │   │   │   ├── pair.ts
-│   │   │   │   │   │   ├── reload.ts
-│   │   │   │   │   │   ├── run.ts
-│   │   │   │   │   │   ├── serve.ts
-│   │   │   │   │   │   ├── stats.ts
-│   │   │   │   │   │   ├── uninstall.ts
-│   │   │   │   │   │   └── upgrade.ts
-│   │   │   │   │   └── commands.ts
-│   │   │   │   ├── config
-│   │   │   │   │   ├── config.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── migrate.ts
-│   │   │   │   │   └── schema.ts
-│   │   │   │   ├── framework
-│   │   │   │   │   ├── runtime.ts
-│   │   │   │   │   └── spec.ts
-│   │   │   │   ├── node
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── plugin-runtime.effect.ts
-│   │   │   │   │   ├── plugin-runtime.promise.ts
-│   │   │   │   │   └── target.ts
-│   │   │   │   ├── run
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── noninteractive.ts
-│   │   │   │   │   ├── run.ts
-│   │   │   │   │   ├── ui.ts
-│   │   │   │   │   └── v1.ts
-│   │   │   │   ├── services
-│   │   │   │   │   ├── remote-tunnel.ts
-│   │   │   │   │   ├── retained-image.ts
-│   │   │   │   │   ├── server-connection.ts
-│   │   │   │   │   ├── service-config.ts
-│   │   │   │   │   ├── service-registration.ts
-│   │   │   │   │   ├── standalone.ts
-│   │   │   │   │   ├── update-preflight.tsx
-│   │   │   │   │   ├── updater-action.ts
-│   │   │   │   │   ├── updater.test.ts
-│   │   │   │   │   ├── updater.ts
-│   │   │   │   │   └── web-ui.ts
-│   │   │   │   ├── ui
-│   │   │   │   │   ├── integration-picker.ts
-│   │   │   │   │   ├── prompt.ts
-│   │   │   │   │   └── timeline.tsx
-│   │   │   │   ├── util
-│   │   │   │   │   ├── error.ts
-│   │   │   │   │   ├── io.ts
-│   │   │   │   │   └── process.ts
-│   │   │   │   ├── app-archive.ts
-│   │   │   │   ├── app-assets.ts
-│   │   │   │   ├── cpu-profile.ts
-│   │   │   │   ├── database-path.ts
-│   │   │   │   ├── env.ts
-│   │   │   │   ├── heap.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── mini-host.ts
+├── src
+│   ├── api.rs
+│   ├── app.rs
+│   ├── auth.rs
+│   ├── backends.rs
+│   ├── catalog.rs
+│   ├── client.rs
+│   ├── daemon.rs
+│   ├── latex.rs
+│   ├── main.rs
+│   ├── mcp.rs
+│   ├── md.rs
+│   ├── oauth.rs
+│   ├── proto.rs
+│   ├── protocol.rs
+│   ├── providers.rs
+│   ├── server.rs
+│   ├── skills.rs
+│   ├── store.rs
+│   └── tools.rs
+├── target
+│   ├── aarch64-apple-darwin
+│   │   ├── release
+│   │   │   ├── .fingerprint
+│   │   │   │   ├── adler2-c69e8f51d836e7a2
+│   │   │   │   │   ├── dep-lib-adler2
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-adler2
+│   │   │   │   │   └── lib-adler2.json
+│   │   │   │   ├── ahash-541d740300b40717
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── ahash-7ae2c2cb7cc110bb
+│   │   │   │   │   ├── dep-lib-ahash
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ahash
+│   │   │   │   │   └── lib-ahash.json
+│   │   │   │   ├── aho-corasick-76ce2725576c6dc8
+│   │   │   │   │   ├── dep-lib-aho_corasick
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-aho_corasick
+│   │   │   │   │   └── lib-aho_corasick.json
+│   │   │   │   ├── allocator-api2-8e800ae3f395ef37
+│   │   │   │   │   ├── dep-lib-allocator_api2
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-allocator_api2
+│   │   │   │   │   └── lib-allocator_api2.json
+│   │   │   │   ├── anstream-7a2cefb1394734fd
+│   │   │   │   │   ├── dep-lib-anstream
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-anstream
+│   │   │   │   │   └── lib-anstream.json
+│   │   │   │   ├── anstyle-4fe6c144e4dc329c
+│   │   │   │   │   ├── dep-lib-anstyle
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-anstyle
+│   │   │   │   │   └── lib-anstyle.json
+│   │   │   │   ├── anstyle-parse-6c35340e90fa8b7e
+│   │   │   │   │   ├── dep-lib-anstyle_parse
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-anstyle_parse
+│   │   │   │   │   └── lib-anstyle_parse.json
+│   │   │   │   ├── anstyle-query-a129c43b845b7959
+│   │   │   │   │   ├── dep-lib-anstyle_query
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-anstyle_query
+│   │   │   │   │   └── lib-anstyle_query.json
+│   │   │   │   ├── anyhow-a84eb6aa40f4c211
+│   │   │   │   │   ├── dep-lib-anyhow
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-anyhow
+│   │   │   │   │   └── lib-anyhow.json
+│   │   │   │   ├── anyhow-e834ffcdb8721146
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── atomic-waker-23f1049b2b31554c
+│   │   │   │   │   ├── dep-lib-atomic_waker
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-atomic_waker
+│   │   │   │   │   └── lib-atomic_waker.json
+│   │   │   │   ├── aws-lc-rs-20c85c36faa93e15
+│   │   │   │   │   ├── dep-lib-aws_lc_rs
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-aws_lc_rs
+│   │   │   │   │   └── lib-aws_lc_rs.json
+│   │   │   │   ├── aws-lc-rs-b0fe8315b31c2a8b
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── aws-lc-sys-389f7b0695d44ef0
+│   │   │   │   │   ├── dep-lib-aws_lc_sys
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-aws_lc_sys
+│   │   │   │   │   └── lib-aws_lc_sys.json
+│   │   │   │   ├── aws-lc-sys-b87ed58a53eab021
+│   │   │   │   │   ├── run-build-script-build-script-main
+│   │   │   │   │   └── run-build-script-build-script-main.json
+│   │   │   │   ├── axum-a1d5dea21b423e23
+│   │   │   │   │   ├── dep-lib-axum
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-axum
+│   │   │   │   │   └── lib-axum.json
+│   │   │   │   ├── axum-core-fac91931459cbf6e
+│   │   │   │   │   ├── dep-lib-axum_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-axum_core
+│   │   │   │   │   └── lib-axum_core.json
+│   │   │   │   ├── base64-6f1a94a26a1eadb7
+│   │   │   │   │   ├── dep-lib-base64
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-base64
+│   │   │   │   │   └── lib-base64.json
+│   │   │   │   ├── base64-72faa2b1c394df1d
+│   │   │   │   │   ├── dep-lib-base64
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-base64
+│   │   │   │   │   └── lib-base64.json
+│   │   │   │   ├── base64-a1f2042063b35054
+│   │   │   │   │   ├── dep-lib-base64
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-base64
+│   │   │   │   │   └── lib-base64.json
+│   │   │   │   ├── bit-set-69fedc749b51e14c
+│   │   │   │   │   ├── dep-lib-bit_set
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-bit_set
+│   │   │   │   │   └── lib-bit_set.json
+│   │   │   │   ├── bit-vec-04a8f603a37576a5
+│   │   │   │   │   ├── dep-lib-bit_vec
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-bit_vec
+│   │   │   │   │   └── lib-bit_vec.json
+│   │   │   │   ├── bitflags-8fb935d3838ec33b
+│   │   │   │   │   ├── dep-lib-bitflags
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-bitflags
+│   │   │   │   │   └── lib-bitflags.json
+│   │   │   │   ├── bytemuck-a1e1b5bdb93f874e
+│   │   │   │   │   ├── dep-lib-bytemuck
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-bytemuck
+│   │   │   │   │   └── lib-bytemuck.json
+│   │   │   │   ├── byteorder-cdf2abf5cbb03513
+│   │   │   │   │   ├── dep-lib-byteorder
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-byteorder
+│   │   │   │   │   └── lib-byteorder.json
+│   │   │   │   ├── bytes-b5cffca3d8cfc5c4
+│   │   │   │   │   ├── dep-lib-bytes
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-bytes
+│   │   │   │   │   └── lib-bytes.json
+│   │   │   │   ├── candle-core-6d062a30763e3377
+│   │   │   │   │   ├── dep-lib-candle_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-candle_core
+│   │   │   │   │   └── lib-candle_core.json
+│   │   │   │   ├── candle-nn-fdf2edc8f73726f5
+│   │   │   │   │   ├── dep-lib-candle_nn
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-candle_nn
+│   │   │   │   │   └── lib-candle_nn.json
+│   │   │   │   ├── candle-transformers-cbdf604ab7cdff54
+│   │   │   │   │   ├── dep-lib-candle_transformers
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-candle_transformers
+│   │   │   │   │   └── lib-candle_transformers.json
+│   │   │   │   ├── castaway-c1df667c3cc1c5c2
+│   │   │   │   │   ├── dep-lib-castaway
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-castaway
+│   │   │   │   │   └── lib-castaway.json
+│   │   │   │   ├── cfg-if-a4ab717990f65f0a
+│   │   │   │   │   ├── dep-lib-cfg_if
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-cfg_if
+│   │   │   │   │   └── lib-cfg_if.json
+│   │   │   │   ├── chrono-8ec44333d7625f37
+│   │   │   │   │   ├── dep-lib-chrono
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-chrono
+│   │   │   │   │   └── lib-chrono.json
+│   │   │   │   ├── clap-571122b37bf7d7d4
+│   │   │   │   │   ├── dep-lib-clap
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-clap
+│   │   │   │   │   └── lib-clap.json
+│   │   │   │   ├── clap_builder-7168adef2aa81d0b
+│   │   │   │   │   ├── dep-lib-clap_builder
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-clap_builder
+│   │   │   │   │   └── lib-clap_builder.json
+│   │   │   │   ├── clap_lex-99219e77b8a88e32
+│   │   │   │   │   ├── dep-lib-clap_lex
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-clap_lex
+│   │   │   │   │   └── lib-clap_lex.json
+│   │   │   │   ├── colorchoice-33f2858b141181fe
+│   │   │   │   │   ├── dep-lib-colorchoice
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-colorchoice
+│   │   │   │   │   └── lib-colorchoice.json
+│   │   │   │   ├── compact_str-b662b228dac33b74
+│   │   │   │   │   ├── dep-lib-compact_str
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-compact_str
+│   │   │   │   │   └── lib-compact_str.json
+│   │   │   │   ├── console-162f4497fffe5811
+│   │   │   │   │   ├── dep-lib-console
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-console
+│   │   │   │   │   └── lib-console.json
+│   │   │   │   ├── console-6c4a16fa2d68d395
+│   │   │   │   │   ├── dep-lib-console
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-console
+│   │   │   │   │   └── lib-console.json
+│   │   │   │   ├── core-foundation-1751e5dc55da5d0e
+│   │   │   │   │   ├── dep-lib-core_foundation
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-core_foundation
+│   │   │   │   │   └── lib-core_foundation.json
+│   │   │   │   ├── core-foundation-8fc85f210e6dad0f
+│   │   │   │   │   ├── dep-lib-core_foundation
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-core_foundation
+│   │   │   │   │   └── lib-core_foundation.json
+│   │   │   │   ├── core-foundation-sys-1efb3f431d6ce991
+│   │   │   │   │   ├── dep-lib-core_foundation_sys
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-core_foundation_sys
+│   │   │   │   │   └── lib-core_foundation_sys.json
+│   │   │   │   ├── crc32fast-5280fa6278877f19
+│   │   │   │   │   ├── dep-lib-crc32fast
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-crc32fast
+│   │   │   │   │   └── lib-crc32fast.json
+│   │   │   │   ├── crc32fast-6991c42383ad97b1
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── critical-section-8d6167a370117e58
+│   │   │   │   │   ├── dep-lib-critical_section
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-critical_section
+│   │   │   │   │   └── lib-critical_section.json
+│   │   │   │   ├── crossbeam-deque-6b08ee099afd85b6
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── crossbeam-deque-c7e08fa2820af314
+│   │   │   │   │   ├── dep-lib-crossbeam_deque
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-crossbeam_deque
+│   │   │   │   │   └── lib-crossbeam_deque.json
+│   │   │   │   ├── crossbeam-epoch-14bd1951ac1027d1
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── crossbeam-epoch-dc28283341223ebd
+│   │   │   │   │   ├── dep-lib-crossbeam_epoch
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-crossbeam_epoch
+│   │   │   │   │   └── lib-crossbeam_epoch.json
+│   │   │   │   ├── crossbeam-utils-74019bd7cd4ae3de
+│   │   │   │   │   ├── dep-lib-crossbeam_utils
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-crossbeam_utils
+│   │   │   │   │   └── lib-crossbeam_utils.json
+│   │   │   │   ├── crossbeam-utils-e1893b452c9dd3b4
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── crossterm-37cb5a8bea78de85
+│   │   │   │   │   ├── dep-lib-crossterm
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-crossterm
+│   │   │   │   │   └── lib-crossterm.json
+│   │   │   │   ├── daachorse-d4b60656789f324e
+│   │   │   │   │   ├── dep-lib-daachorse
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-daachorse
+│   │   │   │   │   └── lib-daachorse.json
+│   │   │   │   ├── dary_heap-c3add200283b119f
+│   │   │   │   │   ├── dep-lib-dary_heap
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-dary_heap
+│   │   │   │   │   └── lib-dary_heap.json
+│   │   │   │   ├── deranged-8b8ec96f8578e78b
+│   │   │   │   │   ├── dep-lib-deranged
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-deranged
+│   │   │   │   │   └── lib-deranged.json
+│   │   │   │   ├── derive_builder-b663cc16b21e56ce
+│   │   │   │   │   ├── dep-lib-derive_builder
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-derive_builder
+│   │   │   │   │   └── lib-derive_builder.json
+│   │   │   │   ├── derive_more-7679fda081e9be8c
+│   │   │   │   │   ├── dep-lib-derive_more
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-derive_more
+│   │   │   │   │   └── lib-derive_more.json
+│   │   │   │   ├── dirs-fcb4aaa6cf941926
+│   │   │   │   │   ├── dep-lib-dirs
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-dirs
+│   │   │   │   │   └── lib-dirs.json
+│   │   │   │   ├── dirs-sys-0a67f02460daecb2
+│   │   │   │   │   ├── dep-lib-dirs_sys
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-dirs_sys
+│   │   │   │   │   └── lib-dirs_sys.json
+│   │   │   │   ├── dyn-stack-f410557290c2391a
+│   │   │   │   │   ├── dep-lib-dyn_stack
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-dyn_stack
+│   │   │   │   │   └── lib-dyn_stack.json
+│   │   │   │   ├── either-0a652f168252ac52
+│   │   │   │   │   ├── dep-lib-either
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-either
+│   │   │   │   │   └── lib-either.json
+│   │   │   │   ├── encoding_rs-352ce1b59af943cb
+│   │   │   │   │   ├── dep-lib-encoding_rs
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-encoding_rs
+│   │   │   │   │   └── lib-encoding_rs.json
+│   │   │   │   ├── equivalent-5fa0c2280d1e14c2
+│   │   │   │   │   ├── dep-lib-equivalent
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-equivalent
+│   │   │   │   │   └── lib-equivalent.json
+│   │   │   │   ├── errno-417f14e23875695a
+│   │   │   │   │   ├── dep-lib-errno
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-errno
+│   │   │   │   │   └── lib-errno.json
+│   │   │   │   ├── esaxx-rs-01cb5459843110b6
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── esaxx-rs-8bc7290ddcfa1e7e
+│   │   │   │   │   ├── dep-lib-esaxx_rs
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-esaxx_rs
+│   │   │   │   │   └── lib-esaxx_rs.json
+│   │   │   │   ├── exp1-agent-9d865b0744ec34d6
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   └── output-bin-exp1-agent
+│   │   │   │   ├── fancy-regex-76bcff3e601a50a0
+│   │   │   │   │   ├── dep-lib-fancy_regex
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-fancy_regex
+│   │   │   │   │   └── lib-fancy_regex.json
+│   │   │   │   ├── fastrand-9bcf1b2e41739ac4
+│   │   │   │   │   ├── dep-lib-fastrand
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-fastrand
+│   │   │   │   │   └── lib-fastrand.json
+│   │   │   │   ├── flate2-21ed5c6e8c82679f
+│   │   │   │   │   ├── dep-lib-flate2
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-flate2
+│   │   │   │   │   └── lib-flate2.json
+│   │   │   │   ├── float8-34dc44bb5570abc1
+│   │   │   │   │   ├── dep-lib-float8
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-float8
+│   │   │   │   │   └── lib-float8.json
+│   │   │   │   ├── fnv-48ebd1784a253bc6
+│   │   │   │   │   ├── dep-lib-fnv
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-fnv
+│   │   │   │   │   └── lib-fnv.json
+│   │   │   │   ├── foldhash-34046733bfa00720
+│   │   │   │   │   ├── dep-lib-foldhash
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-foldhash
+│   │   │   │   │   └── lib-foldhash.json
+│   │   │   │   ├── foldhash-fc0f2dea285fd98b
+│   │   │   │   │   ├── dep-lib-foldhash
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-foldhash
+│   │   │   │   │   └── lib-foldhash.json
+│   │   │   │   ├── form_urlencoded-0c9d6af4bd76bfc8
+│   │   │   │   │   ├── dep-lib-form_urlencoded
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-form_urlencoded
+│   │   │   │   │   └── lib-form_urlencoded.json
+│   │   │   │   ├── futures-5d556073b5e1af65
+│   │   │   │   │   ├── dep-lib-futures
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures
+│   │   │   │   │   └── lib-futures.json
+│   │   │   │   ├── futures-channel-92053c216a431577
+│   │   │   │   │   ├── dep-lib-futures_channel
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures_channel
+│   │   │   │   │   └── lib-futures_channel.json
+│   │   │   │   ├── futures-core-a15ae9249e48ca7f
+│   │   │   │   │   ├── dep-lib-futures_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures_core
+│   │   │   │   │   └── lib-futures_core.json
+│   │   │   │   ├── futures-executor-7501a527d5af4958
+│   │   │   │   │   ├── dep-lib-futures_executor
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures_executor
+│   │   │   │   │   └── lib-futures_executor.json
+│   │   │   │   ├── futures-io-5a21302c17fda65b
+│   │   │   │   │   ├── dep-lib-futures_io
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures_io
+│   │   │   │   │   └── lib-futures_io.json
+│   │   │   │   ├── futures-sink-a2ad3dc70c5894bd
+│   │   │   │   │   ├── dep-lib-futures_sink
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures_sink
+│   │   │   │   │   └── lib-futures_sink.json
+│   │   │   │   ├── futures-task-018f992de2659751
+│   │   │   │   │   ├── dep-lib-futures_task
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures_task
+│   │   │   │   │   └── lib-futures_task.json
+│   │   │   │   ├── futures-util-f6737cd3d33c7481
+│   │   │   │   │   ├── dep-lib-futures_util
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-futures_util
+│   │   │   │   │   └── lib-futures_util.json
+│   │   │   │   ├── gemm-4dbf5f19cdfefda2
+│   │   │   │   │   ├── dep-lib-gemm
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-gemm
+│   │   │   │   │   └── lib-gemm.json
+│   │   │   │   ├── gemm-c32-b95dab97d1655d32
+│   │   │   │   │   ├── dep-lib-gemm_c32
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-gemm_c32
+│   │   │   │   │   └── lib-gemm_c32.json
+│   │   │   │   ├── gemm-c64-cad922939c163f23
+│   │   │   │   │   ├── dep-lib-gemm_c64
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-gemm_c64
+│   │   │   │   │   └── lib-gemm_c64.json
+│   │   │   │   ├── gemm-common-f076163eb328c7a2
+│   │   │   │   │   ├── dep-lib-gemm_common
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-gemm_common
+│   │   │   │   │   └── lib-gemm_common.json
+│   │   │   │   ├── gemm-f16-83ddbeb3ce7841ee
+│   │   │   │   │   ├── dep-lib-gemm_f16
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-gemm_f16
+│   │   │   │   │   └── lib-gemm_f16.json
+│   │   │   │   ├── gemm-f32-7157c2efd58c44fb
+│   │   │   │   │   ├── dep-lib-gemm_f32
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-gemm_f32
+│   │   │   │   │   └── lib-gemm_f32.json
+│   │   │   │   ├── gemm-f64-0f2752f6b75f1c95
+│   │   │   │   │   ├── dep-lib-gemm_f64
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-gemm_f64
+│   │   │   │   │   └── lib-gemm_f64.json
+│   │   │   │   ├── getrandom-324128d111b75cdd
+│   │   │   │   │   ├── dep-lib-getrandom
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-getrandom
+│   │   │   │   │   └── lib-getrandom.json
+│   │   │   │   ├── getrandom-3589e3033f5b0392
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── getrandom-aa4357241b2bf882
+│   │   │   │   │   ├── dep-lib-getrandom
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-getrandom
+│   │   │   │   │   └── lib-getrandom.json
+│   │   │   │   ├── getrandom-b358fdb36b8790e4
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── getrandom-bef8b6d6930e00b0
+│   │   │   │   │   ├── dep-lib-getrandom
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-getrandom
+│   │   │   │   │   └── lib-getrandom.json
+│   │   │   │   ├── h2-4f43fba6e47fb775
+│   │   │   │   │   ├── dep-lib-h2
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-h2
+│   │   │   │   │   └── lib-h2.json
+│   │   │   │   ├── half-741da422e55cc94e
+│   │   │   │   │   ├── dep-lib-half
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-half
+│   │   │   │   │   └── lib-half.json
+│   │   │   │   ├── hashbrown-45dc676a88d917ba
+│   │   │   │   │   ├── dep-lib-hashbrown
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hashbrown
+│   │   │   │   │   └── lib-hashbrown.json
+│   │   │   │   ├── hashbrown-b34fa41ea2dd1757
+│   │   │   │   │   ├── dep-lib-hashbrown
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hashbrown
+│   │   │   │   │   └── lib-hashbrown.json
+│   │   │   │   ├── hashbrown-ff07cb327ffa373b
+│   │   │   │   │   ├── dep-lib-hashbrown
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hashbrown
+│   │   │   │   │   └── lib-hashbrown.json
+│   │   │   │   ├── hf-hub-8ace2521a42ea291
+│   │   │   │   │   ├── dep-lib-hf_hub
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hf_hub
+│   │   │   │   │   └── lib-hf_hub.json
+│   │   │   │   ├── http-67117bceec5aae54
+│   │   │   │   │   ├── dep-lib-http
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-http
+│   │   │   │   │   └── lib-http.json
+│   │   │   │   ├── http-body-332cc1a2020f70a6
+│   │   │   │   │   ├── dep-lib-http_body
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-http_body
+│   │   │   │   │   └── lib-http_body.json
+│   │   │   │   ├── http-body-util-5ec2a0f51f9986ac
+│   │   │   │   │   ├── dep-lib-http_body_util
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-http_body_util
+│   │   │   │   │   └── lib-http_body_util.json
+│   │   │   │   ├── httparse-6870049b575af827
+│   │   │   │   │   ├── dep-lib-httparse
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-httparse
+│   │   │   │   │   └── lib-httparse.json
+│   │   │   │   ├── httparse-c4e7fe180ad27221
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── httpdate-50f6ecc8441da753
+│   │   │   │   │   ├── dep-lib-httpdate
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-httpdate
+│   │   │   │   │   └── lib-httpdate.json
+│   │   │   │   ├── hyper-f156c247ce6a6218
+│   │   │   │   │   ├── dep-lib-hyper
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hyper
+│   │   │   │   │   └── lib-hyper.json
+│   │   │   │   ├── hyper-rustls-db316d0a12868d4a
+│   │   │   │   │   ├── dep-lib-hyper_rustls
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hyper_rustls
+│   │   │   │   │   └── lib-hyper_rustls.json
+│   │   │   │   ├── hyper-tls-58c5802474458276
+│   │   │   │   │   ├── dep-lib-hyper_tls
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hyper_tls
+│   │   │   │   │   └── lib-hyper_tls.json
+│   │   │   │   ├── hyper-util-3fe8cb23e33f43a7
+│   │   │   │   │   ├── dep-lib-hyper_util
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-hyper_util
+│   │   │   │   │   └── lib-hyper_util.json
+│   │   │   │   ├── iana-time-zone-5299c4bafa2aa0a4
+│   │   │   │   │   ├── dep-lib-iana_time_zone
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-iana_time_zone
+│   │   │   │   │   └── lib-iana_time_zone.json
+│   │   │   │   ├── icu_collections-9ed72cdbde916a72
+│   │   │   │   │   ├── dep-lib-icu_collections
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-icu_collections
+│   │   │   │   │   └── lib-icu_collections.json
+│   │   │   │   ├── icu_locale_core-40b48d0ceaad9a15
+│   │   │   │   │   ├── dep-lib-icu_locale_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-icu_locale_core
+│   │   │   │   │   └── lib-icu_locale_core.json
+│   │   │   │   ├── icu_normalizer-65c6ccaedc295374
+│   │   │   │   │   ├── dep-lib-icu_normalizer
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-icu_normalizer
+│   │   │   │   │   └── lib-icu_normalizer.json
+│   │   │   │   ├── icu_normalizer_data-8968ae949e016057
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── icu_normalizer_data-b11b5a981bde0ac4
+│   │   │   │   │   ├── dep-lib-icu_normalizer_data
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-icu_normalizer_data
+│   │   │   │   │   └── lib-icu_normalizer_data.json
+│   │   │   │   ├── icu_properties-ee69a0cb6cb99022
+│   │   │   │   │   ├── dep-lib-icu_properties
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-icu_properties
+│   │   │   │   │   └── lib-icu_properties.json
+│   │   │   │   ├── icu_properties_data-9bf63f6c09cadf00
+│   │   │   │   │   ├── dep-lib-icu_properties_data
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-icu_properties_data
+│   │   │   │   │   └── lib-icu_properties_data.json
+│   │   │   │   ├── icu_properties_data-d0a66d864016a6bc
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── icu_provider-611dcc9d5be574c7
+│   │   │   │   │   ├── dep-lib-icu_provider
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-icu_provider
+│   │   │   │   │   └── lib-icu_provider.json
+│   │   │   │   ├── idna-45e7bb4932551daf
+│   │   │   │   │   ├── dep-lib-idna
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-idna
+│   │   │   │   │   └── lib-idna.json
+│   │   │   │   ├── idna_adapter-def6f365c4bf7dd3
+│   │   │   │   │   ├── dep-lib-idna_adapter
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-idna_adapter
+│   │   │   │   │   └── lib-idna_adapter.json
+│   │   │   │   ├── indexmap-e59376c99c370663
+│   │   │   │   │   ├── dep-lib-indexmap
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-indexmap
+│   │   │   │   │   └── lib-indexmap.json
+│   │   │   │   ├── indicatif-566427d78d08ecc6
+│   │   │   │   │   ├── dep-lib-indicatif
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-indicatif
+│   │   │   │   │   └── lib-indicatif.json
+│   │   │   │   ├── indicatif-99d8b5b6a4c96311
+│   │   │   │   │   ├── dep-lib-indicatif
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-indicatif
+│   │   │   │   │   └── lib-indicatif.json
+│   │   │   │   ├── ipnet-d440e13b0e9b0e3f
+│   │   │   │   │   ├── dep-lib-ipnet
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ipnet
+│   │   │   │   │   └── lib-ipnet.json
+│   │   │   │   ├── is_terminal_polyfill-98f0c3bbdbeeceaa
+│   │   │   │   │   ├── dep-lib-is_terminal_polyfill
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-is_terminal_polyfill
+│   │   │   │   │   └── lib-is_terminal_polyfill.json
+│   │   │   │   ├── itertools-20bc4ec376852148
+│   │   │   │   │   ├── dep-lib-itertools
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-itertools
+│   │   │   │   │   └── lib-itertools.json
+│   │   │   │   ├── itoa-331096955ae5a005
+│   │   │   │   │   ├── dep-lib-itoa
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-itoa
+│   │   │   │   │   └── lib-itoa.json
+│   │   │   │   ├── kasuari-b93aceb1b81082f1
+│   │   │   │   │   ├── dep-lib-kasuari
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-kasuari
+│   │   │   │   │   └── lib-kasuari.json
+│   │   │   │   ├── libc-01c4b2760337c21d
+│   │   │   │   │   ├── dep-lib-libc
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-libc
+│   │   │   │   │   └── lib-libc.json
+│   │   │   │   ├── libc-4138830e534423eb
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── libm-c3a050dcdcedc21d
+│   │   │   │   │   ├── dep-lib-libm
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-libm
+│   │   │   │   │   └── lib-libm.json
+│   │   │   │   ├── libm-cf8b0ca73da78f21
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── line-clipping-83f7d957afab406e
+│   │   │   │   │   ├── dep-lib-line_clipping
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-line_clipping
+│   │   │   │   │   └── lib-line_clipping.json
+│   │   │   │   ├── litemap-ac6979467ad778b7
+│   │   │   │   │   ├── dep-lib-litemap
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-litemap
+│   │   │   │   │   └── lib-litemap.json
+│   │   │   │   ├── lock_api-3b8be3436d50b6bf
+│   │   │   │   │   ├── dep-lib-lock_api
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-lock_api
+│   │   │   │   │   └── lib-lock_api.json
+│   │   │   │   ├── log-379e2f7afcdb7b50
+│   │   │   │   │   ├── dep-lib-log
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-log
+│   │   │   │   │   └── lib-log.json
+│   │   │   │   ├── lru-0185399d15f82fa5
+│   │   │   │   │   ├── dep-lib-lru
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-lru
+│   │   │   │   │   └── lib-lru.json
+│   │   │   │   ├── macro_rules_attribute-0b3572a0bdc4418e
+│   │   │   │   │   ├── dep-lib-macro_rules_attribute
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-macro_rules_attribute
+│   │   │   │   │   └── lib-macro_rules_attribute.json
+│   │   │   │   ├── matchit-182a19678e9a45ca
+│   │   │   │   │   ├── dep-lib-matchit
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-matchit
+│   │   │   │   │   └── lib-matchit.json
+│   │   │   │   ├── memchr-85e10833ff043d15
+│   │   │   │   │   ├── dep-lib-memchr
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-memchr
+│   │   │   │   │   └── lib-memchr.json
+│   │   │   │   ├── memmap2-a5fd115ca7adbcb7
+│   │   │   │   │   ├── dep-lib-memmap2
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-memmap2
+│   │   │   │   │   └── lib-memmap2.json
+│   │   │   │   ├── mime-629c4f53fc4daeb9
+│   │   │   │   │   ├── dep-lib-mime
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-mime
+│   │   │   │   │   └── lib-mime.json
+│   │   │   │   ├── minimal-lexical-0a6e0d6999519c18
+│   │   │   │   │   ├── dep-lib-minimal_lexical
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-minimal_lexical
+│   │   │   │   │   └── lib-minimal_lexical.json
+│   │   │   │   ├── miniz_oxide-b7e75328f8d1645b
+│   │   │   │   │   ├── dep-lib-miniz_oxide
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-miniz_oxide
+│   │   │   │   │   └── lib-miniz_oxide.json
+│   │   │   │   ├── mio-d62d713b6ca2a39b
+│   │   │   │   │   ├── dep-lib-mio
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-mio
+│   │   │   │   │   └── lib-mio.json
+│   │   │   │   ├── monostate-1adbedf184fac442
+│   │   │   │   │   ├── dep-lib-monostate
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-monostate
+│   │   │   │   │   └── lib-monostate.json
+│   │   │   │   ├── native-tls-302ee5894131bc3d
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── native-tls-6ac9ed509b957edf
+│   │   │   │   │   ├── dep-lib-native_tls
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-native_tls
+│   │   │   │   │   └── lib-native_tls.json
+│   │   │   │   ├── nom-671f4e304802a780
+│   │   │   │   │   ├── dep-lib-nom
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-nom
+│   │   │   │   │   └── lib-nom.json
+│   │   │   │   ├── num-complex-8f14da8b4e476770
+│   │   │   │   │   ├── dep-lib-num_complex
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-num_complex
+│   │   │   │   │   └── lib-num_complex.json
+│   │   │   │   ├── num-conv-0297a2567506938c
+│   │   │   │   │   ├── dep-lib-num_conv
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-num_conv
+│   │   │   │   │   └── lib-num_conv.json
+│   │   │   │   ├── num-traits-281c8c114b631c4b
+│   │   │   │   │   ├── dep-lib-num_traits
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-num_traits
+│   │   │   │   │   └── lib-num_traits.json
+│   │   │   │   ├── num-traits-57664d1bddf47954
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── num_cpus-3b1505900555d8b0
+│   │   │   │   │   ├── dep-lib-num_cpus
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-num_cpus
+│   │   │   │   │   └── lib-num_cpus.json
+│   │   │   │   ├── num_threads-dc3eb4538449c941
+│   │   │   │   │   ├── dep-lib-num_threads
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-num_threads
+│   │   │   │   │   └── lib-num_threads.json
+│   │   │   │   ├── number_prefix-f00aa4a0e6a8c56d
+│   │   │   │   │   ├── dep-lib-number_prefix
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-number_prefix
+│   │   │   │   │   └── lib-number_prefix.json
+│   │   │   │   ├── once_cell-884c17113ed40c9f
+│   │   │   │   │   ├── dep-lib-once_cell
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-once_cell
+│   │   │   │   │   └── lib-once_cell.json
+│   │   │   │   ├── onig-bc815eb07972698a
+│   │   │   │   │   ├── dep-lib-onig
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-onig
+│   │   │   │   │   └── lib-onig.json
+│   │   │   │   ├── onig_sys-3f61b38d703d9e90
+│   │   │   │   │   ├── dep-lib-onig_sys
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-onig_sys
+│   │   │   │   │   └── lib-onig_sys.json
+│   │   │   │   ├── onig_sys-87aba66f4d983d0a
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── option-ext-aa4f77bc72907b53
+│   │   │   │   │   ├── dep-lib-option_ext
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-option_ext
+│   │   │   │   │   └── lib-option_ext.json
+│   │   │   │   ├── parking_lot-392696c936fd4704
+│   │   │   │   │   ├── dep-lib-parking_lot
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-parking_lot
+│   │   │   │   │   └── lib-parking_lot.json
+│   │   │   │   ├── parking_lot_core-4f7b2d13aa3def85
+│   │   │   │   │   ├── dep-lib-parking_lot_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-parking_lot_core
+│   │   │   │   │   └── lib-parking_lot_core.json
+│   │   │   │   ├── parking_lot_core-7302c83785b85906
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── percent-encoding-8e8ec3cbf5ed2b97
+│   │   │   │   │   ├── dep-lib-percent_encoding
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-percent_encoding
+│   │   │   │   │   └── lib-percent_encoding.json
+│   │   │   │   ├── pin-project-lite-a4278d84b119ae23
+│   │   │   │   │   ├── dep-lib-pin_project_lite
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-pin_project_lite
+│   │   │   │   │   └── lib-pin_project_lite.json
+│   │   │   │   ├── portable-atomic-b1ddd95ffd0715a7
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── portable-atomic-cb157b672abdea35
+│   │   │   │   │   ├── dep-lib-portable_atomic
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-portable_atomic
+│   │   │   │   │   └── lib-portable_atomic.json
+│   │   │   │   ├── potential_utf-71deedaa3a995871
+│   │   │   │   │   ├── dep-lib-potential_utf
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-potential_utf
+│   │   │   │   │   └── lib-potential_utf.json
+│   │   │   │   ├── powerfmt-ea4fe19f106e6284
+│   │   │   │   │   ├── dep-lib-powerfmt
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-powerfmt
+│   │   │   │   │   └── lib-powerfmt.json
+│   │   │   │   ├── ppv-lite86-95030ec219f4e053
+│   │   │   │   │   ├── dep-lib-ppv_lite86
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ppv_lite86
+│   │   │   │   │   └── lib-ppv_lite86.json
+│   │   │   │   ├── pulp-2104977042be801a
+│   │   │   │   │   ├── dep-lib-pulp
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-pulp
+│   │   │   │   │   └── lib-pulp.json
+│   │   │   │   ├── pulp-3f62d1d4c7b638f1
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── pulp-wasm-simd-flag-47e18d49b002f2e9
+│   │   │   │   │   ├── dep-lib-pulp_wasm_simd_flag
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-pulp_wasm_simd_flag
+│   │   │   │   │   └── lib-pulp_wasm_simd_flag.json
+│   │   │   │   ├── rand-86fc387ea03ba56d
+│   │   │   │   │   ├── dep-lib-rand
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rand
+│   │   │   │   │   └── lib-rand.json
+│   │   │   │   ├── rand_chacha-3ad461c03de2b009
+│   │   │   │   │   ├── dep-lib-rand_chacha
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rand_chacha
+│   │   │   │   │   └── lib-rand_chacha.json
+│   │   │   │   ├── rand_core-0909f7cac298351d
+│   │   │   │   │   ├── dep-lib-rand_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rand_core
+│   │   │   │   │   └── lib-rand_core.json
+│   │   │   │   ├── rand_distr-8c70e5ee222ed6a5
+│   │   │   │   │   ├── dep-lib-rand_distr
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rand_distr
+│   │   │   │   │   └── lib-rand_distr.json
+│   │   │   │   ├── ratatui-910094b665a85b3f
+│   │   │   │   │   ├── dep-lib-ratatui
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ratatui
+│   │   │   │   │   └── lib-ratatui.json
+│   │   │   │   ├── ratatui-core-cca894fb15986bc7
+│   │   │   │   │   ├── dep-lib-ratatui_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ratatui_core
+│   │   │   │   │   └── lib-ratatui_core.json
+│   │   │   │   ├── ratatui-crossterm-8ebe99ac3053b322
+│   │   │   │   │   ├── dep-lib-ratatui_crossterm
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ratatui_crossterm
+│   │   │   │   │   └── lib-ratatui_crossterm.json
+│   │   │   │   ├── ratatui-macros-7229ba352c26ed99
+│   │   │   │   │   ├── dep-lib-ratatui_macros
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ratatui_macros
+│   │   │   │   │   └── lib-ratatui_macros.json
+│   │   │   │   ├── ratatui-widgets-737a4ddc1129b5db
+│   │   │   │   │   ├── dep-lib-ratatui_widgets
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ratatui_widgets
+│   │   │   │   │   └── lib-ratatui_widgets.json
+│   │   │   │   ├── raw-cpuid-80094ce119ad23c4
+│   │   │   │   │   ├── dep-lib-raw_cpuid
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-raw_cpuid
+│   │   │   │   │   └── lib-raw_cpuid.json
+│   │   │   │   ├── rayon-673990584aa87a58
+│   │   │   │   │   ├── dep-lib-rayon
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rayon
+│   │   │   │   │   └── lib-rayon.json
+│   │   │   │   ├── rayon-cond-bd05cb9b9f642f21
+│   │   │   │   │   ├── dep-lib-rayon_cond
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rayon_cond
+│   │   │   │   │   └── lib-rayon_cond.json
+│   │   │   │   ├── rayon-core-a06a25238d0aa4b6
+│   │   │   │   │   ├── dep-lib-rayon_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rayon_core
+│   │   │   │   │   └── lib-rayon_core.json
+│   │   │   │   ├── rayon-core-acefb14be5f165d3
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── reborrow-f08170e72d27c226
+│   │   │   │   │   ├── dep-lib-reborrow
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-reborrow
+│   │   │   │   │   └── lib-reborrow.json
+│   │   │   │   ├── regex-automata-4b7ed63f2b4e9b4c
+│   │   │   │   │   ├── dep-lib-regex_automata
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-regex_automata
+│   │   │   │   │   └── lib-regex_automata.json
+│   │   │   │   ├── regex-b472754ff4eb209f
+│   │   │   │   │   ├── dep-lib-regex
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-regex
+│   │   │   │   │   └── lib-regex.json
+│   │   │   │   ├── regex-syntax-3390591eb47045c0
+│   │   │   │   │   ├── dep-lib-regex_syntax
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-regex_syntax
+│   │   │   │   │   └── lib-regex_syntax.json
+│   │   │   │   ├── reqwest-0ffc87a18de00564
+│   │   │   │   │   ├── dep-lib-reqwest
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-reqwest
+│   │   │   │   │   └── lib-reqwest.json
+│   │   │   │   ├── reqwest-73a84cfc01292469
+│   │   │   │   │   ├── dep-lib-reqwest
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-reqwest
+│   │   │   │   │   └── lib-reqwest.json
+│   │   │   │   ├── ring-608a3558dff127de
+│   │   │   │   │   ├── dep-lib-ring
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ring
+│   │   │   │   │   └── lib-ring.json
+│   │   │   │   ├── ring-c8bd474e23dfbf85
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── rustix-104282610ec5ba96
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── rustix-29bfee1c9da19b6c
+│   │   │   │   │   ├── dep-lib-rustix
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rustix
+│   │   │   │   │   └── lib-rustix.json
+│   │   │   │   ├── rustls-6d3190c1c5dacf25
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── rustls-7bd2bac44a3663ba
+│   │   │   │   │   ├── dep-lib-rustls
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rustls
+│   │   │   │   │   └── lib-rustls.json
+│   │   │   │   ├── rustls-pki-types-14dec476e6a27eaf
+│   │   │   │   │   ├── dep-lib-rustls_pki_types
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rustls_pki_types
+│   │   │   │   │   └── lib-rustls_pki_types.json
+│   │   │   │   ├── rustls-platform-verifier-78da2989a3c0d2d1
+│   │   │   │   │   ├── dep-lib-rustls_platform_verifier
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-rustls_platform_verifier
+│   │   │   │   │   └── lib-rustls_platform_verifier.json
+│   │   │   │   ├── rustls-webpki-06745399983bb8ae
+│   │   │   │   │   ├── dep-lib-webpki
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-webpki
+│   │   │   │   │   └── lib-webpki.json
+│   │   │   │   ├── ryu-4811e97f69a350b8
+│   │   │   │   │   ├── dep-lib-ryu
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ryu
+│   │   │   │   │   └── lib-ryu.json
+│   │   │   │   ├── safetensors-5c0a251c55653d20
+│   │   │   │   │   ├── dep-lib-safetensors
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-safetensors
+│   │   │   │   │   └── lib-safetensors.json
+│   │   │   │   ├── scopeguard-3e4fe1963cf9edbb
+│   │   │   │   │   ├── dep-lib-scopeguard
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-scopeguard
+│   │   │   │   │   └── lib-scopeguard.json
+│   │   │   │   ├── security-framework-7ff41341d0e1dd52
+│   │   │   │   │   ├── dep-lib-security_framework
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-security_framework
+│   │   │   │   │   └── lib-security_framework.json
+│   │   │   │   ├── security-framework-sys-228d5842f95947e1
+│   │   │   │   │   ├── dep-lib-security_framework_sys
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-security_framework_sys
+│   │   │   │   │   └── lib-security_framework_sys.json
+│   │   │   │   ├── serde-67be1dd83784a189
+│   │   │   │   │   ├── dep-lib-serde
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-serde
+│   │   │   │   │   └── lib-serde.json
+│   │   │   │   ├── serde-a145d01e3ece2458
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── serde_core-86c648c07b3275f4
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── serde_core-8c020a5a11a26141
+│   │   │   │   │   ├── dep-lib-serde_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-serde_core
+│   │   │   │   │   └── lib-serde_core.json
+│   │   │   │   ├── serde_json-1884cc45df262336
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── serde_json-21f8a86e3453d474
+│   │   │   │   │   ├── dep-lib-serde_json
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-serde_json
+│   │   │   │   │   └── lib-serde_json.json
+│   │   │   │   ├── serde_path_to_error-6371413024d2cfc2
+│   │   │   │   │   ├── dep-lib-serde_path_to_error
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-serde_path_to_error
+│   │   │   │   │   └── lib-serde_path_to_error.json
+│   │   │   │   ├── serde_plain-23f5ad861ef5a5f4
+│   │   │   │   │   ├── dep-lib-serde_plain
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-serde_plain
+│   │   │   │   │   └── lib-serde_plain.json
+│   │   │   │   ├── serde_urlencoded-0f7961f34b5aac18
+│   │   │   │   │   ├── dep-lib-serde_urlencoded
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-serde_urlencoded
+│   │   │   │   │   └── lib-serde_urlencoded.json
+│   │   │   │   ├── signal-hook-8e13c81efd196e62
+│   │   │   │   │   ├── dep-lib-signal_hook
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-signal_hook
+│   │   │   │   │   └── lib-signal_hook.json
+│   │   │   │   ├── signal-hook-c88546a4586a063c
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── signal-hook-mio-f8278aff0b4ec782
+│   │   │   │   │   ├── dep-lib-signal_hook_mio
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-signal_hook_mio
+│   │   │   │   │   └── lib-signal_hook_mio.json
+│   │   │   │   ├── signal-hook-registry-35f868e4349906bf
+│   │   │   │   │   ├── dep-lib-signal_hook_registry
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-signal_hook_registry
+│   │   │   │   │   └── lib-signal_hook_registry.json
+│   │   │   │   ├── simd-adler32-f2d6981d9fd577e2
+│   │   │   │   │   ├── dep-lib-simd_adler32
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-simd_adler32
+│   │   │   │   │   └── lib-simd_adler32.json
+│   │   │   │   ├── slab-d53d53e36d34ad9f
+│   │   │   │   │   ├── dep-lib-slab
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-slab
+│   │   │   │   │   └── lib-slab.json
+│   │   │   │   ├── smallvec-48bc69bf90ac0c78
+│   │   │   │   │   ├── dep-lib-smallvec
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-smallvec
+│   │   │   │   │   └── lib-smallvec.json
+│   │   │   │   ├── socket2-83463f189f275d84
+│   │   │   │   │   ├── dep-lib-socket2
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-socket2
+│   │   │   │   │   └── lib-socket2.json
+│   │   │   │   ├── socks-060c0639173298d6
+│   │   │   │   │   ├── dep-lib-socks
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-socks
+│   │   │   │   │   └── lib-socks.json
+│   │   │   │   ├── spm_precompiled-b2e876ec9a5dafc1
+│   │   │   │   │   ├── dep-lib-spm_precompiled
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-spm_precompiled
+│   │   │   │   │   └── lib-spm_precompiled.json
+│   │   │   │   ├── stable_deref_trait-06afff7e53341a73
+│   │   │   │   │   ├── dep-lib-stable_deref_trait
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-stable_deref_trait
+│   │   │   │   │   └── lib-stable_deref_trait.json
+│   │   │   │   ├── static_assertions-278cf91b0187e095
+│   │   │   │   │   ├── dep-lib-static_assertions
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-static_assertions
+│   │   │   │   │   └── lib-static_assertions.json
+│   │   │   │   ├── strsim-fad4cc4fef871b6f
+│   │   │   │   │   ├── dep-lib-strsim
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-strsim
+│   │   │   │   │   └── lib-strsim.json
+│   │   │   │   ├── strum-47783918e8e34505
+│   │   │   │   │   ├── dep-lib-strum
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-strum
+│   │   │   │   │   └── lib-strum.json
+│   │   │   │   ├── subtle-3265e79b42def81a
+│   │   │   │   │   ├── dep-lib-subtle
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-subtle
+│   │   │   │   │   └── lib-subtle.json
+│   │   │   │   ├── sync_wrapper-56520fa572a61fb7
+│   │   │   │   │   ├── dep-lib-sync_wrapper
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-sync_wrapper
+│   │   │   │   │   └── lib-sync_wrapper.json
+│   │   │   │   ├── sysctl-100ae16d663532b8
+│   │   │   │   │   ├── dep-lib-sysctl
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-sysctl
+│   │   │   │   │   └── lib-sysctl.json
+│   │   │   │   ├── system-configuration-b1edca3bca2cabca
+│   │   │   │   │   ├── dep-lib-system_configuration
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-system_configuration
+│   │   │   │   │   └── lib-system_configuration.json
+│   │   │   │   ├── system-configuration-sys-d7cc9922293c67f9
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── system-configuration-sys-e40e5e40c3e08a87
+│   │   │   │   │   ├── dep-lib-system_configuration_sys
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-system_configuration_sys
+│   │   │   │   │   └── lib-system_configuration_sys.json
+│   │   │   │   ├── tempfile-82e4c3885cb3a552
+│   │   │   │   │   ├── dep-lib-tempfile
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tempfile
+│   │   │   │   │   └── lib-tempfile.json
+│   │   │   │   ├── thiserror-033b971dac1f4b8f
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── thiserror-65e88290234d47e8
+│   │   │   │   │   ├── dep-lib-thiserror
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-thiserror
+│   │   │   │   │   └── lib-thiserror.json
+│   │   │   │   ├── thiserror-be8bd21ac976212b
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── thiserror-c79f9798f1278cb6
+│   │   │   │   │   ├── dep-lib-thiserror
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-thiserror
+│   │   │   │   │   └── lib-thiserror.json
+│   │   │   │   ├── time-777046d740c77cc9
+│   │   │   │   │   ├── dep-lib-time
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-time
+│   │   │   │   │   └── lib-time.json
+│   │   │   │   ├── time-core-717ef05a798946fb
+│   │   │   │   │   ├── dep-lib-time_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-time_core
+│   │   │   │   │   └── lib-time_core.json
+│   │   │   │   ├── tinystr-74b3fa43ca3cf8f3
+│   │   │   │   │   ├── dep-lib-tinystr
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tinystr
+│   │   │   │   │   └── lib-tinystr.json
+│   │   │   │   ├── titler-da0da21995399e8b
+│   │   │   │   │   ├── dep-lib-titler
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-titler
+│   │   │   │   │   └── lib-titler.json
+│   │   │   │   ├── tokenizers-36dbf98b746b6c0d
+│   │   │   │   │   ├── dep-lib-tokenizers
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tokenizers
+│   │   │   │   │   └── lib-tokenizers.json
+│   │   │   │   ├── tokenizers-eecc8409bdacf4d4
+│   │   │   │   │   ├── dep-lib-tokenizers
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tokenizers
+│   │   │   │   │   └── lib-tokenizers.json
+│   │   │   │   ├── tokio-2aafed59f041b0dc
+│   │   │   │   │   ├── dep-lib-tokio
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tokio
+│   │   │   │   │   └── lib-tokio.json
+│   │   │   │   ├── tokio-native-tls-497539c6f53f440a
+│   │   │   │   │   ├── dep-lib-tokio_native_tls
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tokio_native_tls
+│   │   │   │   │   └── lib-tokio_native_tls.json
+│   │   │   │   ├── tokio-rustls-a612ceb6dd458694
+│   │   │   │   │   ├── dep-lib-tokio_rustls
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tokio_rustls
+│   │   │   │   │   └── lib-tokio_rustls.json
+│   │   │   │   ├── tokio-util-f70e35cf9c216dbd
+│   │   │   │   │   ├── dep-lib-tokio_util
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tokio_util
+│   │   │   │   │   └── lib-tokio_util.json
+│   │   │   │   ├── tower-7a429fe875a36601
+│   │   │   │   │   ├── dep-lib-tower
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tower
+│   │   │   │   │   └── lib-tower.json
+│   │   │   │   ├── tower-http-b3239b358628a289
+│   │   │   │   │   ├── dep-lib-tower_http
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tower_http
+│   │   │   │   │   └── lib-tower_http.json
+│   │   │   │   ├── tower-layer-4598acd84fae6d28
+│   │   │   │   │   ├── dep-lib-tower_layer
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tower_layer
+│   │   │   │   │   └── lib-tower_layer.json
+│   │   │   │   ├── tower-service-c06e01b981a3adff
+│   │   │   │   │   ├── dep-lib-tower_service
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tower_service
+│   │   │   │   │   └── lib-tower_service.json
+│   │   │   │   ├── tracing-1e675b17a0f543c4
+│   │   │   │   │   ├── dep-lib-tracing
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tracing
+│   │   │   │   │   └── lib-tracing.json
+│   │   │   │   ├── tracing-core-ec0807bb1deedbd7
+│   │   │   │   │   ├── dep-lib-tracing_core
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-tracing_core
+│   │   │   │   │   └── lib-tracing_core.json
+│   │   │   │   ├── try-lock-e98c2db93a6ac01f
+│   │   │   │   │   ├── dep-lib-try_lock
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-try_lock
+│   │   │   │   │   └── lib-try_lock.json
+│   │   │   │   ├── typed-path-33ee7b6114fed0e5
+│   │   │   │   │   ├── dep-lib-typed_path
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-typed_path
+│   │   │   │   │   └── lib-typed_path.json
+│   │   │   │   ├── unicode-normalization-alignments-1ec0d9a2fa3f571e
+│   │   │   │   │   ├── dep-lib-unicode_normalization_alignments
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-unicode_normalization_alignments
+│   │   │   │   │   └── lib-unicode_normalization_alignments.json
+│   │   │   │   ├── unicode-segmentation-81b9d31e30c3000b
+│   │   │   │   │   ├── dep-lib-unicode_segmentation
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-unicode_segmentation
+│   │   │   │   │   └── lib-unicode_segmentation.json
+│   │   │   │   ├── unicode-truncate-39a22727a00f4f4d
+│   │   │   │   │   ├── dep-lib-unicode_truncate
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-unicode_truncate
+│   │   │   │   │   └── lib-unicode_truncate.json
+│   │   │   │   ├── unicode-width-8298a347724514d2
+│   │   │   │   │   ├── dep-lib-unicode_width
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-unicode_width
+│   │   │   │   │   └── lib-unicode_width.json
+│   │   │   │   ├── unicode_categories-1a6dcafc361660ee
+│   │   │   │   │   ├── dep-lib-unicode_categories
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-unicode_categories
+│   │   │   │   │   └── lib-unicode_categories.json
+│   │   │   │   ├── unit-prefix-bc7680a7a3debc08
+│   │   │   │   │   ├── dep-lib-unit_prefix
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-unit_prefix
+│   │   │   │   │   └── lib-unit_prefix.json
+│   │   │   │   ├── untrusted-015fca47759e4851
+│   │   │   │   │   ├── dep-lib-untrusted
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-untrusted
+│   │   │   │   │   └── lib-untrusted.json
+│   │   │   │   ├── ureq-c2f0f43b8d67d664
+│   │   │   │   │   ├── dep-lib-ureq
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-ureq
+│   │   │   │   │   └── lib-ureq.json
+│   │   │   │   ├── url-c97d650df8a495d8
+│   │   │   │   │   ├── dep-lib-url
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-url
+│   │   │   │   │   └── lib-url.json
+│   │   │   │   ├── urlencoding-6fe95f5faf760e8e
+│   │   │   │   │   ├── dep-lib-urlencoding
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-urlencoding
+│   │   │   │   │   └── lib-urlencoding.json
+│   │   │   │   ├── utf8_iter-fe717006c62fb0d3
+│   │   │   │   │   ├── dep-lib-utf8_iter
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-utf8_iter
+│   │   │   │   │   └── lib-utf8_iter.json
+│   │   │   │   ├── utf8parse-dd6c6823801ea455
+│   │   │   │   │   ├── dep-lib-utf8parse
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-utf8parse
+│   │   │   │   │   └── lib-utf8parse.json
+│   │   │   │   ├── uuid-bb53c160163d3899
+│   │   │   │   │   ├── dep-lib-uuid
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-uuid
+│   │   │   │   │   └── lib-uuid.json
+│   │   │   │   ├── want-16f3f021396efda7
+│   │   │   │   │   ├── dep-lib-want
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-want
+│   │   │   │   │   └── lib-want.json
+│   │   │   │   ├── webpki-roots-55440f8dba7f13f8
+│   │   │   │   │   ├── dep-lib-webpki_roots
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-webpki_roots
+│   │   │   │   │   └── lib-webpki_roots.json
+│   │   │   │   ├── webpki-roots-b390b2b320c9d65e
+│   │   │   │   │   ├── dep-lib-webpki_roots
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-webpki_roots
+│   │   │   │   │   └── lib-webpki_roots.json
+│   │   │   │   ├── whatlang-50b7ee5b6d170850
+│   │   │   │   │   ├── dep-lib-whatlang
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-whatlang
+│   │   │   │   │   └── lib-whatlang.json
+│   │   │   │   ├── writeable-965853438afe1d46
+│   │   │   │   │   ├── dep-lib-writeable
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-writeable
+│   │   │   │   │   └── lib-writeable.json
+│   │   │   │   ├── yoke-fc3d7493710e4a10
+│   │   │   │   │   ├── dep-lib-yoke
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-yoke
+│   │   │   │   │   └── lib-yoke.json
+│   │   │   │   ├── zerocopy-54a489b015b28caa
+│   │   │   │   │   ├── dep-lib-zerocopy
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-zerocopy
+│   │   │   │   │   └── lib-zerocopy.json
+│   │   │   │   ├── zerocopy-98b10c7a1265cb08
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   ├── zerofrom-a7e55253dd51198e
+│   │   │   │   │   ├── dep-lib-zerofrom
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-zerofrom
+│   │   │   │   │   └── lib-zerofrom.json
+│   │   │   │   ├── zeroize-7c0e2f976352324a
+│   │   │   │   │   ├── dep-lib-zeroize
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-zeroize
+│   │   │   │   │   └── lib-zeroize.json
+│   │   │   │   ├── zerotrie-aa65518987b0dfa5
+│   │   │   │   │   ├── dep-lib-zerotrie
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-zerotrie
+│   │   │   │   │   └── lib-zerotrie.json
+│   │   │   │   ├── zerovec-47ec3b0914e6b677
+│   │   │   │   │   ├── dep-lib-zerovec
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-zerovec
+│   │   │   │   │   └── lib-zerovec.json
+│   │   │   │   ├── zip-5c6c0bb7cc5068c9
+│   │   │   │   │   ├── dep-lib-zip
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── lib-zip
+│   │   │   │   │   └── lib-zip.json
+│   │   │   │   ├── zmij-300a11b742cba43c
+│   │   │   │   │   ├── run-build-script-build-script-build
+│   │   │   │   │   └── run-build-script-build-script-build.json
+│   │   │   │   └── zmij-e7a4a30a7583220e
+│   │   │   │       ├── dep-lib-zmij
+│   │   │   │       ├── invoked.timestamp
+│   │   │   │       ├── lib-zmij
+│   │   │   │       └── lib-zmij.json
+│   │   │   ├── build
+│   │   │   │   ├── ahash-541d740300b40717
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── anyhow-e834ffcdb8721146
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── aws-lc-rs-b0fe8315b31c2a8b
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── aws-lc-sys-b87ed58a53eab021
+│   │   │   │   │   ├── out
+│   │   │   │   │   │   ├── include
+│   │   │   │   │   │   │   ├── openssl
+│   │   │   │   │   │   │   │   ├── experimental
+│   │   │   │   │   │   │   │   │   └── kem_deterministic_api.h
+│   │   │   │   │   │   │   │   ├── aead.h
+│   │   │   │   │   │   │   │   ├── aes.h
+│   │   │   │   │   │   │   │   ├── arm_arch.h
+│   │   │   │   │   │   │   │   ├── asm_base.h
+│   │   │   │   │   │   │   │   ├── asn1.h
+│   │   │   │   │   │   │   │   ├── asn1_mac.h
+│   │   │   │   │   │   │   │   ├── asn1t.h
+│   │   │   │   │   │   │   │   ├── base.h
+│   │   │   │   │   │   │   │   ├── base.h.in
+│   │   │   │   │   │   │   │   ├── base64.h
+│   │   │   │   │   │   │   │   ├── bio.h
+│   │   │   │   │   │   │   │   ├── blake2.h
+│   │   │   │   │   │   │   │   ├── blowfish.h
+│   │   │   │   │   │   │   │   ├── bn.h
+│   │   │   │   │   │   │   │   ├── boringssl_prefix_symbols.h
+│   │   │   │   │   │   │   │   ├── boringssl_prefix_symbols_asm.h
+│   │   │   │   │   │   │   │   ├── boringssl_prefix_symbols_nasm.inc
+│   │   │   │   │   │   │   │   ├── buf.h
+│   │   │   │   │   │   │   │   ├── buffer.h
+│   │   │   │   │   │   │   │   ├── bytestring.h
+│   │   │   │   │   │   │   │   ├── chacha.h
+│   │   │   │   │   │   │   │   ├── cipher.h
+│   │   │   │   │   │   │   │   ├── cmac.h
+│   │   │   │   │   │   │   │   ├── conf.h
+│   │   │   │   │   │   │   │   ├── cpu.h
+│   │   │   │   │   │   │   │   ├── crypto.h
+│   │   │   │   │   │   │   │   ├── ctrdrbg.h
+│   │   │   │   │   │   │   │   ├── curve25519.h
+│   │   │   │   │   │   │   │   ├── des.h
+│   │   │   │   │   │   │   │   ├── dh.h
+│   │   │   │   │   │   │   │   ├── digest.h
+│   │   │   │   │   │   │   │   ├── dsa.h
+│   │   │   │   │   │   │   │   ├── dtls1.h
+│   │   │   │   │   │   │   │   ├── e_os2.h
+│   │   │   │   │   │   │   │   ├── ec.h
+│   │   │   │   │   │   │   │   ├── ec_key.h
+│   │   │   │   │   │   │   │   ├── ecdh.h
+│   │   │   │   │   │   │   │   ├── ecdsa.h
+│   │   │   │   │   │   │   │   ├── engine.h
+│   │   │   │   │   │   │   │   ├── err.h
+│   │   │   │   │   │   │   │   ├── evp.h
+│   │   │   │   │   │   │   │   ├── evp_errors.h
+│   │   │   │   │   │   │   │   ├── ex_data.h
+│   │   │   │   │   │   │   │   ├── hkdf.h
+│   │   │   │   │   │   │   │   ├── hmac.h
+│   │   │   │   │   │   │   │   ├── hpke.h
+│   │   │   │   │   │   │   │   ├── hrss.h
+│   │   │   │   │   │   │   │   ├── is_awslc.h
+│   │   │   │   │   │   │   │   ├── kdf.h
+│   │   │   │   │   │   │   │   ├── lhash.h
+│   │   │   │   │   │   │   │   ├── md4.h
+│   │   │   │   │   │   │   │   ├── md5.h
+│   │   │   │   │   │   │   │   ├── mem.h
+│   │   │   │   │   │   │   │   ├── modes.h
+│   │   │   │   │   │   │   │   ├── nid.h
+│   │   │   │   │   │   │   │   ├── obj.h
+│   │   │   │   │   │   │   │   ├── obj_mac.h
+│   │   │   │   │   │   │   │   ├── objects.h
+│   │   │   │   │   │   │   │   ├── ocsp.h
+│   │   │   │   │   │   │   │   ├── opensslconf.h
+│   │   │   │   │   │   │   │   ├── opensslv.h
+│   │   │   │   │   │   │   │   ├── opensslv.h.in
+│   │   │   │   │   │   │   │   ├── ossl_typ.h
+│   │   │   │   │   │   │   │   ├── pem.h
+│   │   │   │   │   │   │   │   ├── pkcs12.h
+│   │   │   │   │   │   │   │   ├── pkcs7.h
+│   │   │   │   │   │   │   │   ├── pkcs8.h
+│   │   │   │   │   │   │   │   ├── poly1305.h
+│   │   │   │   │   │   │   │   ├── pool.h
+│   │   │   │   │   │   │   │   ├── posix_time.h
+│   │   │   │   │   │   │   │   ├── rand.h
+│   │   │   │   │   │   │   │   ├── rc4.h
+│   │   │   │   │   │   │   │   ├── ripemd.h
+│   │   │   │   │   │   │   │   ├── rsa.h
+│   │   │   │   │   │   │   │   ├── safestack.h
+│   │   │   │   │   │   │   │   ├── service_indicator.h
+│   │   │   │   │   │   │   │   ├── sha.h
+│   │   │   │   │   │   │   │   ├── siphash.h
+│   │   │   │   │   │   │   │   ├── span.h
+│   │   │   │   │   │   │   │   ├── sshkdf.h
+│   │   │   │   │   │   │   │   ├── ssl.h
+│   │   │   │   │   │   │   │   ├── ssl3.h
+│   │   │   │   │   │   │   │   ├── stack.h
+│   │   │   │   │   │   │   │   ├── target.h
+│   │   │   │   │   │   │   │   ├── thread.h
+│   │   │   │   │   │   │   │   ├── time.h
+│   │   │   │   │   │   │   │   ├── tls1.h
+│   │   │   │   │   │   │   │   ├── trust_token.h
+│   │   │   │   │   │   │   │   ├── type_check.h
+│   │   │   │   │   │   │   │   ├── ui.h
+│   │   │   │   │   │   │   │   ├── x509.h
+│   │   │   │   │   │   │   │   ├── x509_vfy.h
+│   │   │   │   │   │   │   │   ├── x509v3.h
+│   │   │   │   │   │   │   │   └── x509v3_errors.h
+│   │   │   │   │   │   │   └── rust_wrapper.h
+│   │   │   │   │   │   ├── 001247bc65c2f5e5-cpucap.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_intt_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_ntt_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_pointwise_montgomery_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_poly_caddq_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_poly_chknorm_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_poly_decompose_32_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_poly_decompose_88_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_poly_use_hint_32_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_poly_use_hint_88_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_polyvecl_pointwise_acc_montgomery_l4_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_polyvecl_pointwise_acc_montgomery_l5_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_polyvecl_pointwise_acc_montgomery_l7_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_polyz_unpack_17_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_polyz_unpack_19_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_rej_uniform_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_rej_uniform_eta2_aarch64_asm.o
+│   │   │   │   │   │   ├── 044d1b1af49c8a28-mldsa_rej_uniform_eta4_aarch64_asm.o
+│   │   │   │   │   │   ├── 056c1e7192c7090b-p5_pbev2.o
+│   │   │   │   │   │   ├── 056c1e7192c7090b-pkcs8.o
+│   │   │   │   │   │   ├── 056c1e7192c7090b-pkcs8_x509.o
+│   │   │   │   │   │   ├── 0a404614a98ad4aa-ui.o
+│   │   │   │   │   │   ├── 0c919c82d61b4518-ecdsa_asn1.o
+│   │   │   │   │   │   ├── 11289f19be935446-rsa_decrepit.o
+│   │   │   │   │   │   ├── 175e87304cd4663c-cfb.o
+│   │   │   │   │   │   ├── 199386740f3660f1-ripemd.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_all.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_info.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_lib.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_oth.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_pk8.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_pkey.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_x509.o
+│   │   │   │   │   │   ├── 27a075eab3d35364-pem_xaux.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-bignum_madd_n25519.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-bignum_madd_n25519_alt.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-bignum_mod_n25519.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-bignum_neg_p25519.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-curve25519_x25519_byte.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-curve25519_x25519_byte_alt.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-curve25519_x25519base_byte.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-curve25519_x25519base_byte_alt.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-edwards25519_decode.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-edwards25519_decode_alt.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-edwards25519_encode.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-edwards25519_scalarmulbase.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-edwards25519_scalarmulbase_alt.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-edwards25519_scalarmuldouble.o
+│   │   │   │   │   │   ├── 2a065450252c12f3-edwards25519_scalarmuldouble_alt.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_copy_row_from_table.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_copy_row_from_table_16.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_copy_row_from_table_32.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_copy_row_from_table_8n.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_ge.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_mul.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_optsub.o
+│   │   │   │   │   │   ├── 2eb9bba22ef5252d-bignum_sqr.o
+│   │   │   │   │   │   ├── 2ee72d5a85c036ff-bignum_emontredc_8n.o
+│   │   │   │   │   │   ├── 2ee72d5a85c036ff-bignum_kmul_16_32.o
+│   │   │   │   │   │   ├── 2ee72d5a85c036ff-bignum_kmul_32_64.o
+│   │   │   │   │   │   ├── 2ee72d5a85c036ff-bignum_ksqr_16_32.o
+│   │   │   │   │   │   ├── 2ee72d5a85c036ff-bignum_ksqr_32_64.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-crypto.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-ex_data.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-mem.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-refcount_c11.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-refcount_lock.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-refcount_win.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-thread.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-thread_none.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-thread_pthread.o
+│   │   │   │   │   │   ├── 30a9a10d3f98970e-thread_win.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_add_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_deamont_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_littleendian_6.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_montinv_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_montmul_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_montmul_p384_alt.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_montsqr_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_montsqr_p384_alt.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_neg_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_nonzero_6.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_sub_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-bignum_tomont_p384.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-p384_montjdouble.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-p384_montjdouble_alt.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-p384_montjscalarmul.o
+│   │   │   │   │   │   ├── 33b0e8a9ff3ac954-p384_montjscalarmul_alt.o
+│   │   │   │   │   │   ├── 3f2f442030472042-base64_bio.o
+│   │   │   │   │   │   ├── 45070f5a112d041b-fork_ube_detect.o
+│   │   │   │   │   │   ├── 45070f5a112d041b-ube.o
+│   │   │   │   │   │   ├── 45070f5a112d041b-vm_ube_detect.o
+│   │   │   │   │   │   ├── 4696e3d2cc941c84-pmbtoken.o
+│   │   │   │   │   │   ├── 4696e3d2cc941c84-trust_token.o
+│   │   │   │   │   │   ├── 4696e3d2cc941c84-voprf.o
+│   │   │   │   │   │   ├── 46ab76b5467ff2b0-obj_decrepit.o
+│   │   │   │   │   │   ├── 46b3cee15136b9e3-bignum_montinv_p256.o
+│   │   │   │   │   │   ├── 46b3cee15136b9e3-p256_montjscalarmul.o
+│   │   │   │   │   │   ├── 46b3cee15136b9e3-p256_montjscalarmul_alt.o
+│   │   │   │   │   │   ├── 48649240ed88c783-siphash.o
+│   │   │   │   │   │   ├── 4a91b32c84b73ad7-ecdh_extra.o
+│   │   │   │   │   │   ├── 5d4700fda13603f0-poly1305.o
+│   │   │   │   │   │   ├── 5d4700fda13603f0-poly1305_arm.o
+│   │   │   │   │   │   ├── 5d4700fda13603f0-poly1305_vec.o
+│   │   │   │   │   │   ├── 5da2666a73fb65eb-hrss.o
+│   │   │   │   │   │   ├── 60df219e9fcbc210-stack.o
+│   │   │   │   │   │   ├── 62e235b24f99f4ff-blake2.o
+│   │   │   │   │   │   ├── 65fbbb68d007b209-hpke.o
+│   │   │   │   │   │   ├── 6cb977b152c40450-chacha-armv8.o
+│   │   │   │   │   │   ├── 6e6559d38d003e66-spake25519.o
+│   │   │   │   │   │   ├── 6e8bb48415b74ed4-dh_decrepit.o
+│   │   │   │   │   │   ├── 6e985d8b17b56a49-md4.o
+│   │   │   │   │   │   ├── 6f8e1f92835a38cb-x509_decrepit.o
+│   │   │   │   │   │   ├── 745212361bfcab17-keccak.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-evp_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_dh.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_dh_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_dsa.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_dsa_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_ec_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_ed25519_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_hmac_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_kem_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_methods.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_pqdsa_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_rsa_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_x25519.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-p_x25519_asn1.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-print.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-scrypt.o
+│   │   │   │   │   │   ├── 7510312e0f5aa0be-sign.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-bio.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-bio_addr.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-bio_mem.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-connect.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-dgram.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-errno.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-fd.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-file.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-hexdump.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-md.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-pair.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-printf.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-socket.o
+│   │   │   │   │   │   ├── 76322f89f5cc2d96-socket_helper.o
+│   │   │   │   │   │   ├── 763c374fde874a6d-console.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_intt_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_ntt_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_poly_mulcache_compute_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_poly_reduce_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_poly_tobytes_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_poly_tomont_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_polyvec_basemul_acc_montgomery_cached_k2_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_polyvec_basemul_acc_montgomery_cached_k3_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_polyvec_basemul_acc_montgomery_cached_k4_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a51880ffa82f69b-mlkem_rej_uniform_aarch64_asm.o
+│   │   │   │   │   │   ├── 7a596fe31a02c0e2-bn_asn1.o
+│   │   │   │   │   │   ├── 7a596fe31a02c0e2-convert.o
+│   │   │   │   │   │   ├── 7ac4c9359514b807-obj.o
+│   │   │   │   │   │   ├── 7ac4c9359514b807-obj_xref.o
+│   │   │   │   │   │   ├── 7bf3e571b6558a6b-ccrandomgeneratebytes.o
+│   │   │   │   │   │   ├── 7bf3e571b6558a6b-deterministic.o
+│   │   │   │   │   │   ├── 7bf3e571b6558a6b-getentropy.o
+│   │   │   │   │   │   ├── 7bf3e571b6558a6b-rand_extra.o
+│   │   │   │   │   │   ├── 7bf3e571b6558a6b-urandom.o
+│   │   │   │   │   │   ├── 7bf3e571b6558a6b-vm_ube_fallback.o
+│   │   │   │   │   │   ├── 7bf3e571b6558a6b-windows.o
+│   │   │   │   │   │   ├── 86cc0a4f50e0e3bd-evp_do_all.o
+│   │   │   │   │   │   ├── 89981633f66afe17-cipher_extra.o
+│   │   │   │   │   │   ├── 89981633f66afe17-cts.o
+│   │   │   │   │   │   ├── 89981633f66afe17-derive_key.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_aes_cbc_hmac_sha1.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_aes_cbc_hmac_sha256.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_aesctrhmac.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_aesgcmsiv.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_chacha20poly1305.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_des.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_null.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_rc2.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_rc4.o
+│   │   │   │   │   │   ├── 89981633f66afe17-e_tls.o
+│   │   │   │   │   │   ├── 89981633f66afe17-tls_cbc.o
+│   │   │   │   │   │   ├── 904ef411c1476e9d-cipher.o
+│   │   │   │   │   │   ├── 925ae38753d351a6-pool.o
+│   │   │   │   │   │   ├── a3e95cd5f24d649a-err.o
+│   │   │   │   │   │   ├── a4677c68e4880270-buf.o
+│   │   │   │   │   │   ├── a4a065efb8ac7b35-cast.o
+│   │   │   │   │   │   ├── a4a065efb8ac7b35-cast_tables.o
+│   │   │   │   │   │   ├── a6455f51a2435c3f-chacha.o
+│   │   │   │   │   │   ├── abfd5700da2a0c03-trampoline-armv8.o
+│   │   │   │   │   │   ├── ac9a06e0f1f9cd7d-sha3_keccak2_f1600.o
+│   │   │   │   │   │   ├── ac9a06e0f1f9cd7d-sha3_keccak4_f1600_alt.o
+│   │   │   │   │   │   ├── ac9a06e0f1f9cd7d-sha3_keccak4_f1600_alt2.o
+│   │   │   │   │   │   ├── ac9a06e0f1f9cd7d-sha3_keccak_f1600.o
+│   │   │   │   │   │   ├── ac9a06e0f1f9cd7d-sha3_keccak_f1600_alt.o
+│   │   │   │   │   │   ├── ac9a06e0f1f9cd7d-sha3_keccak_f1600_alt2.o
+│   │   │   │   │   │   ├── ad45968d24b0237e-base64.o
+│   │   │   │   │   │   ├── b0fd2550ab09b04e-rsa_asn1.o
+│   │   │   │   │   │   ├── b0fd2550ab09b04e-rsa_crypt.o
+│   │   │   │   │   │   ├── b0fd2550ab09b04e-rsa_print.o
+│   │   │   │   │   │   ├── b0fd2550ab09b04e-rsassa_pss_asn1.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_bitstr.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_bool.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_d2i_fp.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_dup.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_gentm.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_i2d_fp.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_int.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_mbstr.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_object.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_octet.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_strex.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_strnid.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_time.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_type.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_utctm.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-a_utf8.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-asn1_lib.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-asn1_par.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-asn_pack.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-f_int.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-f_string.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-posix_time.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-tasn_dec.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-tasn_enc.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-tasn_fre.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-tasn_new.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-tasn_typ.o
+│   │   │   │   │   │   ├── bc1b343226bc6a17-tasn_utl.o
+│   │   │   │   │   │   ├── c1300545a7d60e2b-dh_asn1.o
+│   │   │   │   │   │   ├── c1300545a7d60e2b-params.o
+│   │   │   │   │   │   ├── c2f744a0f6403e0c-err_data.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-aesv8-armx.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-aesv8-gcm-armv8-unroll8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-aesv8-gcm-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-armv8-mont.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-bn-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-ghash-neon-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-ghashv8-armx.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-keccak1600-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-md5-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-p256-armv8-asm.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-p256_beeu-armv8-asm.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-rndr-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-sha1-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-sha256-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-sha512-armv8.o
+│   │   │   │   │   │   ├── c4391ac3c46825d6-vpaes-armv8.o
+│   │   │   │   │   │   ├── c4fcddba145918af-asn1_compat.o
+│   │   │   │   │   │   ├── c4fcddba145918af-ber.o
+│   │   │   │   │   │   ├── c4fcddba145918af-cbb.o
+│   │   │   │   │   │   ├── c4fcddba145918af-cbs.o
+│   │   │   │   │   │   ├── c4fcddba145918af-unicode.o
+│   │   │   │   │   │   ├── c53e8c40df789e0d-chacha20_poly1305_armv8.o
+│   │   │   │   │   │   ├── c7e9326d9b5d7de8-blowfish.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_asn.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_client.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_extension.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_http.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_lib.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_print.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_server.o
+│   │   │   │   │   │   ├── caa8b30982b4915c-ocsp_verify.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_add_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_fromlebytes_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_inv_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_mul_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_mul_p521_alt.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_neg_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_sqr_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_sqr_p521_alt.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_sub_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-bignum_tolebytes_p521.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-p521_jdouble.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-p521_jdouble_alt.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-p521_jscalarmul.o
+│   │   │   │   │   │   ├── ccbabe9886131d80-p521_jscalarmul_alt.o
+│   │   │   │   │   │   ├── d7fed99e8aa5a9b1-rc4.o
+│   │   │   │   │   │   ├── da5030c6f3330e8d-des.o
+│   │   │   │   │   │   ├── dcb7d53a9be33b0c-engine.o
+│   │   │   │   │   │   ├── dfe446faf29f8012-ec_asn1.o
+│   │   │   │   │   │   ├── dfe446faf29f8012-ec_brainpool.o
+│   │   │   │   │   │   ├── dfe446faf29f8012-ec_derive.o
+│   │   │   │   │   │   ├── dfe446faf29f8012-hash_to_curve.o
+│   │   │   │   │   │   ├── e3caa0b8b118742c-pkcs7.o
+│   │   │   │   │   │   ├── e3caa0b8b118742c-pkcs7_asn1.o
+│   │   │   │   │   │   ├── e3caa0b8b118742c-pkcs7_x509.o
+│   │   │   │   │   │   ├── e4ecb171c489b811-conf.o
+│   │   │   │   │   │   ├── e71c6558e17b1ce7-digest_extra.o
+│   │   │   │   │   │   ├── e9338ebcd69164a9-aes-xts-dec.o
+│   │   │   │   │   │   ├── e9338ebcd69164a9-aes-xts-enc.o
+│   │   │   │   │   │   ├── ea2b51a0b6630529-lhash.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-a_digest.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-a_sign.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-a_verify.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-algorithm.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-asn1_gen.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-by_dir.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-by_file.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-i2d_pr.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-name_print.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-policy.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-rsa_pss.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-t_crl.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-t_req.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-t_x509.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-t_x509a.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_akey.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_akeya.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_alt.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_bcons.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_bitst.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_conf.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_cpols.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_crld.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_enum.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_extku.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_genn.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_ia5.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_info.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_int.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_lib.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_ncons.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_ocsp.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_pcons.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_pmaps.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_prn.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_purp.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_skey.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-v3_utl.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_att.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_cmp.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_d2.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_def.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_ext.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_lu.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_obj.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_req.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_set.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_trs.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_txt.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_v3.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_vfy.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509_vpm.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509cset.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509name.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509rset.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x509spki.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_algor.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_all.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_attrib.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_crl.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_exten.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_name.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_pubkey.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_req.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_sig.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_spki.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_val.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_x509.o
+│   │   │   │   │   │   ├── ebcd52e9457b6221-x_x509a.o
+│   │   │   │   │   │   ├── f8e4fd781484bd36-bcm.o
+│   │   │   │   │   │   ├── fb1f39df2ea6f08f-dsa.o
+│   │   │   │   │   │   ├── fb1f39df2ea6f08f-dsa_asn1.o
+│   │   │   │   │   │   ├── flag_check
+│   │   │   │   │   │   ├── flag_check.c
+│   │   │   │   │   │   └── libaws_lc_0_45_0_crypto.a
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── crc32fast-6991c42383ad97b1
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── crossbeam-deque-6b08ee099afd85b6
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── crossbeam-epoch-14bd1951ac1027d1
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── crossbeam-utils-e1893b452c9dd3b4
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── esaxx-rs-01cb5459843110b6
+│   │   │   │   │   ├── out
+│   │   │   │   │   │   ├── 0602fb52cb66f316-esaxx.o
+│   │   │   │   │   │   └── libesaxx.a
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── getrandom-3589e3033f5b0392
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── getrandom-b358fdb36b8790e4
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── httparse-c4e7fe180ad27221
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── icu_normalizer_data-8968ae949e016057
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── icu_properties_data-d0a66d864016a6bc
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── libc-4138830e534423eb
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── libm-cf8b0ca73da78f21
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── native-tls-302ee5894131bc3d
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── num-traits-57664d1bddf47954
+│   │   │   │   │   ├── out
+│   │   │   │   │   ├── invoked.timestamp
+│   │   │   │   │   ├── output
+│   │   │   │   │   ├── root-output
+│   │   │   │   │   └── stderr
+│   │   │   │   ├── onig_sys-87aba66f4d983d0a
+│   │   │   │   │   ├── out
+│   │   │   │   │   │   ├── a445302c6d3dcb51-ascii.o
+│   │   │   │   │   │   ├── a445302c6d3dcb51-big5.o
+│   │   │   │   │   │   ├── a445302c6d3dcb51-cp1251.o
+│   │   │   │   │   │   └── … (listing truncated)
+│   │   │   │   │   └── … (listing truncated)
 │   │   │   │   └── … (listing truncated)
 │   │   │   └── … (listing truncated)
 │   │   └── … (listing truncated)
