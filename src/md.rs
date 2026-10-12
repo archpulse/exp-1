@@ -28,6 +28,8 @@ pub enum Style {
 pub struct Run {
     pub style: Style,
     pub text: String,
+    /// Where a link points, when it is one: the label is not the address.
+    pub url: Option<String>,
 }
 
 impl Run {
@@ -35,6 +37,16 @@ impl Run {
         Self {
             style,
             text: text.into(),
+            url: None,
+        }
+    }
+
+    /// A link: the text is what is drawn, the url is where a click goes.
+    pub fn link(text: impl Into<String>, url: impl Into<String>) -> Self {
+        Self {
+            style: Style::Link,
+            text: text.into(),
+            url: Some(url.into()),
         }
     }
 }
@@ -143,7 +155,10 @@ fn inline(text: &str) -> Vec<Run> {
                 if rest[close..].starts_with("](") {
                     if let Some(paren) = rest[close..].find(')') {
                         flush!();
-                        runs.push(Run::new(Style::Link, &rest[1..close]));
+                        // `[label](url)`: the label is drawn, the url is kept
+                        // for the click.
+                        let url = &rest[close + 2..close + paren];
+                        runs.push(Run::link(&rest[1..close], url));
                         index += rest[..close + paren + 1].chars().count();
                         continue;
                     }
@@ -578,6 +593,12 @@ mod tests {
         let out = render("use `cargo build` and [docs](https://example.com)");
         assert!(out[0].iter().any(|r| r.style == Style::Code && r.text == "cargo build"));
         assert!(out[0].iter().any(|r| r.style == Style::Link && r.text == "docs"));
+        // The label is what is drawn; the address has to survive for a click.
+        let link = out[0]
+            .iter()
+            .find(|r| r.style == Style::Link)
+            .expect("link run");
+        assert_eq!(link.url.as_deref(), Some("https://example.com"));
     }
 
     #[test]

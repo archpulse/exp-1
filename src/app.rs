@@ -171,6 +171,14 @@ fn wrap_text(text: &str, width: usize) -> Vec<String> {
 
 /// The same for styled runs: a line of markdown is split at the width so the
 /// scroll offset keeps counting real screen lines.
+/// One piece of a run: the style and the text, plus whatever else the run
+/// carried, which for a link is the address a click needs.
+fn wrapped_run(run: &md::Run, text: &str) -> md::Run {
+    let mut piece = md::Run::new(run.style, text);
+    piece.url = run.url.clone();
+    piece
+}
+
 fn wrap_runs(runs: &[md::Run], width: usize) -> Vec<Vec<md::Run>> {
     if width == 0 {
         return vec![runs.to_vec()];
@@ -183,7 +191,7 @@ fn wrap_runs(runs: &[md::Run], width: usize) -> Vec<Vec<md::Run>> {
         for ch in run.text.chars() {
             if used == width {
                 if !chunk.is_empty() {
-                    current.push(md::Run::new(run.style, &chunk));
+                    current.push(wrapped_run(run, &chunk));
                     chunk.clear();
                 }
                 out.push(std::mem::take(&mut current));
@@ -193,7 +201,7 @@ fn wrap_runs(runs: &[md::Run], width: usize) -> Vec<Vec<md::Run>> {
             used += 1;
         }
         if !chunk.is_empty() {
-            current.push(md::Run::new(run.style, &chunk));
+            current.push(wrapped_run(run, &chunk));
         }
     }
     if !current.is_empty() || out.is_empty() {
@@ -324,6 +332,37 @@ impl AskView {
     }
 }
 
+/// What a click on a screen cell does.
+#[derive(Clone, PartialEq, Eq)]
+pub enum ClickAction {
+    /// A row of the open picker, by index into its items.
+    PickerRow(usize),
+    /// A row of the completion popup, by index into the suggestions.
+    Suggestion(usize),
+    /// A link in the transcript: open it in the browser.
+    Link(String),
+    /// The footer hint that switches between the main and side threads.
+    SideThread,
+}
+
+/// Where a link sits inside one message's own lines.
+#[derive(Clone)]
+pub struct LinkSpan {
+    /// The line within that message's rendering.
+    pub line: usize,
+    /// Columns, in characters, inside that line.
+    pub start: usize,
+    pub end: usize,
+    pub url: String,
+}
+
+/// A region the last frame drew that a click can act on.
+#[derive(Clone)]
+pub struct ClickTarget {
+    pub area: Rect,
+    pub action: ClickAction,
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum ThreadKind {
     Main,
@@ -363,6 +402,9 @@ pub struct Thread {
     /// re-wrapped on every frame. Rebuilt when the width, the theme or the
     /// output setting changes; a message that changes is rebuilt on its own.
     lines: Vec<Vec<Line<'static>>>,
+    /// Links per message, in the same order as `lines`, so a click on one can
+    /// open it.
+    links: Vec<Vec<LinkSpan>>,
     lines_width: usize,
     lines_theme: usize,
     lines_output: bool,
@@ -392,6 +434,7 @@ impl Thread {
             popup_open: false,
             scroll: 0,
             lines: Vec::new(),
+            links: Vec::new(),
             lines_width: 0,
             lines_theme: usize::MAX,
             lines_output: false,
@@ -405,15 +448,20 @@ impl Thread {
         if self.lines_width != width || self.lines_theme != theme_index || self.lines_output != show_output
         {
             self.lines.clear();
+            self.links.clear();
             self.lines_width = width;
             self.lines_theme = theme_index;
             self.lines_output = show_output;
         }
         if self.lines.len() > self.transcript.len() {
             self.lines.truncate(self.transcript.len());
+            self.links.truncate(self.transcript.len());
         }
         for msg in &self.transcript[self.lines.len()..] {
-            self.lines.push(message_lines(msg, width, theme, show_output));
+            let mut links = Vec::new();
+            self.lines
+                .push(message_lines(msg, width, theme, show_output, &mut links));
+            self.links.push(links);
         }
     }
 
@@ -478,6 +526,7 @@ impl Thread {
                 last.text = text;
                 // The line changed, so its cached rendering is stale.
                 self.lines.truncate(self.transcript.len() - 1);
+                self.links.truncate(self.transcript.len() - 1);
             }
             _ => self.transcript.push(Msg {
                 role: Role::Tool,
@@ -572,6 +621,9 @@ pub struct App {
     /// Whether tool output is drawn under its call line. Off by default: the
     /// call is what a reader follows, the output is what they go back for.
     pub show_tool_output: bool,
+    /// What the last frame drew that a click can act on. Interior mutability
+    /// because the render passes only borrow the app.
+    pub clicks: std::cell::RefCell<Vec<ClickTarget>>,
     /// A mouse drag over the screen: anchor and head, both (column, row).
     pub selection: Option<((u16, u16), (u16, u16))>,
     /// Plain text of every drawn screen row, refreshed each render, so a
@@ -659,6 +711,7 @@ impl App {
             mode: "build".to_string(),
             first_run: false,
             show_tool_output: false,
+            clicks: std::cell::RefCell::new(Vec::new()),
             selection: None,
             screen: Vec::new(),
             copied: None,
@@ -1012,6 +1065,9 @@ impl App {
     pub fn render(&mut self, frame: &mut Frame) {
         let area = frame.area();
         let suggestions = self.suggestions();
+        // The frame about to be drawn replaces the clickable regions of the
+        // one before it.
+        self.clicks.borrow_mut().clear();
 
         // Height is budgeted top-down by hand. Letting the layout solver divide a
         // short terminal was what dropped the input band entirely once the fixed
@@ -1077,6 +1133,21 @@ impl App {
         self.render_input(frame, rows[4]);
         self.render_footer(frame, rows[5], rows[6], !suggestions.is_empty());
         self.capture_screen(frame);
+    }
+
+    /// The action under a screen cell, if the last frame drew one there.
+    pub fn click_at(&self, column: u16, row: u16) -> Option<ClickAction> {
+        self.clicks
+            .borrow()
+            .iter()
+            .rev()
+            .find(|target| {
+                column >= target.area.x
+                    && column < target.area.x + target.area.width
+                    && row >= target.area.y
+                    && row < target.area.y + target.area.height
+            })
+            .map(|target| target.action.clone())
     }
 
     /// Starts a selection at a screen position.
@@ -1399,15 +1470,44 @@ impl App {
         // message is what you see unless you wheel upwards.
         let scroll = (thread.scroll as usize).min(max_scroll);
         let offset = max_scroll - scroll;
+        // Assembled line by line, so a link knows the row it was drawn on.
         let mut visible: Vec<Line> = Vec::with_capacity(height);
-        for line in prefix
-            .iter()
-            .chain(thread.lines.iter().flatten())
-            .chain(tail.iter())
-            .skip(offset)
-            .take(height)
-        {
-            visible.push(line.clone());
+        let mut absolute = 0usize;
+        let keep = |line: &Line<'static>, absolute: usize, visible: &mut Vec<Line>| {
+            if absolute >= offset && absolute < offset + height {
+                visible.push(line.clone());
+            }
+        };
+        for line in prefix.iter() {
+            keep(line, absolute, &mut visible);
+            absolute += 1;
+        }
+        for (message, msg_lines) in thread.lines.iter().enumerate() {
+            for (line_index, line) in msg_lines.iter().enumerate() {
+                keep(line, absolute, &mut visible);
+                if absolute >= offset
+                    && absolute < offset + height
+                    && let Some(links) = thread.links.get(message)
+                {
+                    let row = area.y + (absolute - offset) as u16;
+                    for link in links.iter().filter(|link| link.line == line_index) {
+                        self.clicks.borrow_mut().push(ClickTarget {
+                            area: Rect::new(
+                                area.x + link.start as u16,
+                                row,
+                                link.end.saturating_sub(link.start) as u16,
+                                1,
+                            ),
+                            action: ClickAction::Link(link.url.clone()),
+                        });
+                    }
+                }
+                absolute += 1;
+            }
+        }
+        for line in tail.iter() {
+            keep(line, absolute, &mut visible);
+            absolute += 1;
         }
         frame.render_widget(Paragraph::new(visible), area);
     }
@@ -1435,6 +1535,10 @@ impl App {
         let mut lines: Vec<Line> = Vec::new();
         for (offset, suggestion) in suggestions.iter().skip(start).take(height.max(1)).enumerate() {
             let index = start + offset;
+            self.clicks.borrow_mut().push(ClickTarget {
+                area: Rect::new(area.x, area.y + offset as u16, area.width, 1),
+                action: ClickAction::Suggestion(index),
+            });
             let text: String = format!(
                 "  {:<name_column$} {}",
                 suggestion.label, suggestion.description
@@ -1496,8 +1600,13 @@ impl App {
             .max()
             .unwrap_or(0)
             + 2;
+        let items_top = lines.len();
         for (offset, item) in picker.items[start..start + visible].iter().enumerate() {
             let index = start + offset;
+            self.clicks.borrow_mut().push(ClickTarget {
+                area: Rect::new(area.x, area.y + (items_top + offset) as u16, area.width, 1),
+                action: ClickAction::PickerRow(index),
+            });
             let selected = index == picker.selected;
             let marker = if selected { ">" } else { " " };
             let body: String = format!(
@@ -1707,11 +1816,47 @@ impl App {
         }
         let gap = width.saturating_sub(INDENT + left_text.chars().count() + right_len);
 
+        let right_column = INDENT + left_text.chars().count() + gap;
         let mut line: Vec<Span> = vec![Span::raw(" ".repeat(INDENT))];
         line.push(Span::styled(left_text, left_style));
         line.push(Span::raw(" ".repeat(gap)));
         line.push(Span::styled(right, right_style));
         frame.render_widget(Paragraph::new(Line::from(line)), hint_area);
+        // The thread switch is a button as much as a hint.
+        if note.is_none() {
+            self.clicks.borrow_mut().push(ClickTarget {
+                area: Rect::new(hint_area.x + right_column as u16, hint_area.y, right_len as u16, 1),
+                action: ClickAction::SideThread,
+            });
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A link in a message is recorded where it was drawn, so a click can open
+    /// it: the label is what a reader sees, the address is what it points at.
+    #[test]
+    fn a_link_records_where_it_was_drawn() {
+        let theme = &THEMES[0];
+        let text = "see [docs](https://example.com/x) for more";
+        let msg = Msg {
+            role: Role::Assistant,
+            text: text.to_string(),
+            images: 0,
+            runs: md::render(text),
+            kind: crate::proto::WireMsgKind::Plain,
+        };
+        let mut links = Vec::new();
+        let lines = message_lines(&msg, 80, theme, false, &mut links);
+        assert_eq!(links.len(), 1, "one link");
+        let link = &links[0];
+        assert_eq!(link.url, "https://example.com/x");
+        assert_eq!(link.start, 4, "after 'see '");
+        assert_eq!(link.end, 8, "the label is four characters");
+        assert!(link.line < lines.len(), "the line it sits on exists");
     }
 }
 
@@ -1752,6 +1897,7 @@ fn message_lines(
     width: usize,
     theme: &'static Theme,
     show_output: bool,
+    links: &mut Vec<LinkSpan>,
 ) -> Vec<Line<'static>> {
     let mut lines: Vec<Line<'static>> = Vec::new();
     match msg.role {
@@ -1815,10 +1961,25 @@ fn message_lines(
                 for run_line in &msg.runs {
                     for part in wrap_runs(run_line, width) {
                         let mut spans: Vec<Span> = Vec::new();
+                        let line_index = lines.len();
+                        let mut column = 0usize;
                         for run in &part {
                             if run.style == md::Style::CodeBlock {
                                 spans.push(Span::styled("│ ", Style::default().fg(theme.dim)));
+                                column += 2;
                             }
+                            // The column advances for every run, so a link
+                            // knows where it starts even when text comes first.
+                            let width = run.text.chars().count();
+                            if let Some(url) = &run.url {
+                                links.push(LinkSpan {
+                                    line: line_index,
+                                    start: column,
+                                    end: column + width,
+                                    url: url.clone(),
+                                });
+                            }
+                            column += width;
                             spans.push(Span::styled(
                                 run.text.clone(),
                                 md_style(run.style, theme),

@@ -1406,6 +1406,40 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
     }
 }
 
+/// A click that did not drag: do what the thing under it does. A picker row is
+/// Enter on that row, a suggestion is Tab, the footer hint is `ctrl + /`, and a
+/// link opens in the browser.
+fn click_at(app: &mut App, ctx: &Ctx, column: u16, row: u16) {
+    let Some(action) = app.click_at(column, row) else {
+        return;
+    };
+    match action {
+        app::ClickAction::PickerRow(index) => {
+            if let Some(picker) = app.picker.as_mut() {
+                picker.selected = index;
+            }
+            let scoped = app
+                .picker
+                .as_ref()
+                .is_some_and(|picker| picker.kind == app::PickerKind::Scoped);
+            if scoped {
+                toggle_scoped(app, index);
+            } else {
+                select_from_picker(app, ctx);
+            }
+        }
+        app::ClickAction::Suggestion(index) => {
+            app.thread_mut().selected = index;
+            app.accept_suggestion();
+        }
+        app::ClickAction::SideThread => {
+            app.active = 1 - app.active;
+            app.picker = None;
+        }
+        app::ClickAction::Link(url) => crate::oauth::open_in_browser(&url),
+    }
+}
+
 /// The files named with `@` in a prompt, resolved against the working
 /// directory. A name may be quoted (`@"my file.png"`) when it has spaces.
 fn mentions(text: &str, cwd: &std::path::Path) -> Vec<String> {
@@ -2202,6 +2236,10 @@ fn event_loop(
                                     app.copied =
                                         Some((format!("copied {chars} chars"), Instant::now()));
                                 }
+                            } else if !dragged {
+                                // A click that did not drag acts on whatever it
+                                // landed on.
+                                click_at(app, ctx, mouse.column, mouse.row);
                             }
                             app.selection = None;
                         }

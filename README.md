@@ -205,6 +205,13 @@ input band with a `›` prompt and a blinking `│` caret, then a model line and
 - **Tool output is hidden by default**: the transcript carries the call (`read src/main.rs`), not
   what it returned. `ctrl-o` shows the output under its call and hides it again, which is the
   difference between following the work and reading it.
+- **The mouse is not just for scrolling.** The wheel scrolls, dragging selects and copies, and a
+  click acts on whatever it landed on: a row of a picker or of the completion popup behaves like
+  Enter on that row, the `ctrl + / for side` hint in the footer switches threads, and a link in a
+  message opens in the browser. Every frame records the regions it drew, so a click is a hit test
+  against the last frame rather than a guess at the layout. Hover highlighting is deliberately not
+  implemented: it costs a redraw per mouse move, and the terminal's own cursor already says where
+  the pointer is.
 - A subagent reports its current step on **one line that updates** (`subagent → grep tokenizer`)
   rather than a line per step, and the call that started it reads `task: <description>`.
 - The transcript sticks to the newest message; the mouse wheel or `PageUp`/`PageDown` scrolls
