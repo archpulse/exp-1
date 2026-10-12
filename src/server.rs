@@ -3,7 +3,7 @@
 
 use anyhow::{Context, Result};
 use axum::Router;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::sse::{Event, Sse};
 use axum::response::{IntoResponse, Json, Response};
@@ -196,7 +196,7 @@ async fn run_subagent(
                             Err(err) => Err(err),
                         }
                     }
-                    Some(entry) => match request_target(entry, candidate).await {
+                    Some(entry) => match request_target(entry, candidate, &session).await {
                         Ok(target) => crate::backends::stream(
                             target,
                             store::prompt("subagent", SUBAGENT_INSTRUCTIONS),
@@ -1193,7 +1193,7 @@ async fn run_turn(
                             Err(err) => Err(err),
                         }
                     }
-                    Some(entry) => match request_target(entry, candidate).await {
+                    Some(entry) => match request_target(entry, candidate, &session).await {
                         Ok(target) => {
                             crate::backends::stream(
                                 target,
@@ -2452,12 +2452,34 @@ async fn answer(
 /// Builds the request target for a provider. GitHub Copilot is the odd one:
 /// its stored credential is a long-lived GitHub token, and the host and bearer
 /// token are both derived from a short-lived exchange done per request.
+/// Headers the opencode gateways want on every call. They route by session and
+/// refuse a request without it outright: "Request is missing x-opencode-session
+/// and cannot be routed efficiently".
+fn gateway_headers(
+    provider: &'static crate::providers::Provider,
+    session: &Arc<Session>,
+) -> Vec<(String, String)> {
+    if crate::providers::key_group(provider.id) != Some("opencode") {
+        return Vec::new();
+    }
+    vec![
+        ("x-opencode-session".to_string(), session.id.clone()),
+        (
+            "x-opencode-project".to_string(),
+            session.cwd().display().to_string(),
+        ),
+        ("x-opencode-client".to_string(), "exp-1-agent".to_string()),
+    ]
+}
+
 async fn request_target(
     provider: &'static crate::providers::Provider,
     model: &str,
+    session: &Arc<Session>,
 ) -> Result<crate::backends::Target, String> {
     let stored = store::api_key(provider.id);
     let wire = provider.wire_for(model);
+    let headers = gateway_headers(provider, session);
 
     // Vertex mints an access token from gcloud's application default
     // credentials, and builds its path from the project and location.
@@ -2478,7 +2500,7 @@ async fn request_target(
             ),
             key: Some(config.access_token),
             model: model.to_string(),
-            headers: Vec::new(),
+            headers,
         });
     }
 
@@ -2497,7 +2519,7 @@ async fn request_target(
             endpoint: provider.endpoint_for(model),
             key: Some(oidc),
             model: model.to_string(),
-            headers: Vec::new(),
+            headers,
         });
     }
 
@@ -2512,7 +2534,7 @@ async fn request_target(
             endpoint: format!("{host}{}", wire.suffix()),
             key: Some(token),
             model: model.to_string(),
-            headers: Vec::new(),
+            headers,
         });
     }
 
@@ -2522,7 +2544,7 @@ async fn request_target(
         endpoint: provider.endpoint_for(model),
         key: stored,
         model: model.to_string(),
-        headers: Vec::new(),
+        headers,
     })
 }
 
@@ -2543,11 +2565,14 @@ fn provider_context_window() -> u64 {
 /// The active model's compaction threshold, zero when the model is unknown.
 fn model_context_limit(shared: &Arc<Shared>) -> u64 {
     let slug = shared.agent.model();
-    shared
-        .catalog
-        .iter()
-        .find(|model| model.slug == slug)
-        .map(|model| model.context_limit())
+    if let Some(model) = shared.catalog.iter().find(|model| model.slug == slug) {
+        return model.context_limit();
+    }
+    // A model the Codex cache does not list: models.dev knows its window, and
+    // without one the conversation would never be compacted at all.
+    crate::providers::catalog_id(&shared.agent.provider())
+        .and_then(|catalog| crate::models_dev::context_limit(catalog, &slug))
+        .map(|window| window * catalog::compact_threshold_percent() / 100)
         .unwrap_or(0)
 }
 
@@ -3074,6 +3099,16 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
         sessions: Mutex::new(restored),
     });
 
+    // The model list is fetched, not baked in: bring it up to date in the
+    // background so the first picker of the day is current.
+    {
+        let shared = shared.clone();
+        tokio::spawn(async move {
+            let http = shared.agent.registry.lock().await.http();
+            crate::models_dev::refresh_if_stale(&http).await;
+        });
+    }
+
     let app = Router::new()
         .route("/health", get(health))
         .route("/sessions", get(list_sessions).post(create_session))
@@ -3105,27 +3140,57 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
     Ok(())
 }
 
-async fn models(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Response {
+/// What a model list request asks for.
+#[derive(serde::Deserialize)]
+struct ModelsQuery {
+    /// `all=1` ignores the scope: the `/scoped-models` picker has to offer the
+    /// models that are not ticked yet.
+    #[serde(default)]
+    all: Option<String>,
+}
+
+async fn models(
+    State(shared): State<Arc<Shared>>,
+    headers: HeaderMap,
+    Query(query): Query<ModelsQuery>,
+) -> Response {
     if !authorized(&shared, &headers) {
         return unauthorized();
     }
     let active = shared.agent.provider();
+    let everything = query
+        .all
+        .as_deref()
+        .is_some_and(|value| value == "1" || value == "true");
+    let scoped = store::load_settings().scoped_models;
+    let allowed = |slug: &str| {
+        everything || scoped.is_empty() || scoped.iter().any(|chosen| chosen == slug)
+    };
+
     // Every provider but Codex publishes a plain list of model ids.
     if let Some(provider) = crate::providers::by_id(&active)
         && provider.models.iter().any(|(_, wire)| wire.is_remote())
     {
-        let scoped = store::load_settings().scoped_models;
-        let ids: Vec<String> = provider
-            .model_ids()
-            .into_iter()
-            .filter(|model| scoped.is_empty() || scoped.contains(model))
-            .collect();
+        // The live catalogue first: it is the provider's own list, refreshed in
+        // the background instead of baked into this binary. A provider with no
+        // entry there keeps the table in providers.rs.
+        let live = crate::providers::catalog_id(&active)
+            .map(crate::models_dev::models_for)
+            .unwrap_or_default();
+        let ids: Vec<String> = if live.is_empty() {
+            provider.model_ids()
+        } else {
+            live.into_iter().map(|entry| entry.slug).collect()
+        };
         let list: Vec<WireModel> = ids
             .into_iter()
+            .filter(|slug| allowed(slug))
             .map(|slug| WireModel {
+                context_window: crate::providers::catalog_id(&active)
+                    .and_then(|catalog| crate::models_dev::context_limit(catalog, &slug))
+                    .unwrap_or_else(provider_context_window),
                 display_name: slug.clone(),
                 description: format!("via {}", provider.label),
-                context_window: provider_context_window(),
                 slug,
                 efforts: Vec::new(),
                 default_effort: None,
@@ -3134,11 +3199,10 @@ async fn models(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Respon
         return Json(list).into_response();
     }
 
-    let scoped = store::load_settings().scoped_models;
     let models: Vec<WireModel> = catalog::load()
         .into_iter()
         .filter(|model| model.listed)
-        .filter(|model| scoped.is_empty() || scoped.contains(&model.slug))
+        .filter(|model| allowed(&model.slug))
         .map(|model| WireModel {
             slug: model.slug,
             context_window: model.context_window,
@@ -3181,6 +3245,21 @@ async fn list_providers(State(shared): State<Arc<Shared>>, headers: HeaderMap) -
 }
 
 /// `/login`: pick the active provider, and store a key when one is needed.
+/// Stores a key for a provider and for every provider that shares its key:
+/// the opencode gateways are one account, so one paste signs into both.
+fn store_key(provider: &'static crate::providers::Provider, key: &str) -> anyhow::Result<()> {
+    store::set_api_key(provider.id, key)?;
+    if let Some(group) = crate::providers::key_group(provider.id) {
+        for sibling in crate::providers::PROVIDERS
+            .iter()
+            .filter(|other| crate::providers::key_group(other.id) == Some(group))
+        {
+            let _ = store::set_api_key(sibling.id, key);
+        }
+    }
+    Ok(())
+}
+
 async fn login(
     State(shared): State<Arc<Shared>>,
     headers: HeaderMap,
@@ -3331,14 +3410,19 @@ async fn login(
         })
         .into_response();
     }
-    if let Some(key) = body.key.as_deref().map(str::trim).filter(|k| !k.is_empty())
-        && let Err(err) = store::set_api_key(provider.id, key)
-    {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("could not store the key: {err:#}"),
-        )
-            .into_response();
+    if let Some(key) = body.key.as_deref().map(str::trim).filter(|k| !k.is_empty()) {
+        if let Err(err) = store_key(provider, key) {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("could not store the key: {err:#}"),
+            )
+                .into_response();
+        }
+        // A fresh sign-in is a good moment to fetch the current model list.
+        let http = shared.agent.registry.lock().await.http();
+        tokio::spawn(async move {
+            crate::models_dev::refresh_if_stale(&http).await;
+        });
     }
     // The Anthropic OAuth provider adopts a token another tool already holds
     // before asking the user to sign in.

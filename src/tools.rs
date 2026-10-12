@@ -167,6 +167,11 @@ pub struct Registry {
 }
 
 impl Registry {
+    /// The shared HTTP client, for the few callers outside this module.
+    pub fn http(&self) -> reqwest::Client {
+        self.http.clone()
+    }
+
     pub fn new() -> Self {
         Self {
             http: reqwest::Client::builder()

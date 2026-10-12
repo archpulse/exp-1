@@ -443,4 +443,15 @@ impl Connection {
         response.json().await.context("read the catalogue")
     }
 
+    /// The same list without the scope applied: the picker that *sets* the
+    /// scope has to be able to offer what is not in it yet.
+    pub async fn models_all(&self) -> Result<Vec<crate::proto::WireModel>> {
+        let response = self
+            .auth(self.http.get(format!("{}/models?all=1", self.url)))
+            .send()
+            .await
+            .context("fetch the catalogue")?;
+        response.json().await.context("read the catalogue")
+    }
+
 }

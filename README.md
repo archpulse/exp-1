@@ -250,6 +250,19 @@ using each entry's `slug`, `display_name`, `description`, `visibility`,
 `default_reasoning_level` and `supported_reasoning_levels`. The startup default is the first
 listed model in that catalogue.
 
+**Every other provider gets its list live, from models.dev.** The catalogue is fetched at most
+once every twelve hours into `~/.cache/exp-1/models-dev.json`, held in memory, and read for three
+things: the model ids a provider offers, the protocol each model speaks (models.dev records it as
+the AI SDK package the provider is configured with — `@ai-sdk/anthropic` for a Claude model behind
+a gateway, `@ai-sdk/openai` for a Grok one), and the context window, which is what the auto
+compaction threshold is computed from. A provider missing from the catalogue keeps the table in
+`src/providers.rs`, and so does a machine that is offline, so the app never depends on the fetch.
+
+A model the tables miss altogether still gets a protocol: its vendor prefix decides (`claude-*`,
+`minimax-*` and `qwen-*` speak Anthropic, `grok-*`, `gpt-*` and `muse-*` speak Responses,
+`gemini-*` speaks Gemini, everything else is chat), and a provider that speaks one protocol
+throughout answers for anything else.
+
 Efforts genuinely differ per model, which is why guessing them does not work:
 
 | Model | Efforts |
@@ -368,6 +381,12 @@ position. Picking a provider
 that is already signed in switches to it and says so; picking the one already in use — or running
 `/login <id>` — signs in again on purpose. A device-code sign-in opens the vendor's page in the
 browser and prints the URL and code as the fallback.
+
+**One key can cover several providers.** `opencode-go` and `opencode-zen` are one account behind
+two base URLs, so signing into either stores the key for both (`providers::key_group` names the
+groups). The opencode gateways also route by session: every request carries
+`x-opencode-session`, `x-opencode-project` and `x-opencode-client`, without which the gateway
+refuses it outright ("Request is missing x-opencode-session").
 
 Four wire protocols cover everything implemented here: the **OpenAI chat-completions** API, shared
 by a dozen vendors, **OpenAI Responses**, **Anthropic messages**, and Vertex AI's native
@@ -571,7 +590,7 @@ All routes require `Authorization: Bearer <password>`.
 | `GET` | `/sessions/{id}/events` | SSE: snapshot, deltas, tools, usage, title, done, idle |
 | `POST` | `/sessions/{id}/answer` | answer a pending `ask_question` |
 | `POST` | `/sessions/{id}/interrupt` | abort the running turn |
-| `GET` | `/models` | the catalogue, with each model's real efforts |
+| `GET` | `/models` | the catalogue, with each model's real efforts. `?all=1` ignores the scope: the picker that sets the scope needs the models outside it |
 
 A session carries its own working directory, so one server serves several projects; the directory
 arrives with `POST /sessions` rather than being fixed when the server starts.

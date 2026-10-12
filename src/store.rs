@@ -47,6 +47,12 @@ pub fn dir() -> PathBuf {
     home().join(".cache").join("exp-1").join("sessions")
 }
 
+/// The cache directory itself, above the conversations: the live model
+/// catalogue lives here, where `trim_cache` never touches it.
+pub fn cache_root() -> PathBuf {
+    dir().parent().map(PathBuf::from).unwrap_or_else(dir)
+}
+
 /// How much of the cache the conversations may take. Past this, the oldest
 /// session files are dropped: they are a cache, and the alternative is a
 /// directory that grows without ever being looked at again.

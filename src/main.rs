@@ -12,6 +12,7 @@ mod daemon;
 mod latex;
 mod mcp;
 mod md;
+mod models_dev;
 mod proto;
 mod providers;
 mod oauth;
@@ -628,7 +629,7 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             let conn = ctx.conn.clone();
             let tx = ctx.events.clone();
             tokio::spawn(async move {
-                match conn.models().await {
+                match conn.models_all().await {
                     Ok(list) => {
                         let _ = tx.send(AgentMsg::Models(list));
                     }

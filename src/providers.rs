@@ -381,24 +381,31 @@ pub const PROVIDERS: &[Provider] = &[
             m("gpt-6-luna", OpenAiResponses),
             m("gpt-5.6-luna", OpenAiResponses),
             m("muse-spark-1.3-contributor", OpenAiResponses),
+            m("muse-spark-1.2-contributor", OpenAiResponses),
             m("claude-haiku-5-5", Anthropic),
             m("minimax-m3", Anthropic),
             m("minimax-m2.7", Anthropic),
             m("qwen3.8-max", Anthropic),
             m("qwen3.8-flash", Anthropic),
+            m("qwen3.7-plus", Anthropic),
             m("glm-5.3", OpenAiChat),
             m("glm-5.3-flash", OpenAiChat),
+            m("glm-5.2", OpenAiChat),
             m("kimi-k3", OpenAiChat),
             m("kimi-k2.7-code", OpenAiChat),
             m("deepseek-v4-pro", OpenAiChat),
             m("deepseek-v4-flash", OpenAiChat),
+            m("deepseek-v4-flash-vision-exp", OpenAiChat),
             m("deepseek-v4.1-flash", OpenAiChat),
             m("mimo-v2.6-pro", OpenAiChat),
             m("mimo-v2.6-flash", OpenAiChat),
             m("mimo-v2.5", OpenAiChat),
+            m("mimo-v2.5-pro", OpenAiChat),
             m("longcat-2.0", OpenAiChat),
+            m("longcat-2.5-preview-free", OpenAiChat),
             m("step-5-preview-free", OpenAiChat),
             m("hy3", OpenAiChat),
+            m("hy4-preview", OpenAiChat),
             m("space-bunny", OpenAiChat),
         ],
     },
@@ -484,6 +491,58 @@ pub fn by_id(id: &str) -> Option<&'static Provider> {
     PROVIDERS.iter().find(|provider| provider.id == id)
 }
 
+/// The id a provider has in the models.dev catalogue, when it is listed there.
+/// Its entry supplies the live model list and the protocol of each model; a
+/// provider without one keeps the table above.
+pub fn catalog_id(id: &str) -> Option<&'static str> {
+    Some(match id {
+        "openai-api" => "openai",
+        "anthropic" | "anthropic-auth" => "anthropic",
+        "gemini" => "google",
+        "vertex" => "google-vertex",
+        "deepseek" => "deepseek",
+        "kimi" => "moonshotai",
+        "qwen" => "alibaba-cn",
+        "minimax" => "minimax-coding-plan",
+        "stepfun" => "stepfun",
+        "fireworks" => "fireworks-ai",
+        "openrouter" => "openrouter",
+        "groq" => "groq",
+        "grok" => "xai",
+        "github-copilot" => "github-copilot",
+        "meta-auth" | "muse-spark" => "meta",
+        "glm" => "zai",
+        "glm-coding-plan" => "zai-coding-plan",
+        "glm-cn" => "zhipuai",
+        "glm-cn-coding-plan" => "zhipuai-coding-plan",
+        "cline-pass" => "cline-pass",
+        "agentrouter" => "agentrouter",
+        "opencode-zen" => "opencode",
+        "opencode-go" => "opencode-go",
+        _ => return None,
+    })
+}
+
+/// Providers that accept the same key: signing into one signs into all of
+/// them. The opencode gateways are one account behind two base URLs.
+pub fn key_group(id: &str) -> Option<&'static str> {
+    match id {
+        "opencode-go" | "opencode-zen" => Some("opencode"),
+        _ => None,
+    }
+}
+
+/// The wire a model id implies, for one no table lists. Gateways route by
+/// upstream vendor, so the prefix is what gives it away.
+fn infer_wire(model: &str) -> Option<Wire> {
+    Some(match model.split(['-', '.']).next().unwrap_or(model) {
+        "claude" | "minimax" | "qwen" => Wire::Anthropic,
+        "grok" | "gpt" | "muse" => Wire::OpenAiResponses,
+        "gemini" => Wire::Gemini,
+        _ => return None,
+    })
+}
+
 /// The provider used before anyone logs in.
 pub const DEFAULT_PROVIDER: &str = "openai-auth";
 
@@ -499,12 +558,25 @@ impl Provider {
 
     /// The protocol a given model answers on, falling back to the first entry.
     pub fn wire_for(&self, model: &str) -> Wire {
-        self.models
-            .iter()
-            .find(|(id, _)| *id == model)
-            .map(|(_, wire)| *wire)
-            .or_else(|| self.models.first().map(|(_, wire)| *wire))
-            .unwrap_or(OpenAiChat)
+        if let Some((_, wire)) = self.models.iter().find(|(id, _)| *id == model) {
+            return *wire;
+        }
+        // A model the table does not know: the live catalogue says which
+        // protocol it speaks, then the family the id belongs to, then, for a
+        // provider that speaks one protocol throughout, that one.
+        if let Some(catalog) = catalog_id(self.id)
+            && let Some(wire) = crate::models_dev::wire_for(catalog, model)
+        {
+            return wire;
+        }
+        if let Some(wire) = infer_wire(model) {
+            return wire;
+        }
+        let mut wires = self.models.iter().map(|(_, wire)| *wire);
+        match (wires.next(), wires.next()) {
+            (Some(only), None) => only,
+            _ => OpenAiChat,
+        }
     }
 
     /// The full URL for a model.
@@ -532,6 +604,38 @@ mod tests {
         for provider in PROVIDERS {
             assert!(seen.insert(provider.id), "duplicate id {}", provider.id);
         }
+    }
+
+    /// The opencode gateways are one account, so one key signs into both.
+    #[test]
+    fn the_opencode_gateways_share_one_key() {
+        assert_eq!(key_group("opencode-go"), Some("opencode"));
+        assert_eq!(key_group("opencode-zen"), key_group("opencode-go"));
+        assert_eq!(key_group("anthropic"), None);
+    }
+
+    /// A model no table lists still gets a protocol: the vendor decides.
+    #[test]
+    fn a_model_the_table_misses_falls_back_by_family() {
+        let go = by_id("opencode-go").expect("opencode-go");
+        // Known models keep the table's answer, whatever a heuristic says.
+        assert_eq!(go.wire_for("claude-haiku-5-5"), Wire::Anthropic);
+        assert_eq!(go.wire_for("glm-5.3"), Wire::OpenAiChat);
+        assert_eq!(go.wire_for("grok-4.7"), Wire::OpenAiResponses);
+        // Unknown ones follow their vendor, and anything else is chat, since a
+        // gateway that speaks several protocols has no single default.
+        assert_eq!(go.wire_for("claude-opus-9"), Wire::Anthropic);
+        assert_eq!(go.wire_for("grok-9"), Wire::OpenAiResponses);
+        assert_eq!(go.wire_for("brand-new-thing"), Wire::OpenAiChat);
+    }
+
+    /// Providers listed in models.dev carry the id they are filed under there.
+    #[test]
+    fn catalog_ids_are_mapped_where_the_names_differ() {
+        assert_eq!(catalog_id("opencode-zen"), Some("opencode"));
+        assert_eq!(catalog_id("opencode-go"), Some("opencode-go"));
+        assert_eq!(catalog_id("gemini"), Some("google"));
+        assert_eq!(catalog_id("openai-auth"), None);
     }
 
     #[test]
