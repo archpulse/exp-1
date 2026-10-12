@@ -17,6 +17,7 @@ ratatui = "0.30"
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "form", "rustls", "webpki-roots", "charset", "http2"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+regex = "1"
 # The bundled titler is a sibling crate and pulls in Candle. It is optional so
 # a build without it — CI, or a cross-build for a platform where its TLS stack
 # does not link — still produces a working agent, minus local titles.

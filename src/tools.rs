@@ -13,9 +13,10 @@ use std::time::{Duration, Instant};
 use tokio::process::Command;
 use tokio::sync::{Mutex, oneshot};
 
-const SHELL_TIMEOUT: Duration = Duration::from_secs(120);
 /// A foreground command still running after this long is promoted to a
-/// background task, so the agent is never blocked on something slow.
+/// background task, so the agent is never blocked on something slow. A
+/// background task has no clock on it: builds and test suites run for minutes,
+/// and the old 120s axe was cutting them off mid-flight.
 const FOREGROUND_LIMIT: Duration = Duration::from_secs(60);
 /// Hard cap on anything handed back to the model.
 const MAX_OUTPUT: usize = 30_000;
@@ -366,6 +367,16 @@ fn err(message: impl Into<String>) -> Outcome {
     }
 }
 
+/// A byte offset moved back to a character boundary, so truncating text never
+/// panics in the middle of a multi-byte character.
+fn cut(text: &str, at: usize) -> &str {
+    let mut end = at.min(text.len());
+    while end > 0 && !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    &text[..end]
+}
+
 /// Applies a line cap and a byte cap, in that order.
 fn clamp(text: &str, limit: Option<usize>) -> String {
     let limit = limit.unwrap_or(DEFAULT_LINES);
@@ -376,7 +387,8 @@ fn clamp(text: &str, limit: Option<usize>) -> String {
         out.push_str(&format!("\n... truncated at {limit} lines"));
     }
     if out.len() > MAX_OUTPUT {
-        out.truncate(MAX_OUTPUT);
+        let end = cut(&out, MAX_OUTPUT).len();
+        out.truncate(end);
         out.push_str("\n... [output truncated by exp-1 agent]");
     }
     out
@@ -442,7 +454,8 @@ pub async fn read(cwd: &Path, args: &Value) -> Outcome {
     let header = format!("{} ({} lines)", raw, total);
     let mut body = taken.join("\n");
     if body.len() > MAX_OUTPUT {
-        body.truncate(MAX_OUTPUT);
+        let end = cut(&body, MAX_OUTPUT).len();
+        body.truncate(end);
         body.push_str("\n... [output truncated by exp-1 agent; read again with pos]");
     }
     let mut output = format!("{header}\n{body}");
@@ -665,9 +678,11 @@ pub async fn read_output(registry: &Shared, args: &Value) -> Outcome {
     let handle = task.handle.take().expect("finished");
     drop(guard);
 
-    let output = handle
-        .await
-        .unwrap_or_else(|_| "exit_code: failed\ntask panicked".to_string());
+    let output = match handle.await {
+        Ok(output) => output,
+        Err(e) if e.is_cancelled() => "exit_code: killed\ncommand was stopped".to_string(),
+        Err(_) => "exit_code: failed\ntask panicked".to_string(),
+    };
 
     let mut guard = registry.lock().await;
     guard.background.remove(id);
@@ -733,6 +748,9 @@ pub async fn shell(cwd: &Path, registry: &Shared, args: &Value) -> Outcome {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     command.env("TERM", "dumb");
+    // Dropping the task — the turn being torn down, the server shutting down —
+    // stops the process instead of leaving it running with nobody listening.
+    command.kill_on_drop(true);
 
     if background {
         // The agent keeps working; the model polls this id when it needs the result.
@@ -741,13 +759,9 @@ pub async fn shell(cwd: &Path, registry: &Shared, args: &Value) -> Outcome {
             guard.next_id("bg")
         };
         let handle = tokio::spawn(async move {
-            match tokio::time::timeout(SHELL_TIMEOUT, command.output()).await {
-                Err(_) => format!(
-                    "exit_code: timeout\ncommand timed out after {}s",
-                    SHELL_TIMEOUT.as_secs()
-                ),
-                Ok(Err(e)) => format!("exit_code: spawn_failed\n{e}"),
-                Ok(Ok(output)) => render_output(&output),
+            match command.output().await {
+                Err(e) => format!("exit_code: spawn_failed\n{e}"),
+                Ok(output) => render_output(&output),
             }
         });
         let mut guard = registry.lock().await;
@@ -806,13 +820,9 @@ pub async fn shell(cwd: &Path, registry: &Shared, args: &Value) -> Outcome {
                 let mut guard = registry.lock().await;
                 let id = guard.next_id("bg");
                 let handle = tokio::spawn(async move {
-                    match tokio::time::timeout(SHELL_TIMEOUT, waiter).await {
-                        Err(_) => format!(
-                            "exit_code: timeout\ncommand timed out after {}s",
-                            SHELL_TIMEOUT.as_secs()
-                        ),
-                        Ok(Err(e)) => format!("exit_code: spawn_failed\n{e}"),
-                        Ok(Ok(output)) => render_output(&output),
+                    match waiter.await {
+                        Err(e) => format!("exit_code: spawn_failed\n{e}"),
+                        Ok(output) => render_output(&output),
                     }
                 });
                 guard.background.insert(
@@ -1076,7 +1086,8 @@ pub async fn fetch(http: &reqwest::Client, args: &Value) -> Outcome {
     let taken: Vec<&str> = lines.iter().skip(pos - 1).take(limit).copied().collect();
     let mut body = taken.join("\n");
     if body.len() > MAX_OUTPUT {
-        body.truncate(MAX_OUTPUT);
+        let end = cut(&body, MAX_OUTPUT).len();
+        body.truncate(end);
         body.push_str("\n... [output truncated by exp-1 agent; fetch again with a further pos]");
     }
     let mut output = format!("{url} ({total} lines of text)\n\n{body}");
@@ -1596,6 +1607,142 @@ pub async fn ast(cwd: &Path, args: &Value) -> Outcome {
     }
 }
 
+// ---------------------------------------------------------------- grep
+
+/// Matches a `grep` prints before it stops; the answer says how to ask for more.
+const GREP_DEFAULT_MAX: usize = 100;
+/// One match line is shown up to this many characters: a minified file is a
+/// single line of megabytes and would eat the whole answer.
+const GREP_LINE_CAP: usize = 400;
+/// Directories a search never enters: version control, caches, build output and
+/// dependencies. Everything else, hidden directories included, is searched.
+const GREP_SKIP: &[&str] = &[".git", ".cache", "target", "node_modules"];
+
+/// Finds `pattern` in the files under `path` without pulling them into the
+/// conversation. The answer is capped, so a broad pattern returns a bounded
+/// list and says how to narrow it.
+pub async fn grep(cwd: &Path, args: &Value) -> Outcome {
+    let Some(pattern) = args.get("pattern").and_then(Value::as_str) else {
+        return err("grep: 'pattern' is required");
+    };
+    let re = match regex::Regex::new(pattern) {
+        Ok(re) => re,
+        Err(e) => return err(format!("grep: invalid pattern: {e}")),
+    };
+    let max = args
+        .get("max")
+        .and_then(Value::as_u64)
+        .map(|v| v.max(1) as usize)
+        .unwrap_or(GREP_DEFAULT_MAX);
+    let raw = args.get("path").and_then(Value::as_str).unwrap_or(".");
+    let path = resolve(cwd, raw);
+    if !path.exists() {
+        return err(format!("grep: {raw}: no such file or directory"));
+    }
+
+    let mut files: Vec<PathBuf> = Vec::new();
+    if path.is_dir() {
+        let mut stack = vec![path.clone()];
+        while let Some(dir) = stack.pop() {
+            let Ok(entries) = std::fs::read_dir(&dir) else {
+                continue;
+            };
+            for entry in entries.flatten() {
+                let Ok(kind) = entry.file_type() else {
+                    continue;
+                };
+                if kind.is_symlink() {
+                    continue; // a link cycle would loop forever
+                }
+                if kind.is_dir() {
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    if !GREP_SKIP.contains(&name.as_str()) {
+                        stack.push(entry.path());
+                    }
+                } else {
+                    files.push(entry.path());
+                }
+            }
+        }
+        files.sort();
+    } else {
+        files.push(path.clone());
+    }
+
+    let mut matches: Vec<String> = Vec::new();
+    let mut files_hit = 0usize;
+    let mut files_read = 0usize;
+    let mut capped = false;
+    'files: for file in &files {
+        // Anything that is not text — a binary, an unreadable file — has no
+        // line matches to report.
+        let Ok(text) = std::fs::read_to_string(file) else {
+            continue;
+        };
+        files_read += 1;
+        let mut hit = false;
+        for (index, line) in text.lines().enumerate() {
+            if !re.is_match(line) {
+                continue;
+            }
+            if !hit {
+                hit = true;
+                files_hit += 1;
+            }
+            matches.push(format!(
+                "{}:{}: {}",
+                shown_path(cwd, file),
+                index + 1,
+                clip_line(line)
+            ));
+            if matches.len() >= max {
+                capped = true;
+                break 'files;
+            }
+        }
+    }
+
+    if matches.is_empty() {
+        return Outcome {
+            output: format!(
+                "no matches for '{pattern}' under {raw} ({files_read} text file(s) searched)"
+            ),
+            background_id: None,
+        };
+    }
+
+    let mut body = matches.join("\n");
+    if body.len() > MAX_OUTPUT {
+        let end = cut(&body, MAX_OUTPUT).len();
+        body.truncate(end);
+        body.push_str("\n... [output truncated by exp-1 agent; narrow the pattern or the path]");
+    }
+    let mut output = format!(
+        "{pattern}: {} match(es) in {files_hit} file(s)\n{body}",
+        matches.len()
+    );
+    if capped {
+        output.push_str(&format!(
+            "\n... stopped at {max} matches; call grep again with a larger max or a narrower path"
+        ));
+    }
+    Outcome {
+        output,
+        background_id: None,
+    }
+}
+
+/// A match line, trimmed and clipped so one minified line cannot eat the answer.
+fn clip_line(line: &str) -> String {
+    let trimmed = line.trim_end();
+    if trimmed.chars().count() <= GREP_LINE_CAP {
+        return trimmed.to_string();
+    }
+    let mut clipped: String = trimmed.chars().take(GREP_LINE_CAP).collect();
+    clipped.push('…');
+    clipped
+}
+
 // ---------------------------------------------------------------- dispatch
 
 pub async fn call(
@@ -1618,6 +1765,7 @@ pub async fn call(
         "shell" => shell(cwd, registry, &args).await,
         "ast" => ast(cwd, &args).await,
         "count" => count(cwd, &args).await,
+        "grep" => grep(cwd, &args).await,
         "fetch" => {
             let http = { registry.lock().await.http.clone() };
             fetch(&http, &args).await
@@ -1636,8 +1784,9 @@ pub fn specs() -> Vec<Value> {
         json!({
             "type": "function",
             "name": "read",
-            "description": "Read a text file. Reads the whole file by default; pass limit for a \
-                            number of lines and pos to start at a line.",
+            "description": "Read a text file. Returns at most 400 lines by default; pass \
+                            limit for a different number of lines and pos for a 1-based \
+                            first line. A cut read says how to continue.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -1696,9 +1845,12 @@ pub fn specs() -> Vec<Value> {
         json!({
             "type": "function",
             "name": "shell",
-            "description": "Run a command. Foreground by default: you wait until it finishes. \
-                            Pass background true to keep working and poll output_id later. Output \
-                            is line-limited; re-read a previous run with output_id and a new limit.",
+            "description": "Run a command. Foreground by default: you wait until it finishes, \
+                            and one still running after 60s is promoted to the background \
+                            where you are told when it finishes. Pass background true to \
+                            keep working. A background command is never killed on a timer. \
+                            Output is line-limited; re-read a previous run with output_id \
+                            and a new limit.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -1765,6 +1917,26 @@ pub fn specs() -> Vec<Value> {
         }),
         json!({
             "type": "function",
+            "name": "grep",
+            "description": "Find a pattern in the files under a directory. Use it to locate \
+                            code instead of reading files to look for something. `pattern` \
+                            is a regular expression. Skips .git, .cache, target and \
+                            node_modules, follows no symlinks, and ignores files that are \
+                            not text. The answer is capped, and a broad pattern says how to \
+                            narrow it.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "pattern": { "type": "string", "description": "Regular expression to find." },
+                    "path": { "type": "string", "description": "File or directory, relative to the working directory (default: the working directory)." },
+                    "max": { "type": "integer", "description": "Matches to return (default 100)." }
+                },
+                "required": ["pattern"],
+                "additionalProperties": false
+            }
+        }),
+        json!({
+            "type": "function",
             "name": "websearch",
             "description": "Search the web and get page contents back. Use it for anything \
                             outside the machine: current versions, documentation, error \
@@ -1822,6 +1994,55 @@ pub fn specs() -> Vec<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A grep answers with `path:line: text`, skips build output, and stops at
+    /// `max` with a note on how to ask for more.
+    #[test]
+    fn grep_finds_matches_and_skips_build_dirs() {
+        let dir = std::env::temp_dir().join(format!("exp1-grep-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("src")).expect("temp dir");
+        std::fs::create_dir_all(dir.join("target")).expect("temp dir");
+        std::fs::write(dir.join("src/lib.rs"), "fn alpha() {}\nfn beta() {}\n").expect("write");
+        std::fs::write(dir.join("target/junk.rs"), "fn alpha() {}\n").expect("write");
+
+        let runtime = tokio::runtime::Runtime::new().expect("runtime");
+        let outcome = runtime.block_on(grep(&dir, &json!({ "pattern": "fn \\w+" })));
+        assert!(outcome.output.contains("src/lib.rs:1: fn alpha() {}"), "{}", outcome.output);
+        assert!(outcome.output.contains("src/lib.rs:2: fn beta() {}"), "{}", outcome.output);
+        assert!(!outcome.output.contains("junk.rs"), "target must be skipped: {}", outcome.output);
+        assert!(outcome.output.contains("2 match(es) in 1 file(s)"), "{}", outcome.output);
+
+        // A cap stops the list and says how to continue.
+        let outcome = runtime.block_on(grep(&dir, &json!({ "pattern": "fn", "max": 1 })));
+        assert!(outcome.output.contains("stopped at 1 matches"), "{}", outcome.output);
+
+        // A bad pattern is refused rather than treated as literal text.
+        let outcome = runtime.block_on(grep(&dir, &json!({ "pattern": "fn (" })));
+        assert!(outcome.output.contains("invalid pattern"), "{}", outcome.output);
+
+        // Nothing found is still an answer, with the number of files searched.
+        let outcome = runtime.block_on(grep(&dir, &json!({ "pattern": "nothing-here" })));
+        assert!(outcome.output.contains("no matches"), "{}", outcome.output);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Truncation lands on a character boundary: cutting Cyrillic at a byte
+    /// offset used to panic in the middle of a letter.
+    #[test]
+    fn truncation_never_splits_a_character() {
+        let text = "привет, мир! ".repeat(4000);
+        assert!(text.len() > MAX_OUTPUT, "the sample must be over the cap");
+        let clamped = clamp(&text, None);
+        assert!(clamped.len() <= MAX_OUTPUT + 64, "the byte cap held: {}", clamped.len());
+        assert!(clamped.starts_with("привет"), "and nothing was mangled");
+
+        // The helper itself never returns a slice inside a character.
+        for at in 0..text.len().min(200) {
+            let piece = cut(&text, at);
+            assert!(text.starts_with(piece));
+        }
+    }
 
     /// A read with no limit must not swallow a large file: it returns a window
     /// and says how to continue.

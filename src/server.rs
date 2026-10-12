@@ -542,11 +542,12 @@ const INSTRUCTIONS: &str = r#"You are exp-1 agent, a coding assistant operating 
 - `edit` — replace an exact snippet in a file. `path`, `old`, `new`. `old` must match the file exactly and only once: the edit fails if `old` is missing or matches more than once, so include enough surrounding context to make it unique. `old` and `new` must differ. It reports how many lines were replaced and the new line count.
 - `shell` — run a command. `command` is an **array of strings** (`["cargo", "test"]`), not a single string. Options:
   - Foreground by default: you wait for it to finish. A command still running after 60s is automatically promoted to a background task, so you are never blocked indefinitely.
-  - `background: true` returns immediately with a `bg-…` id; poll it by calling `shell` again with that id in `output_id`.
+  - `background: true` returns immediately with a `bg-…` id; you are woken with its output the moment it finishes, so poll with that id in `output_id` only to check progress.
   - Output is line-limited; re-read any earlier run (foreground `out-…` id or background `bg-…` id) by passing its id in `output_id` together with a new `limit`.
-  - Commands are killed after 120s. `TERM=dumb` is set, so output is plain and non-interactive; `stdin` is closed, so nothing will wait for input.
+  - A background command is never killed on a timer: a long build or a test suite runs to the end. `TERM=dumb` is set, so output is plain and non-interactive; `stdin` is closed, so nothing will wait for input.
 - `ast` — show the directory tree of the project. `path` (defaults to the working directory), `refresh` (set true to rebuild instead of using the `.cache/ast` cache). The tree caps at a few thousand entries and skips `.git`.
 - `count` — count the lines of a file, or of every file under a directory, without pulling the contents into the conversation. `path` (required), `refresh` (set true to recount instead of using the `.cache/count` cache). Answers are cached per file and recounted whenever its size or modification time change.
+- `grep` — find where something is without reading whole files. `pattern` (required) is a regular expression (`(?i)` for case-insensitive), `path` (defaults to the working directory) and `max` (matches returned, default 100). Skips `.git`, `.cache`, `target` and `node_modules`, follows no symlinks, ignores non-text files. Answers are `path:line: text`, capped, and a broad pattern says how to narrow it.
 - `fetch` — read one web page as plain text, paged like a file: `url` (required), `limit` (maximum lines, default 400) and `pos` (the 1-based line to start at). Use it when you already have a URL — documentation, a changelog, an issue — instead of searching for the page.
 - `websearch` — search the web and get page contents back. `query` (required). Tune with `numResults` (default 8), `type` (`auto`|`fast`|`deep`), `livecrawl` (`fallback`|`preferred`), and `contextMaxCharacters` (default 10000). Use it for anything outside this machine: current versions, documentation, error messages, facts you cannot read from the filesystem.
 - `ask_question` — ask the user a question and wait for the answer. `question` (required), with optional `options` to offer choices. Whatever the user types is taken as their answer. Use it when a decision is theirs to make and guessing would waste work — a choice of approach, a missing credential, an ambiguous requirement.
@@ -556,8 +557,9 @@ const INSTRUCTIONS: &str = r#"You are exp-1 agent, a coding assistant operating 
 
 - Prefer the dedicated tools for file work: `read` to look, `edit` for a precise change, `write` for a new file, `delete` to remove one. Use `shell` for building, testing, running, and anything with no dedicated tool (git, moving files, removing directories).
 - Read a file before editing it, and copy `old` from what you actually read. For `edit`, put in `old` the smallest snippet that uniquely identifies what to change. The result shows the lines around the change, so there is no need to read the file back to see what you did.
-- Run `shell` commands in the foreground unless you genuinely need to keep working while one runs; then use `background` and poll `output_id`. Re-read long output with a larger `limit` instead of guessing at it.
+- Run `shell` commands in the foreground unless you genuinely need to keep working while one runs; then use `background` — you are told when it finishes. Re-read long output with a larger `limit` instead of guessing at it.
 - Reach for `count` when the question is how big a file or a tree is in lines — never read a file just to count it.
+- Reach for `grep` to find where something is; reading files to look for it wastes context.
 - Reach for `fetch` when you have the URL and `websearch` when you only have the question.
 - Reach for `websearch` when the answer depends on something outside this machine.
 - Ask with `ask_question` rather than guessing when a choice is the user's to make; delegate broad or parallel work to `task` instead of flooding your own context.
@@ -1250,6 +1252,9 @@ fn command_preview(name: &str, arguments: &str) -> String {
         "count" => path("path")
             .map(|p| format!("count {p}"))
             .unwrap_or_default(),
+        "grep" => path("pattern")
+            .map(|p| format!("grep {p}"))
+            .unwrap_or_default(),
         "fetch" => path("url").map(|u| format!("fetch {u}")).unwrap_or_default(),
         "websearch" => path("query")
             .map(|q| format!("search: {q}"))
@@ -1279,7 +1284,14 @@ fn preview(text: &str) -> String {
     let collapsed: Vec<&str> = text.lines().take(12).collect();
     let mut out = collapsed.join("\n");
     if text.lines().count() > 12 || out.chars().count() > 400 {
-        out.truncate(400);
+        // Truncate at the 400th character, not the 400th byte: slicing a
+        // multi-byte character in half panics, and Cyrillic output is routine.
+        let end = out
+            .char_indices()
+            .nth(400)
+            .map(|(at, _)| at)
+            .unwrap_or(out.len());
+        out.truncate(end);
         out.push_str("\n…");
     }
     out
@@ -1379,7 +1391,7 @@ fn permission_resource(name: &str, arguments: &str, cwd: &std::path::Path) -> St
             .map(str::to_string)
     };
     match name {
-        "read" | "write" | "edit" | "delete" | "count" => text("path")
+        "read" | "write" | "edit" | "delete" | "count" | "grep" => text("path")
             .map(|raw| {
                 let path = std::path::Path::new(&raw);
                 if path.is_absolute() {
@@ -1481,6 +1493,22 @@ async fn permission_check(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A tool preview is cut at a character boundary. The old code truncated at
+    /// byte 400, which panics inside a multi-byte character; this sample is
+    /// built so byte 400 lands in the middle of a Cyrillic letter.
+    #[test]
+    fn a_preview_never_splits_a_character() {
+        // Each unit is 27 bytes and 400 = 27*14 + 22, which is inside `р`.
+        let sample = "привет — мир!   ".repeat(200);
+        assert!(!sample.is_char_boundary(400), "the sample must reproduce the trap");
+
+        let shown = preview(&sample);
+        assert!(shown.ends_with('…'), "{}", shown);
+        let kept = shown.trim_end_matches('…').trim_end_matches('\n');
+        assert!(sample.starts_with(kept), "nothing was mangled");
+        assert!(shown.chars().count() <= 402, "cut at the 400th character");
+    }
 
     /// A failure that is worth another attempt, and one that is not.
     #[test]
