@@ -481,20 +481,38 @@ fn rough_tokens(items: &[InputItem]) -> u64 {
 const PRUNE_AT_CHARS: usize = 200_000;
 const PRUNE_TO_CHARS: usize = 120_000;
 const PRUNE_KEEP_TURNS: usize = 2;
+/// Results the working set keeps whole, whatever the turns say: a single long
+/// turn must not overflow the window before it ends.
+const PRUNE_KEEP_OUTPUTS: usize = 6;
 
 /// Replaces old tool output with a note; returns how many items were dropped.
 fn prune_history(history: &mut [InputItem]) -> usize {
+    // The last turns stay whole: that is the working set.
     let starts: Vec<usize> = history
         .iter()
         .enumerate()
         .filter(|(_, item)| matches!(item, InputItem::Message { role, .. } if role == "user"))
         .map(|(index, _)| index)
         .collect();
-    let recent_from = if starts.len() > PRUNE_KEEP_TURNS {
+    let turn_from = if starts.len() > PRUNE_KEEP_TURNS {
         starts[starts.len() - PRUNE_KEEP_TURNS]
     } else {
-        return 0;
+        0
     };
+    // …and so do the last few results, turn or no turn.
+    let outputs: Vec<usize> = history
+        .iter()
+        .enumerate()
+        .filter(|(_, item)| matches!(item, InputItem::FunctionCallOutput { .. }))
+        .map(|(index, _)| index)
+        .collect();
+    let protected_from = if outputs.len() > PRUNE_KEEP_OUTPUTS {
+        outputs[outputs.len() - PRUNE_KEEP_OUTPUTS]
+    } else {
+        history.len()
+    };
+    let scan_to = if turn_from == 0 { history.len() } else { turn_from };
+
     let mut total: usize = history.iter().map(item_chars).sum();
     if total <= PRUNE_AT_CHARS {
         return 0;
@@ -514,11 +532,14 @@ fn prune_history(history: &mut [InputItem]) -> usize {
     }
 
     let mut dropped = 0usize;
-    for item in history.iter_mut().take(recent_from) {
+    for index in 0..scan_to {
         if total <= PRUNE_TO_CHARS {
             break;
         }
-        match item {
+        if index >= protected_from {
+            continue;
+        }
+        match &mut history[index] {
             InputItem::FunctionCallOutput { call_id, output } => {
                 let was = output.chars().count();
                 if was <= 400 {
@@ -1718,6 +1739,33 @@ mod tests {
         assert!(outputs[3] == &big && outputs[4] == &big, "the working set stays whole");
         assert!(outputs[0].contains("dropped"), "{}", outputs[0]);
         assert!(outputs[0].contains("read file-0.rs"), "the note names the call: {}", outputs[0]);
+    }
+
+    /// One long turn: the oldest results go, the last few stay whole, so a
+    /// twenty-call turn cannot overflow the window before it ends.
+    #[test]
+    fn a_single_long_turn_is_pruned_too() {
+        let big = "y".repeat(40_000);
+        let mut history = vec![InputItem::user_text("do the thing")];
+        for call in 0..10 {
+            history.push(InputItem::FunctionCall {
+                call_id: format!("call-{call}"),
+                name: "shell".to_string(),
+                arguments: "{\"command\": [\"ls\"]}".to_string(),
+            });
+            history.push(InputItem::FunctionCallOutput {
+                call_id: format!("call-{call}"),
+                output: big.clone(),
+            });
+        }
+        let before: usize = history.iter().map(item_chars).sum();
+        assert!(before > PRUNE_AT_CHARS, "{before}");
+
+        let dropped = prune_history(&mut history);
+        let after: usize = history.iter().map(item_chars).sum();
+        assert!(dropped >= 2, "{dropped}");
+        assert!(before - after > 80_000, "{}", before - after);
+        assert!(after < before);
     }
 
     /// A tool preview is cut at a character boundary. The old code truncated at
