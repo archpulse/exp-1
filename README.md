@@ -515,8 +515,20 @@ this machine:
 | | cold launch | next launch |
 | --- | --- | --- |
 | UI spawn → first frame | 189 ms | **84 ms** |
-| UI RSS | 14.4 MB | 14.6 MB |
-| server RSS | 62.5 MB | 63.4 MB (after two sessions) |
+| UI RSS | 14.4 MB | 16.0 MB |
+| server RSS | 15.2 MB | 20.5 MB (after a turn) |
+
+Measured again with five sessions open at once:
+
+| | one server + 5 UIs | five standalone processes |
+| --- | --- | --- |
+| idle | 97 MB (15 + 5 × 16) | 183 MB (5 × 37) |
+| with the bundled titler | 143 MB | 423 MB (5 × 85) |
+
+The server is lazy about what it loads: the Codex client appears on the first turn (+5 MB) and the
+bundled titler only if a title is actually generated locally (+48 MB, which is why `auto` prefers
+the model). That laziness is most of the point — the 48 MB of weights are paid once for every
+session on the machine instead of once per process.
 
 The expensive, once-per-machine state — the tool registry and the ~49 MB titler model — lives in
 the one server, and the Codex client is built the first time a Codex-protocol request needs it, so
