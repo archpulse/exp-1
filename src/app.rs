@@ -253,6 +253,9 @@ pub struct Msg {
     pub images: usize,
     /// Markdown parsed once, at push time. Empty for roles that are not rich text.
     pub runs: Vec<Vec<md::Run>>,
+    /// Tool output is hidden unless the reader asks for it; a progress line is
+    /// replaced in place by the next one.
+    pub kind: crate::proto::WireMsgKind,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -356,6 +359,16 @@ pub struct Thread {
     pub selected: usize,
     pub popup_open: bool,
     pub scroll: u16,
+    /// Built lines per transcript message, so a long conversation is not
+    /// re-wrapped on every frame. Rebuilt when the width, the theme or the
+    /// output setting changes; a message that changes is rebuilt on its own.
+    lines: Vec<Vec<Line<'static>>>,
+    lines_width: usize,
+    lines_theme: usize,
+    lines_output: bool,
+    /// Lines the last frame drew, so a view scrolled up can be held in place
+    /// while new ones arrive.
+    last_total: usize,
 }
 
 impl Thread {
@@ -378,6 +391,29 @@ impl Thread {
             selected: 0,
             popup_open: false,
             scroll: 0,
+            lines: Vec::new(),
+            lines_width: 0,
+            lines_theme: usize::MAX,
+            lines_output: false,
+            last_total: 0,
+        }
+    }
+
+    /// Builds the lines for every message that does not have them yet. The
+    /// width, the theme and the output setting are part of the cache key.
+    fn bake(&mut self, width: usize, theme_index: usize, show_output: bool, theme: &'static Theme) {
+        if self.lines_width != width || self.lines_theme != theme_index || self.lines_output != show_output
+        {
+            self.lines.clear();
+            self.lines_width = width;
+            self.lines_theme = theme_index;
+            self.lines_output = show_output;
+        }
+        if self.lines.len() > self.transcript.len() {
+            self.lines.truncate(self.transcript.len());
+        }
+        for msg in &self.transcript[self.lines.len()..] {
+            self.lines.push(message_lines(msg, width, theme, show_output));
         }
     }
 
@@ -398,18 +434,59 @@ impl Thread {
 
     pub fn push_user(&mut self, text: impl Into<String>, images: usize) {
         let text = text.into();
-        self.transcript.push(Msg { role: Role::User, text, images, runs: Vec::new() });
+        self.transcript.push(Msg {
+            role: Role::User,
+            text,
+            images,
+            runs: Vec::new(),
+            kind: crate::proto::WireMsgKind::Plain,
+        });
+        // Sending means looking at the answer: the view goes back to the end.
         self.scroll = 0;
     }
 
     pub fn push(&mut self, role: Role, text: impl Into<String>) {
+        self.push_kind(role, text, crate::proto::WireMsgKind::Plain);
+    }
+
+    pub fn push_kind(
+        &mut self,
+        role: Role,
+        text: impl Into<String>,
+        kind: crate::proto::WireMsgKind,
+    ) {
         let text = text.into();
         let runs = match role {
             Role::Assistant => md::render(&text),
             _ => Vec::new(),
         };
-        self.transcript.push(Msg { role, text, images: 0, runs });
-        self.scroll = 0;
+        self.transcript.push(Msg {
+            role,
+            text,
+            images: 0,
+            runs,
+            kind,
+        });
+    }
+
+    /// A line the next one replaces: a subagent's current step, so its work
+    /// does not fill the transcript one line at a time.
+    pub fn push_progress(&mut self, text: impl Into<String>) {
+        let text = text.into();
+        match self.transcript.last_mut() {
+            Some(last) if last.kind == crate::proto::WireMsgKind::Progress => {
+                last.text = text;
+                // The line changed, so its cached rendering is stale.
+                self.lines.truncate(self.transcript.len() - 1);
+            }
+            _ => self.transcript.push(Msg {
+                role: Role::Tool,
+                text,
+                images: 0,
+                runs: Vec::new(),
+                kind: crate::proto::WireMsgKind::Progress,
+            }),
+        }
     }
 
     pub fn clear_input(&mut self) {
@@ -492,6 +569,9 @@ pub struct App {
     /// True when there is nothing saved yet, so the empty screen can teach the
     /// commands once instead of on every launch.
     pub first_run: bool,
+    /// Whether tool output is drawn under its call line. Off by default: the
+    /// call is what a reader follows, the output is what they go back for.
+    pub show_tool_output: bool,
     /// A mouse drag over the screen: anchor and head, both (column, row).
     pub selection: Option<((u16, u16), (u16, u16))>,
     /// Plain text of every drawn screen row, refreshed each render, so a
@@ -578,6 +658,7 @@ impl App {
             attention: false,
             mode: "build".to_string(),
             first_run: false,
+            show_tool_output: false,
             selection: None,
             screen: Vec::new(),
             copied: None,
@@ -1211,116 +1292,50 @@ impl App {
 
     fn render_transcript(&mut self, frame: &mut Frame, area: Rect, width: usize) {
         let theme = self.theme();
-        let thread = self.thread();
-        let mut lines: Vec<Line> = Vec::new();
+        let (theme_index, show_output) = (self.theme, self.show_tool_output);
 
+        // Only what is missing is built: a long conversation must not be
+        // re-wrapped on every frame.
+        {
+            let thread = self.thread_mut();
+            thread.bake(width, theme_index, show_output, theme);
+        }
+        let thread = self.thread();
+
+        let mut prefix: Vec<Line> = Vec::new();
         if thread.transcript.is_empty() {
-            lines.push(Line::raw(""));
+            prefix.push(Line::raw(""));
             if self.first_run {
                 // First run shows command names only; descriptions are available
                 // through the completion popup and /help.
-                lines.push(Line::styled(
+                prefix.push(Line::styled(
                     "  To get started, describe a task or try one of these commands:",
                     Style::default().fg(theme.dim),
                 ));
-                lines.push(Line::raw(""));
+                prefix.push(Line::raw(""));
                 for (name, _) in COMMANDS {
-                    lines.push(Line::from(vec![
+                    prefix.push(Line::from(vec![
                         Span::raw("  "),
                         Span::styled(name, Style::default().fg(theme.accent)),
                     ]));
                 }
                 for (name, _) in &self.skills {
-                    lines.push(Line::from(vec![
+                    prefix.push(Line::from(vec![
                         Span::raw("  "),
                         Span::styled(name.clone(), Style::default().fg(theme.accent)),
                     ]));
                 }
             } else {
-                lines.push(Line::styled(
+                prefix.push(Line::styled(
                     "  Describe a task to start; / opens the commands, /help the keys.",
                     Style::default().fg(theme.dim),
                 ));
             }
         }
 
-        for msg in &thread.transcript {
-            match msg.role {
-                Role::User => {
-                    if msg.images > 0 {
-                        lines.push(pad_line(
-                            &format!("  ▣ {} image{} attached", msg.images, if msg.images == 1 { "" } else { "s" }),
-                            width,
-                            theme.input_bg,
-                        ));
-                    }
-                    let mut first = true;
-                    for body in msg.text.split('\n') {
-                        let room = width.saturating_sub(2);
-                        for wrapped in wrap_text(body, room) {
-                            let lead = if first { "› " } else { "  " };
-                            first = false;
-                            lines.push(pad_line(&format!("{lead}{wrapped}"), width, theme.input_bg));
-                        }
-                    }
-                }
-                Role::System => {
-                    for (index, body) in msg.text.split('\n').enumerate() {
-                        let lead = if index == 0 { "• " } else { "  " };
-                        let room = width.saturating_sub(lead.chars().count());
-                        for (part, wrapped) in wrap_text(body, room).into_iter().enumerate() {
-                            let prefix = if index == 0 && part == 0 { "• " } else { "  " };
-                            lines.push(Line::styled(
-                                format!("{prefix}{wrapped}"),
-                                Style::default().fg(theme.dim),
-                            ));
-                        }
-                    }
-                }
-                Role::Tool => {
-                    for body in msg.text.split('\n') {
-                        let room = width.saturating_sub(4);
-                        for wrapped in wrap_text(body, room) {
-                            lines.push(Line::styled(
-                                format!("    {wrapped}"),
-                                Style::default().fg(theme.dim),
-                            ));
-                        }
-                    }
-                }
-                Role::Assistant => {
-                    if msg.runs.is_empty() {
-                        for body in msg.text.split('\n') {
-                            lines.push(Line::raw(body.to_string()));
-                        }
-                    } else {
-                        for run_line in &msg.runs {
-                            for part in wrap_runs(run_line, width) {
-                                let mut spans: Vec<Span> = Vec::new();
-                                for run in &part {
-                                    if run.style == md::Style::CodeBlock {
-                                        spans.push(Span::styled(
-                                            "│ ",
-                                            Style::default().fg(theme.dim),
-                                        ));
-                                    }
-                                    spans.push(Span::styled(
-                                        run.text.clone(),
-                                        md_style(run.style, theme),
-                                    ));
-                                }
-                                if spans.is_empty() {
-                                    spans.push(Span::raw(""));
-                                }
-                                lines.push(Line::from(spans));
-                            }
-                        }
-                    }
-                }
-            }
-            lines.push(Line::raw(""));
-        }
-
+        // The streamed text and the activity line are small, so they are built
+        // fresh each frame.
+        let mut tail: Vec<Line> = Vec::new();
         if !thread.live.is_empty() {
             // The text being streamed is markdown too, so it is formatted while
             // it arrives instead of snapping into shape once the turn ends.
@@ -1336,7 +1351,7 @@ impl App {
                     if spans.is_empty() {
                         spans.push(Span::raw(""));
                     }
-                    lines.push(Line::from(spans));
+                    tail.push(Line::from(spans));
                 }
             }
         } else if thread.busy() {
@@ -1350,7 +1365,7 @@ impl App {
                 .started_at
                 .map(|start| start.elapsed().as_secs())
                 .unwrap_or(0);
-            lines.push(Line::from(vec![
+            tail.push(Line::from(vec![
                 Span::raw("  "),
                 Span::styled(
                     SPINNER[self.tick % SPINNER.len()].to_string(),
@@ -1363,12 +1378,38 @@ impl App {
             ]));
         }
 
-        // `scroll` counts lines scrolled up from the bottom, so the newest message is
-        // what you see unless you wheel upwards.
-        let max_scroll = (lines.len() as u16).saturating_sub(area.height);
-        let scroll = thread.scroll.min(max_scroll);
+        let total =
+            prefix.len() + thread.lines.iter().map(Vec::len).sum::<usize>() + tail.len();
+        let height = area.height as usize;
+        let max_scroll = total.saturating_sub(height);
+
+        // A view scrolled up stays where it is while new lines arrive; one at
+        // the bottom follows the conversation.
+        {
+            let thread = self.thread_mut();
+            let grew = total.saturating_sub(thread.last_total);
+            if grew > 0 && thread.scroll > 0 {
+                thread.scroll = thread.scroll.saturating_add(grew as u16);
+            }
+            thread.last_total = total;
+        }
+        let thread = self.thread();
+
+        // `scroll` counts lines scrolled up from the bottom, so the newest
+        // message is what you see unless you wheel upwards.
+        let scroll = (thread.scroll as usize).min(max_scroll);
         let offset = max_scroll - scroll;
-        frame.render_widget(Paragraph::new(lines).scroll((offset, 0)), area);
+        let mut visible: Vec<Line> = Vec::with_capacity(height);
+        for line in prefix
+            .iter()
+            .chain(thread.lines.iter().flatten())
+            .chain(tail.iter())
+            .skip(offset)
+            .take(height)
+        {
+            visible.push(line.clone());
+        }
+        frame.render_widget(Paragraph::new(visible), area);
     }
 
     fn render_popup(&self, frame: &mut Frame, area: Rect, suggestions: &[Suggestion]) {
@@ -1632,7 +1673,7 @@ impl App {
         } else if thread.busy() {
             "esc esc interrupts · /btw runs alongside".to_string()
         } else {
-            "enter send · ctrl-c quit · ↑↓ history · scroll to page".to_string()
+            "enter send · ctrl-c quit · ctrl-o output · ↑↓ history · scroll to page".to_string()
         };
         let left_style = if thread.error.is_some() {
             Style::default().fg(theme.warn)
@@ -1702,6 +1743,98 @@ fn pad_to(text: &str, width: usize) -> String {
     } else {
         format!("{text}{}", " ".repeat(width - len))
     }
+}
+
+/// The lines one transcript message renders to. Tool output is skipped unless
+/// the reader asked for it.
+fn message_lines(
+    msg: &Msg,
+    width: usize,
+    theme: &'static Theme,
+    show_output: bool,
+) -> Vec<Line<'static>> {
+    let mut lines: Vec<Line<'static>> = Vec::new();
+    match msg.role {
+        Role::User => {
+            if msg.images > 0 {
+                lines.push(pad_line(
+                    &format!(
+                        "  ▣ {} image{} attached",
+                        msg.images,
+                        if msg.images == 1 { "" } else { "s" }
+                    ),
+                    width,
+                    theme.input_bg,
+                ));
+            }
+            let mut first = true;
+            for body in msg.text.split('\n') {
+                let room = width.saturating_sub(2);
+                for wrapped in wrap_text(body, room) {
+                    let lead = if first { "› " } else { "  " };
+                    first = false;
+                    lines.push(pad_line(&format!("{lead}{wrapped}"), width, theme.input_bg));
+                }
+            }
+        }
+        Role::System => {
+            for (index, body) in msg.text.split('\n').enumerate() {
+                let lead = if index == 0 { "• " } else { "  " };
+                let room = width.saturating_sub(lead.chars().count());
+                for (part, wrapped) in wrap_text(body, room).into_iter().enumerate() {
+                    let prefix = if index == 0 && part == 0 { "• " } else { "  " };
+                    lines.push(Line::styled(
+                        format!("{prefix}{wrapped}"),
+                        Style::default().fg(theme.dim),
+                    ));
+                }
+            }
+        }
+        Role::Tool => {
+            // The call itself is the line that matters; its output is noise
+            // unless the reader asked for it.
+            if msg.kind == crate::proto::WireMsgKind::ToolOutput && !show_output {
+                return lines;
+            }
+            for body in msg.text.split('\n') {
+                let room = width.saturating_sub(4);
+                for wrapped in wrap_text(body, room) {
+                    lines.push(Line::styled(
+                        format!("    {wrapped}"),
+                        Style::default().fg(theme.dim),
+                    ));
+                }
+            }
+        }
+        Role::Assistant => {
+            if msg.runs.is_empty() {
+                for body in msg.text.split('\n') {
+                    lines.push(Line::raw(body.to_string()));
+                }
+            } else {
+                for run_line in &msg.runs {
+                    for part in wrap_runs(run_line, width) {
+                        let mut spans: Vec<Span> = Vec::new();
+                        for run in &part {
+                            if run.style == md::Style::CodeBlock {
+                                spans.push(Span::styled("│ ", Style::default().fg(theme.dim)));
+                            }
+                            spans.push(Span::styled(
+                                run.text.clone(),
+                                md_style(run.style, theme),
+                            ));
+                        }
+                        if spans.is_empty() {
+                            spans.push(Span::raw(""));
+                        }
+                        lines.push(Line::from(spans));
+                    }
+                }
+            }
+        }
+    }
+    lines.push(Line::raw(""));
+    lines
 }
 
 fn pad_line(text: &str, width: usize, bg: Color) -> Line<'static> {

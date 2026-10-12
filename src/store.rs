@@ -276,6 +276,8 @@ pub struct StoredMsg {
     /// `user`, `assistant`, `tool` or `system`.
     pub role: String,
     pub text: String,
+    #[serde(default)]
+    pub kind: crate::proto::WireMsgKind,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

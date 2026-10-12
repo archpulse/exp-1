@@ -22,7 +22,8 @@ use crate::catalog;
 use crate::daemon;
 use crate::proto::{
     AnswerBody, Health, LoginBody, PromptBody, ScopedBody, SessionSummary, WireAnswerRequest,
-    WireEvent, WireMsg, WireEffort, WireModel, WirePhase, WireProvider, WireSnapshot, WireUsage,
+    WireEvent, WireMsg, WireMsgKind, WireEffort, WireModel, WirePhase, WireProvider, WireSnapshot,
+    WireUsage,
 };
 use crate::protocol::{ContentPart, InputItem, Reasoning, ResponsesRequest, Usage};
 use crate::tools;
@@ -271,9 +272,9 @@ async fn run_subagent(
         }
 
         for (call_id, name, arguments) in calls {
-            session.broadcast(WireEvent::Tool {
-                text: format!("  subagent → {}", command_preview(&name, &arguments)),
-            });
+            // One line that updates in place: a subagent's steps replace each
+            // other instead of filling the transcript one line at a time.
+            session.progress(format!("  subagent → {}", command_preview(&name, &arguments)));
             // A subagent follows the same rules as its parent.
             let refusal = permission_check(&session, &name, &arguments).await;
             let outcome = if let Some(refusal) = refusal {
@@ -855,11 +856,42 @@ impl Session {
     }
 
     fn push(&self, role: &str, text: impl Into<String>) {
+        self.push_kind(role, text, WireMsgKind::Plain);
+    }
+
+    /// A tool's output: kept in the transcript, hidden by default in the UI.
+    fn push_output(&self, text: impl Into<String>) {
+        self.push_kind("tool", text, WireMsgKind::ToolOutput);
+    }
+
+    /// A line the next one replaces: a subagent's current step, so a long
+    /// investigation does not grow the transcript one step at a time.
+    fn progress(&self, text: impl Into<String>) {
+        let text = text.into();
+        if let Ok(mut state) = self.state.lock() {
+            match state.transcript.last_mut() {
+                Some(last) if last.kind == WireMsgKind::Progress => last.text = text.clone(),
+                _ => state.transcript.push(WireMsg {
+                    role: "tool".to_string(),
+                    text: text.clone(),
+                    images: 0,
+                    kind: WireMsgKind::Progress,
+                }),
+            }
+        }
+        self.broadcast(WireEvent::Tool {
+            text,
+            line: WireMsgKind::Progress,
+        });
+    }
+
+    fn push_kind(&self, role: &str, text: impl Into<String>, kind: WireMsgKind) {
         if let Ok(mut state) = self.state.lock() {
             state.transcript.push(WireMsg {
                 role: role.to_string(),
                 text: text.into(),
                 images: 0,
+                kind,
             });
         }
     }
@@ -1337,7 +1369,10 @@ async fn run_turn(
                 command_preview(name, arguments)
             };
             session.push("tool", label.clone());
-            session.broadcast(WireEvent::Tool { text: label });
+            session.broadcast(WireEvent::Tool {
+                text: label,
+                line: WireMsgKind::Plain,
+            });
         }
         session.set_phase(WirePhase::Running);
 
@@ -1347,8 +1382,11 @@ async fn run_turn(
                 watch_background(shared.clone(), session.clone(), id);
             }
             let shown = preview(&outcome.output);
-            session.push("tool", shown.clone());
-            session.broadcast(WireEvent::Tool { text: shown });
+            session.push_output(shown.clone());
+            session.broadcast(WireEvent::Tool {
+                text: shown,
+                line: WireMsgKind::ToolOutput,
+            });
 
             let mut history = session.history.lock().await;
             history.push(InputItem::FunctionCall {
@@ -1412,6 +1450,7 @@ async fn persist(session: &Arc<Session>) {
                 .map(|msg| store::StoredMsg {
                     role: msg.role.clone(),
                     text: msg.text.clone(),
+                    kind: msg.kind,
                 })
                 .collect::<Vec<_>>(),
         )
@@ -1433,9 +1472,11 @@ async fn persist(session: &Arc<Session>) {
     let _ = store::save_session(&stored);
 }
 
-/// How many messages of a conversation are kept on disk. Older ones fall off
-/// the front; the model's own context is bounded separately by compaction.
-const MAX_STORED_MESSAGES: usize = 250;
+/// How many messages of a conversation are kept on disk. A transcript line is
+/// small — tool output is previewed, not stored whole — so this is generous on
+/// purpose: a long conversation should still be there when it is reopened. The
+/// model's own context is bounded separately by pruning and compaction.
+const MAX_STORED_MESSAGES: usize = 5_000;
 
 fn command_preview(name: &str, arguments: &str) -> String {
     let value: serde_json::Value = match serde_json::from_str(arguments) {
@@ -1469,6 +1510,11 @@ fn command_preview(name: &str, arguments: &str) -> String {
         "ask_question" => path("question")
             .map(|q| format!("ask: {q}"))
             .unwrap_or_else(|| "ask".to_string()),
+        // A subagent call is named by its description, not by the whole task
+        // text it carries.
+        "task" => path("description")
+            .map(|d| format!("task: {d}"))
+            .unwrap_or_else(|| "task".to_string()),
         _ => {
             let argv = value
                 .get("command")
@@ -2298,6 +2344,7 @@ async fn session_snapshot(
                     role: msg.role.clone(),
                     text: msg.text.clone(),
                     images: 0,
+                    kind: msg.kind,
                 })
                 .collect(),
             live: String::new(),
@@ -2598,12 +2645,14 @@ async fn compact_if_full(shared: &Arc<Shared>, session: &Arc<Session>) -> bool {
     );
     session.broadcast(WireEvent::Tool {
         text: "compacting the conversation…".to_string(),
+        line: WireMsgKind::Plain,
     });
 
     if compact(shared, session).await.is_some() {
         session.push("system", "Conversation compacted; continuing from the summary");
         session.broadcast(WireEvent::Tool {
             text: "context compacted".to_string(),
+            line: WireMsgKind::Plain,
         });
         true
     } else {
@@ -3006,6 +3055,7 @@ fn restore_sessions() -> HashMap<String, Arc<Session>> {
                     role: msg.role.clone(),
                     text: msg.text.clone(),
                     images: 0,
+                    kind: msg.kind,
                 })
                 .collect();
         }

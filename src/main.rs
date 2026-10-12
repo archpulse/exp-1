@@ -42,7 +42,7 @@ use tokio::sync::mpsc;
 
 
 use app::{App, AskView, Phase, Role, THEMES};
-use proto::{WireEvent, WireModel, WirePhase, WireProvider};
+use proto::{WireEvent, WireModel, WireMsgKind, WirePhase, WireProvider};
 use protocol::Usage;
 
 /// Two Esc presses inside this window abort the running turn.
@@ -85,8 +85,8 @@ enum AgentMsg {
     Delta(usize, String),
     Reasoning(usize, String),
     AssistantDone(usize, String),
-    /// A tool line exactly as the server produced it.
-    ToolLine(usize, String),
+    /// A tool line exactly as the server produced it, and what kind it is.
+    ToolLine(usize, String, WireMsgKind),
     Usage(usize, Usage),
     Error(usize, String),
     Done(usize, String),
@@ -127,7 +127,7 @@ fn translate(thread: usize, event: WireEvent) -> Vec<AgentMsg> {
         WireEvent::Delta { text } => vec![AgentMsg::Delta(thread, text)],
         WireEvent::Reasoning { text } => vec![AgentMsg::Reasoning(thread, text)],
         WireEvent::Assistant { text } => vec![AgentMsg::AssistantDone(thread, text)],
-        WireEvent::Tool { text } => vec![AgentMsg::ToolLine(thread, text)],
+        WireEvent::Tool { text, line } => vec![AgentMsg::ToolLine(thread, text, line)],
         WireEvent::Usage { usage } => vec![AgentMsg::Usage(
             thread,
             Usage {
@@ -1376,6 +1376,12 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
                 attach_clipboard_image(app);
                 return;
             }
+            // ctrl+o shows the output of tool calls, which is hidden by default:
+            // the call lines are the story, the output is the footnote.
+            if ch == 'o' && key.modifiers.contains(KeyModifiers::CONTROL) {
+                app.show_tool_output = !app.show_tool_output;
+                return;
+            }
             // Typing stays available while a turn runs, so a /btw side question
             // can be asked mid-task.
             let thread = app.thread_mut();
@@ -1543,10 +1549,14 @@ fn apply(app: &mut App, message: AgentMsg) {
             thread.live.clear();
             thread.reasoning.clear();
         })),
-        AgentMsg::ToolLine(index, text) => (index, Box::new(move |app: &mut App| {
+        AgentMsg::ToolLine(index, text, kind) => (index, Box::new(move |app: &mut App| {
             let thread = &mut app.threads[index];
             thread.live.clear();
-            thread.push(Role::Tool, text);
+            match kind {
+                // A subagent's step replaces the previous one.
+                WireMsgKind::Progress => thread.push_progress(text),
+                _ => thread.push_kind(Role::Tool, text, kind),
+            }
         })),
         AgentMsg::Usage(index, usage) => (index, Box::new(move |app: &mut App| {
             app.threads[index].usage = Some(usage);
@@ -1583,7 +1593,7 @@ fn apply(app: &mut App, message: AgentMsg) {
                 if role == Role::User {
                     thread.push_user(message.text.clone(), message.images);
                 } else {
-                    thread.push(role, message.text.clone());
+                    thread.push_kind(role, message.text.clone(), message.kind);
                 }
             }
             if !snapshot.name.is_empty() {

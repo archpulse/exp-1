@@ -183,7 +183,14 @@ directory beneath it, a completion popup or a numbered selection picker above th
 input band with a `›` prompt and a blinking `│` caret, then a model line and a hint line.
 
 - A submitted prompt is drawn back in the transcript as a full-width band, the way Codex does.
-- The transcript sticks to the newest message; the mouse wheel scrolls upwards through history.
+- **Tool output is hidden by default**: the transcript carries the call (`read src/main.rs`), not
+  what it returned. `ctrl-o` shows the output under its call and hides it again, which is the
+  difference between following the work and reading it.
+- A subagent reports its current step on **one line that updates** (`subagent → grep tokenizer`)
+  rather than a line per step, and the call that started it reads `task: <description>`.
+- The transcript sticks to the newest message; the mouse wheel or `PageUp` scrolls upwards through
+  history, and a view scrolled up stays where it is while new lines arrive instead of being
+  dragged back to the bottom.
 - Dragging with the mouse selects text anywhere on the screen — masthead included — and releasing
   puts it on the clipboard: OSC 52 first, so it also works over ssh, then `wl-copy`, `xclip` or
   `xsel` when they exist. A `copied N chars` note confirms it in the hint line. The selection is a
@@ -353,7 +360,8 @@ rapid wheel scrolling.
 
 **Subagents.** The `task` tool runs a second agent with its own context and the same tools, then
 returns only its report — useful for work that would otherwise flood the caller's context. The
-report is cut at 6 000 characters, because it lands in the caller's context. Nested
+report is cut at 6 000 characters, because it lands in the caller's context, and the transcript
+shows its progress on a single line that is replaced at every step instead of one line per step. Nested
 subagents are offered while depth remains, capped at two levels so recursion cannot run away. The
 transcript shows each step the subagent takes.
 
@@ -629,6 +637,9 @@ huge tool output cannot make the conversation re-compact forever.
 
 The share is `EXP1_COMPACT_PERCENT` if you want a different one, which is also how the path can be
 exercised without filling a 272 000-token window.
+
+A conversation keeps up to 5 000 transcript messages on disk; the model's own context is bounded
+separately by pruning and compaction, so a long session stays readable without costing tokens.
 
 ## Persistence
 

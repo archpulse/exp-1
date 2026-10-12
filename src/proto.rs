@@ -3,6 +3,19 @@
 use serde::{Deserialize, Serialize};
 
 /// One transcript entry, as the UI displays it.
+/// What kind of line a transcript message is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WireMsgKind {
+    /// Ordinary text, shown as it arrives.
+    #[default]
+    Plain,
+    /// The output of a tool call: hidden unless the reader asks for it.
+    ToolOutput,
+    /// A line the next one replaces, for work that reports its steps.
+    Progress,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WireMsg {
     /// `user`, `assistant`, `tool` or `system`.
@@ -10,6 +23,8 @@ pub struct WireMsg {
     pub text: String,
     #[serde(default)]
     pub images: usize,
+    #[serde(default)]
+    pub kind: WireMsgKind,
 }
 
 /// How far along a turn is.
@@ -67,7 +82,7 @@ pub enum WireEvent {
     Delta { text: String },
     Reasoning { text: String },
     Assistant { text: String },
-    Tool { text: String },
+    Tool { text: String, #[serde(default)] line: WireMsgKind },
     Usage { usage: WireUsage },
     Error { message: String },
     Done { label: String },
