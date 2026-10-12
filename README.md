@@ -74,12 +74,31 @@ cargo build --release --target x86_64-pc-windows-gnu
 `dlltool` from `mingw-w64-binutils` is what the import libraries need; without it the build stops at
 `windows-sys`.
 
-A macOS binary needs no root either, but it cannot be finished on Linux as things stand: `reqwest`
-0.13's `rustls` feature pulls `rustls-platform-verifier`, which needs `Security.framework`,
-`SystemConfiguration` and `CoreFoundation` at link time, and those live only in the Apple SDK. Zig
-links Mach-O and libSystem happily; it does not ship the frameworks. Build the macOS binaries on a
-Mac or in CI (`.github/workflows/release.yml` does all four targets). The recipe below is the one
-that gets as far as the link:
+Without root the same binary comes out of an llvm-mingw tarball unpacked under `~/.local`. The Rust
+std for this target asks the linker for `libgcc.a`, which llvm-mingw does not ship, so a two-symlink
+shim supplies the equivalents, and `--no-default-features` drops the bundled titler the way CI does:
+
+```sh
+mkdir -p ~/.local/mingw-shim
+ln -sf ~/.local/llvm-mingw/lib/clang/*/lib/windows/libclang_rt.builtins-x86_64.a ~/.local/mingw-shim/libgcc.a
+ln -sf ~/.local/llvm-mingw/x86_64-w64-mingw32/lib/libunwind.a ~/.local/mingw-shim/libgcc_eh.a
+PATH="$HOME/.local/mingw-shim:$HOME/.local/llvm-mingw/bin:$PATH" \
+CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="$HOME/.local/llvm-mingw/bin/x86_64-w64-mingw32-clang" \
+RUSTFLAGS="-L $HOME/.local/mingw-shim" \
+cargo build --release --target x86_64-pc-windows-gnu --no-default-features
+```
+
+`cargo` and `rustup` from `~/.cargo/bin` know the cross targets; the system packages do not, and on
+this machine `~/.cargo/bin` is not on the `PATH`, so call them by their full path.
+
+A macOS binary needs no root either, and with `cargo zigbuild` the whole tree builds for
+`aarch64-apple-darwin`: `zig cc` cross-compiles the C dependencies (`aws-lc-sys` included, which a
+plain `cargo check` cannot do — the host `cc` rejects `-arch arm64`), and every crate compiles. What
+stops it is the last step: `reqwest` 0.13's `rustls` feature pulls `rustls-platform-verifier`, and
+the linker then reports `unable to find framework 'Security'` and `'CoreFoundation'`. Those live
+only in the Apple SDK; Zig links Mach-O and libSystem happily, it does not ship the frameworks. So
+the macOS binaries come from a Mac or from CI (`.github/workflows/release.yml` builds both arches).
+The recipe below is the one that gets as far as the link:
 
 ```sh
 mkdir -p ~/.local/zig && curl -L https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz \
