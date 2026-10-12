@@ -1641,6 +1641,45 @@ async fn set_mode(
     Json(serde_json::json!({ "mode": mode, "note": note })).into_response()
 }
 
+/// `/clear`: start this session over. The transcript on screen is only half of
+/// a conversation — the other half is the history the model is sent — so both
+/// go, along with the undo log, and the title is taken again on the next prompt.
+async fn clear_session(
+    State(shared): State<Arc<Shared>>,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+) -> Response {
+    if !authorized(&shared, &headers) {
+        return unauthorized();
+    }
+    let Some(session) = find(&shared, &id) else {
+        return (StatusCode::NOT_FOUND, "no such session").into_response();
+    };
+    // A turn in flight would keep writing into the conversation being cleared.
+    if let Some(task) = session.agent.lock().ok().and_then(|mut slot| slot.take()) {
+        task.abort();
+    }
+    {
+        let Ok(mut state) = session.state.lock() else {
+            return (StatusCode::INTERNAL_SERVER_ERROR, "session state is locked").into_response();
+        };
+        state.transcript.clear();
+        state.live.clear();
+        state.usage = None;
+        state.error = None;
+        state.question = None;
+        state.title.clear();
+        state.name.clear();
+        state.phase = WirePhase::Idle;
+    }
+    session.history.lock().await.clear();
+    if let Ok(mut log) = session.undo.lock() {
+        *log = tools::UndoLog::default();
+    }
+    session.broadcast(WireEvent::Idle);
+    StatusCode::NO_CONTENT.into_response()
+}
+
 /// `/fork`: continue this conversation as a new session, so a different
 /// approach can be tried without losing the original.
 async fn fork_session(
@@ -2679,6 +2718,7 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
         .route("/sessions/{id}/undo", post(undo))
         .route("/sessions/{id}/fork", post(fork_session))
         .route("/sessions/{id}/mode", post(set_mode))
+        .route("/sessions/{id}/clear", post(clear_session))
         .route("/sessions/{id}/diff", post(show_diff))
         .route("/mcp", get(list_mcp))
         .route("/sessions/{id}/cd", post(cd))

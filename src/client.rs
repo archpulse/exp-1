@@ -166,6 +166,19 @@ impl Connection {
             .to_string())
     }
 
+    /// Empties the session: transcript, model history and undo log.
+    pub async fn clear(&self, session: &str) -> Result<()> {
+        let response = self
+            .auth(self.http.post(format!("{}/sessions/{session}/clear", self.url)))
+            .send()
+            .await
+            .context("clear the session")?;
+        if !response.status().is_success() {
+            bail!("clear failed: HTTP {}", response.status());
+        }
+        Ok(())
+    }
+
     /// Switches the session between building and planning.
     pub async fn mode(&self, session: &str, mode: &str) -> Result<String> {
         let response = self

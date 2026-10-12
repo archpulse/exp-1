@@ -1,0 +1,2006 @@
+/home/user/projects/exp1-agent/.
+├── .github
+│   └── workflows
+│       └── release.yml
+├── opencode
+│   ├── .github
+│   │   ├── ISSUE_TEMPLATE
+│   │   │   ├── bug-report.yml
+│   │   │   ├── config.yml
+│   │   │   └── feature-request.yml
+│   │   ├── actions
+│   │   │   ├── setup-bun
+│   │   │   │   └── action.yml
+│   │   │   └── setup-git-committer
+│   │   │       └── action.yml
+│   │   ├── workflows
+│   │   │   ├── check.yml
+│   │   │   ├── close-issues.yml
+│   │   │   ├── close-prs.yml
+│   │   │   ├── compliance-close.yml
+│   │   │   ├── containers.yml
+│   │   │   ├── deploy-files.yml
+│   │   │   ├── deploy-posts.yml
+│   │   │   ├── deploy-update.yml
+│   │   │   ├── deploy-www.yml
+│   │   │   ├── deploy.yml
+│   │   │   ├── docs-locale-sync.yml
+│   │   │   ├── docs-update.yml
+│   │   │   ├── duplicate-issues.yml
+│   │   │   ├── nix-eval.yml
+│   │   │   ├── nix-hashes.yml
+│   │   │   ├── notify-discord.yml
+│   │   │   ├── opencode.yml
+│   │   │   ├── pr-management.yml
+│   │   │   ├── pr-standards.yml
+│   │   │   ├── publish-github-action.yml
+│   │   │   ├── publish-vscode.yml
+│   │   │   ├── publish.yml
+│   │   │   ├── release-github-action.yml
+│   │   │   ├── review.yml
+│   │   │   ├── stats.yml
+│   │   │   ├── storybook.yml
+│   │   │   ├── test.yml
+│   │   │   └── triage.yml
+│   │   ├── CODEOWNERS
+│   │   ├── TEAM_MEMBERS
+│   │   ├── publish-python-sdk.yml
+│   │   └── pull_request_template.md
+│   ├── .husky
+│   │   └── pre-push
+│   ├── .opencode
+│   │   ├── agent
+│   │   │   ├── duplicate-pr.md
+│   │   │   └── triage.md
+│   │   ├── command
+│   │   │   ├── ai-deps.md
+│   │   │   ├── changelog.md
+│   │   │   ├── commit.md
+│   │   │   ├── issues.md
+│   │   │   ├── learn.md
+│   │   │   ├── rmslop.md
+│   │   │   ├── spellcheck.md
+│   │   │   └── translate.md
+│   │   ├── glossary
+│   │   │   ├── README.md
+│   │   │   ├── ar.md
+│   │   │   ├── br.md
+│   │   │   ├── bs.md
+│   │   │   ├── da.md
+│   │   │   ├── de.md
+│   │   │   ├── es.md
+│   │   │   ├── fr.md
+│   │   │   ├── he.md
+│   │   │   ├── ja.md
+│   │   │   ├── ko.md
+│   │   │   ├── no.md
+│   │   │   ├── pl.md
+│   │   │   ├── ru.md
+│   │   │   ├── th.md
+│   │   │   ├── tr.md
+│   │   │   ├── zh-cn.md
+│   │   │   └── zh-tw.md
+│   │   ├── plugins
+│   │   │   └── smoke-theme.json
+│   │   ├── skills
+│   │   │   ├── effect
+│   │   │   │   └── SKILL.md
+│   │   │   ├── opencode-dev
+│   │   │   │   └── SKILL.md
+│   │   │   ├── rtl-aware-development
+│   │   │   │   └── SKILL.md
+│   │   │   └── sample-skill
+│   │   │       └── SKILL.md
+│   │   ├── themes
+│   │   │   ├── .gitignore
+│   │   │   └── mytheme.json
+│   │   ├── tool
+│   │   │   ├── github-pr-search.ts
+│   │   │   └── github-triage.ts
+│   │   ├── .gitignore
+│   │   ├── env.d.ts
+│   │   ├── opencode.jsonc
+│   │   └── tui.json
+│   ├── .vscode
+│   │   ├── launch.example.json
+│   │   └── settings.example.json
+│   ├── .zed
+│   │   └── settings.json
+│   ├── github
+│   │   ├── script
+│   │   │   ├── publish
+│   │   │   └── release
+│   │   ├── .gitignore
+│   │   ├── README.md
+│   │   ├── action.yml
+│   │   ├── bun.lock
+│   │   ├── index.ts
+│   │   ├── package.json
+│   │   ├── sst-env.d.ts
+│   │   └── tsconfig.json
+│   ├── infra
+│   │   ├── app.ts
+│   │   ├── console.ts
+│   │   ├── enterprise.ts
+│   │   ├── monitoring.ts
+│   │   ├── secret.ts
+│   │   ├── stage.ts
+│   │   ├── stats.ts
+│   │   └── webapp.ts
+│   ├── nix
+│   │   ├── scripts
+│   │   │   ├── canonicalize-node-modules.ts
+│   │   │   └── normalize-bun-binaries.ts
+│   │   ├── desktop.nix
+│   │   ├── electron.nix
+│   │   ├── hashes.json
+│   │   ├── node_modules.nix
+│   │   └── opencode.nix
+│   ├── packages
+│   │   ├── ai
+│   │   │   ├── docs
+│   │   │   │   └── media-design.md
+│   │   │   ├── example
+│   │   │   │   └── tutorial.ts
+│   │   │   ├── script
+│   │   │   │   ├── publish.ts
+│   │   │   │   ├── recording-cost-report.ts
+│   │   │   │   └── setup-recording-env.ts
+│   │   │   ├── src
+│   │   │   │   ├── experimental
+│   │   │   │   │   ├── evaluation-client.ts
+│   │   │   │   │   ├── evaluation.ts
+│   │   │   │   │   └── system-one.ts
+│   │   │   │   ├── protocols
+│   │   │   │   │   ├── utils
+│   │   │   │   │   │   ├── bedrock-auth.ts
+│   │   │   │   │   │   ├── bedrock-cache.ts
+│   │   │   │   │   │   ├── bedrock-media.ts
+│   │   │   │   │   │   ├── cache.ts
+│   │   │   │   │   │   ├── claude-model.ts
+│   │   │   │   │   │   ├── fal-queue.ts
+│   │   │   │   │   │   ├── gateway-protocol.ts
+│   │   │   │   │   │   ├── gemini-generate-content.ts
+│   │   │   │   │   │   ├── gemini-json-schema.ts
+│   │   │   │   │   │   ├── lifecycle.ts
+│   │   │   │   │   │   ├── media-input.ts
+│   │   │   │   │   │   ├── mistral-tool-id.ts
+│   │   │   │   │   │   ├── open-responses-options.ts
+│   │   │   │   │   │   ├── openai-options.ts
+│   │   │   │   │   │   ├── partial-json-options.ts
+│   │   │   │   │   │   ├── partial-json.ts
+│   │   │   │   │   │   ├── responses-checkpoint.ts
+│   │   │   │   │   │   ├── responses-compaction.ts
+│   │   │   │   │   │   ├── responses-hosted-tools.ts
+│   │   │   │   │   │   ├── speaker-turns.ts
+│   │   │   │   │   │   ├── speech-stream.ts
+│   │   │   │   │   │   ├── tool-schema.ts
+│   │   │   │   │   │   └── tool-stream.ts
+│   │   │   │   │   ├── alibaba-chat.ts
+│   │   │   │   │   ├── alibaba-messages.ts
+│   │   │   │   │   ├── alibaba-responses.ts
+│   │   │   │   │   ├── anthropic-messages.ts
+│   │   │   │   │   ├── assemblyai-transcription.ts
+│   │   │   │   │   ├── bedrock-converse.ts
+│   │   │   │   │   ├── bedrock-event-stream.ts
+│   │   │   │   │   ├── bfl-images.ts
+│   │   │   │   │   ├── cartesia-speech.ts
+│   │   │   │   │   ├── cohere-chat.ts
+│   │   │   │   │   ├── deepgram-speech.ts
+│   │   │   │   │   ├── deepgram-transcription.ts
+│   │   │   │   │   ├── elevenlabs-speech.ts
+│   │   │   │   │   ├── elevenlabs-transcription.ts
+│   │   │   │   │   ├── fal-images.ts
+│   │   │   │   │   ├── fal-video.ts
+│   │   │   │   │   ├── gemini.ts
+│   │   │   │   │   ├── google-images.ts
+│   │   │   │   │   ├── google-interactions.ts
+│   │   │   │   │   ├── google-speech.ts
+│   │   │   │   │   ├── google-transcription.ts
+│   │   │   │   │   ├── google-video.ts
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── meta-images.ts
+│   │   │   │   │   ├── meta-messages.ts
+│   │   │   │   │   ├── meta-responses.ts
+│   │   │   │   │   ├── mistral-chat.ts
+│   │   │   │   │   ├── open-responses-channel.ts
+│   │   │   │   │   ├── open-responses-continuation.ts
+│   │   │   │   │   ├── open-responses.ts
+│   │   │   │   │   ├── openai-chat.ts
+│   │   │   │   │   ├── openai-compatible-chat.ts
+│   │   │   │   │   ├── openai-compatible-responses.ts
+│   │   │   │   │   ├── openai-images.ts
+│   │   │   │   │   ├── openai-responses.ts
+│   │   │   │   │   ├── openai-speech.ts
+│   │   │   │   │   ├── openai-transcription.ts
+│   │   │   │   │   ├── replicate-images.ts
+│   │   │   │   │   ├── runway-video.ts
+│   │   │   │   │   ├── shared.ts
+│   │   │   │   │   ├── stability-images.ts
+│   │   │   │   │   ├── venice-chat.ts
+│   │   │   │   │   ├── xai-images.ts
+│   │   │   │   │   ├── xai-responses.ts
+│   │   │   │   │   ├── xai-video.ts
+│   │   │   │   │   ├── zai-chat.ts
+│   │   │   │   │   ├── zai-images.ts
+│   │   │   │   │   └── zai-messages.ts
+│   │   │   │   ├── providers
+│   │   │   │   │   ├── alibaba
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── amazon-bedrock
+│   │   │   │   │   │   ├── mantle
+│   │   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   │   └── mantle.ts
+│   │   │   │   │   ├── azure
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── cohere
+│   │   │   │   │   │   └── chat.ts
+│   │   │   │   │   ├── google
+│   │   │   │   │   │   └── interactions.ts
+│   │   │   │   │   ├── google-vertex
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   ├── gemini.ts
+│   │   │   │   │   │   ├── interactions.ts
+│   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   ├── mistral.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── meta
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── minimax
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── moonshot
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── openai
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── openai-compatible
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── vercel-ai-gateway
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── zai
+│   │   │   │   │   │   └── chat.ts
+│   │   │   │   │   ├── zai-coding-plan
+│   │   │   │   │   │   ├── chat.ts
+│   │   │   │   │   │   ├── messages.ts
+│   │   │   │   │   │   └── responses.ts
+│   │   │   │   │   ├── alibaba.ts
+│   │   │   │   │   ├── amazon-bedrock-mantle.ts
+│   │   │   │   │   ├── amazon-bedrock.ts
+│   │   │   │   │   ├── anthropic-compatible.ts
+│   │   │   │   │   ├── anthropic.ts
+│   │   │   │   │   ├── assemblyai.ts
+│   │   │   │   │   ├── azure.ts
+│   │   │   │   │   ├── baseten.ts
+│   │   │   │   │   ├── black-forest-labs.ts
+│   │   │   │   │   ├── cartesia.ts
+│   │   │   │   │   ├── cerebras.ts
+│   │   │   │   │   ├── cloudflare-ai-gateway.ts
+│   │   │   │   │   ├── cloudflare-workers-ai.ts
+│   │   │   │   │   ├── cohere.ts
+│   │   │   │   │   ├── deepgram.ts
+│   │   │   │   │   ├── deepinfra.ts
+│   │   │   │   │   ├── deepseek.ts
+│   │   │   │   │   ├── digitalocean.ts
+│   │   │   │   │   ├── elevenlabs.ts
+│   │   │   │   │   ├── fal.ts
+│   │   │   │   │   ├── fireworks.ts
+│   │   │   │   │   ├── google-vertex-chat.ts
+│   │   │   │   │   ├── google-vertex-interactions.ts
+│   │   │   │   │   ├── google-vertex-messages.ts
+│   │   │   │   │   ├── google-vertex-mistral.ts
+│   │   │   │   │   ├── google-vertex-responses.ts
+│   │   │   │   │   ├── google-vertex-shared.ts
+│   │   │   │   │   ├── google-vertex.ts
+│   │   │   │   │   ├── google.ts
+│   │   │   │   │   ├── groq.ts
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── meta.ts
+│   │   │   │   │   ├── minimax.ts
+│   │   │   │   │   ├── mistral.ts
+│   │   │   │   │   ├── moonshot.ts
+│   │   │   │   │   ├── open-responses-options.ts
+│   │   │   │   │   ├── openai-compatible-responses.ts
+│   │   │   │   │   ├── openai-compatible.ts
+│   │   │   │   │   ├── openai-options.ts
+│   │   │   │   │   ├── openai.ts
+│   │   │   │   │   ├── opencode-zen.ts
+│   │   │   │   │   ├── openrouter.ts
+│   │   │   │   │   ├── replicate.ts
+│   │   │   │   │   ├── runway.ts
+│   │   │   │   │   ├── stability.ts
+│   │   │   │   │   ├── togetherai.ts
+│   │   │   │   │   ├── typesafe-ai.ts
+│   │   │   │   │   ├── venice.ts
+│   │   │   │   │   ├── vercel-ai-gateway.ts
+│   │   │   │   │   ├── xai.ts
+│   │   │   │   │   ├── zai-coding-plan.ts
+│   │   │   │   │   └── zai.ts
+│   │   │   │   ├── route
+│   │   │   │   │   ├── transport
+│   │   │   │   │   │   ├── http.ts
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   ├── websocket-channel.ts
+│   │   │   │   │   │   └── websocket.ts
+│   │   │   │   │   ├── auth-options.ts
+│   │   │   │   │   ├── auth.ts
+│   │   │   │   │   ├── client.ts
+│   │   │   │   │   ├── endpoint.ts
+│   │   │   │   │   ├── executor-service.ts
+│   │   │   │   │   ├── executor.ts
+│   │   │   │   │   ├── framing.ts
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── media-protocol.ts
+│   │   │   │   │   ├── media.ts
+│   │   │   │   │   └── protocol.ts
+│   │   │   │   ├── schema
+│   │   │   │   │   ├── errors.ts
+│   │   │   │   │   ├── events.ts
+│   │   │   │   │   ├── ids.ts
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── messages.ts
+│   │   │   │   │   └── options.ts
+│   │   │   │   ├── utils
+│   │   │   │   │   ├── bytes.ts
+│   │   │   │   │   ├── json.ts
+│   │   │   │   │   ├── media-type.ts
+│   │   │   │   │   ├── record.ts
+│   │   │   │   │   └── sanitize.ts
+│   │   │   │   ├── ai-client.ts
+│   │   │   │   ├── cache-policy.ts
+│   │   │   │   ├── effort-updates.ts
+│   │   │   │   ├── experimental.ts
+│   │   │   │   ├── generation.ts
+│   │   │   │   ├── image-client.ts
+│   │   │   │   ├── image.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── llm.ts
+│   │   │   │   ├── media-client.ts
+│   │   │   │   ├── media-model.ts
+│   │   │   │   ├── media.ts
+│   │   │   │   ├── promise.ts
+│   │   │   │   ├── protocols.ts
+│   │   │   │   ├── provider-error.ts
+│   │   │   │   ├── provider-package.ts
+│   │   │   │   ├── provider.ts
+│   │   │   │   ├── providers.ts
+│   │   │   │   ├── route.ts
+│   │   │   │   ├── speech-client.ts
+│   │   │   │   ├── speech.ts
+│   │   │   │   ├── testing.ts
+│   │   │   │   ├── tool-history.ts
+│   │   │   │   ├── tool-runtime.ts
+│   │   │   │   ├── tool.ts
+│   │   │   │   ├── transcription-client.ts
+│   │   │   │   ├── transcription.ts
+│   │   │   │   ├── video-client.ts
+│   │   │   │   └── video.ts
+│   │   │   ├── test
+│   │   │   │   ├── fixtures
+│   │   │   │   │   ├── audio
+│   │   │   │   │   │   ├── dialog.mp3
+│   │   │   │   │   │   └── hello.mp3
+│   │   │   │   │   ├── images
+│   │   │   │   │   │   └── edit-source.jpg
+│   │   │   │   │   ├── media
+│   │   │   │   │   │   └── restroom.png
+│   │   │   │   │   └── recordings
+│   │   │   │   │       ├── alibaba-chat
+│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-disabled.json
+│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-enabled.json
+│   │   │   │   │       │   ├── qwen-3-8-flash-reads-image-bytes.json
+│   │   │   │   │       │   ├── qwen-3-8-max-obeys-named-tool-choice.json
+│   │   │   │   │       │   ├── qwen-3-8-max-replays-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── qwen-3-8-max-returns-a-json-object.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-default-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-high-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-low-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-max-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-medium-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-minimal-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-none-effort.json
+│   │   │   │   │       │   └── qwen-3-8-max-streams-xhigh-effort.json
+│   │   │   │   │       ├── alibaba-messages
+│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-disabled.json
+│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-enabled.json
+│   │   │   │   │       │   ├── qwen-3-8-flash-reads-image-bytes.json
+│   │   │   │   │       │   ├── qwen-3-8-max-follows-a-json-schema.json
+│   │   │   │   │       │   ├── qwen-3-8-max-obeys-named-tool-choice.json
+│   │   │   │   │       │   ├── qwen-3-8-max-replays-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-default-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-high-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-low-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-max-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-medium-effort.json
+│   │   │   │   │       │   └── qwen-3-8-max-streams-xhigh-effort.json
+│   │   │   │   │       ├── alibaba-responses
+│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-disabled.json
+│   │   │   │   │       │   ├── qwen-3-7-plus-streams-thinking-enabled.json
+│   │   │   │   │       │   ├── qwen-3-8-flash-reads-image-bytes.json
+│   │   │   │   │       │   ├── qwen-3-8-max-continues-a-stored-response.json
+│   │   │   │   │       │   ├── qwen-3-8-max-obeys-named-tool-choice.json
+│   │   │   │   │       │   ├── qwen-3-8-max-replays-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-default-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-high-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-low-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-max-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-medium-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-minimal-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-none-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-streams-xhigh-effort.json
+│   │   │   │   │       │   ├── qwen-3-8-max-uses-hosted-code-interpreter.json
+│   │   │   │   │       │   └── qwen-3-8-max-uses-hosted-web-search-and-extraction.json
+│   │   │   │   │       ├── anthropic-compatible-messages
+│   │   │   │   │       │   ├── minimax-m3-anthropic-compatible-text.json
+│   │   │   │   │       │   ├── minimax-m3-anthropic-compatible-tool-call.json
+│   │   │   │   │       │   └── minimax-m3-anthropic-compatible-tool-loop.json
+│   │   │   │   │       ├── anthropic-messages
+│   │   │   │   │       │   └── anthropic-opus-4-7-image-tool-result.json
+│   │   │   │   │       ├── anthropic-messages-cache
+│   │   │   │   │       │   ├── keeps-a-long-tool-turn-inside-the-cache-lookback.json
+│   │   │   │   │       │   └── writes-then-reads-cache-control-on-identical-second-call.json
+│   │   │   │   │       ├── assemblyai-transcription
+│   │   │   │   │       │   └── uploads-submits-and-polls-a-transcript.json
+│   │   │   │   │       ├── azure
+│   │   │   │   │       │   ├── chat-streams-text.json
+│   │   │   │   │       │   ├── responses-calls-a-tool.json
+│   │   │   │   │       │   ├── responses-continues-after-a-tool-result.json
+│   │   │   │   │       │   └── responses-streams-text.json
+│   │   │   │   │       ├── bedrock-converse
+│   │   │   │   │       │   ├── continues-after-parallel-tool-results.json
+│   │   │   │   │       │   ├── drives-a-tool-loop.json
+│   │   │   │   │       │   ├── streams-a-tool-call.json
+│   │   │   │   │       │   └── streams-text.json
+│   │   │   │   │       ├── bedrock-converse-cache
+│   │   │   │   │       │   └── writes-then-reads-cachepoint-on-identical-second-call.json
+│   │   │   │   │       ├── bedrock-converse-thinking-binding
+│   │   │   │   │       │   ├── accepts-the-default-binding-with-no-thinking-configured.json
+│   │   │   │   │       │   └── keeps-a-session-working-after-the-system-prompt-changes.json
+│   │   │   │   │       ├── bedrock-mantle
+│   │   │   │   │       │   └── streams-text.json
+│   │   │   │   │       ├── bedrock-mantle-messages
+│   │   │   │   │       │   ├── applies-mid-conversation-effort-updates-and-thinking-block-binding-on-opus-5-5.json
+│   │   │   │   │       │   ├── lowers-system-updates-to-wrapped-user-text-on-haiku-4-5-with-budget-thinking.json
+│   │   │   │   │       │   ├── replays-signed-thinking-through-a-tool-loop-and-native-system-update.json
+│   │   │   │   │       │   └── strips-unsupported-mid-conversation-effort-updates-on-opus-5-0.json
+│   │   │   │   │       ├── bfl-images
+│   │   │   │   │       │   └── submits-resumes-and-polls-an-image.json
+│   │   │   │   │       ├── cartesia-speech
+│   │   │   │   │       │   ├── generates-speech.json
+│   │   │   │   │       │   └── streams-speech-with-timestamps.json
+│   │   │   │   │       ├── cerebras-chat
+│   │   │   │   │       │   ├── cerebras-gpt-oss-120b-text.json
+│   │   │   │   │       │   ├── cerebras-gpt-oss-120b-tool-call.json
+│   │   │   │   │       │   └── cerebras-gpt-oss-120b-tool-loop.json
+│   │   │   │   │       ├── cloudflare-ai-gateway
+│   │   │   │   │       │   ├── cloudflare-ai-gateway-claude-haiku-4-5-text.json
+│   │   │   │   │       │   ├── cloudflare-ai-gateway-claude-haiku-4-5-tool-loop.json
+│   │   │   │   │       │   ├── cloudflare-ai-gateway-openai-gpt-5-nano-text.json
+│   │   │   │   │       │   ├── cloudflare-ai-gateway-openai-gpt-5-nano-tool-loop.json
+│   │   │   │   │       │   ├── cloudflare-ai-gateway-workers-ai-gpt-oss-20b-tools-tool-call.json
+│   │   │   │   │       │   └── cloudflare-ai-gateway-workers-ai-llama-3-1-8b-text.json
+│   │   │   │   │       ├── cloudflare-workers-ai
+│   │   │   │   │       │   ├── cloudflare-workers-ai-gpt-oss-20b-tools-tool-call.json
+│   │   │   │   │       │   └── cloudflare-workers-ai-llama-3-1-8b-text.json
+│   │   │   │   │       ├── cohere
+│   │   │   │   │       │   ├── continues-a-native-tool-call.json
+│   │   │   │   │       │   ├── streams-compatible-chat-reasoning.json
+│   │   │   │   │       │   ├── streams-native-text-and-usage.json
+│   │   │   │   │       │   └── streams-native-thinking-with-a-budget.json
+│   │   │   │   │       ├── deepgram-speech
+│   │   │   │   │       │   ├── generates-speech.json
+│   │   │   │   │       │   └── streams-speech.json
+│   │   │   │   │       ├── deepgram-transcription
+│   │   │   │   │       │   ├── splits-utterances-at-speaker-changes.json
+│   │   │   │   │       │   └── transcribes-raw-audio-with-speakers-and-word-timestamps.json
+│   │   │   │   │       ├── deepinfra-chat
+│   │   │   │   │       │   ├── deepinfra-llama-3-3-70b-text.json
+│   │   │   │   │       │   ├── deepinfra-llama-3-3-70b-tool-call.json
+│   │   │   │   │       │   └── deepinfra-llama-3-3-70b-tool-loop.json
+│   │   │   │   │       ├── digitalocean-chat
+│   │   │   │   │       │   ├── gpt-nano-continues-a-tool-call-with-cache-markers.json
+│   │   │   │   │       │   ├── gpt-nano-reuses-a-cached-prompt.json
+│   │   │   │   │       │   ├── haiku-continues-a-tool-call-with-cache-markers.json
+│   │   │   │   │       │   └── haiku-reuses-a-cached-prompt.json
+│   │   │   │   │       ├── elevenlabs-speech
+│   │   │   │   │       │   ├── generates-speech.json
+│   │   │   │   │       │   └── streams-speech-with-timestamps.json
+│   │   │   │   │       ├── elevenlabs-transcription
+│   │   │   │   │       │   ├── groups-diarized-words-into-speaker-turns.json
+│   │   │   │   │       │   └── transcribes-audio-with-word-timestamps.json
+│   │   │   │   │       ├── fal-images
+│   │   │   │   │       │   └── generates-an-image.json
+│   │   │   │   │       ├── fal-video
+│   │   │   │   │       │   └── generates-a-video.json
+│   │   │   │   │       ├── gemini
+│   │   │   │   │       │   └── gemini-2-5-flash-image.json
+│   │   │   │   │       ├── gemini-cache
+│   │   │   │   │       │   └── reports-cachedcontenttokencount-on-identical-second-call.json
+│   │   │   │   │       ├── google-images
+│   │   │   │   │       │   ├── edits-an-image.json
+│   │   │   │   │       │   └── generates-an-image.json
+│   │   │   │   │       ├── google-interactions
+│   │   │   │   │       │   ├── continues-tool-results-with-previous-interaction-id.json
+│   │   │   │   │       │   ├── replays-native-tool-results-and-signatures-statelessly.json
+│   │   │   │   │       │   ├── streams-reasoning-and-retains-thought-signatures.json
+│   │   │   │   │       │   └── streams-text-and-reports-usage.json
+│   │   │   │   │       ├── google-speech
+│   │   │   │   │       │   ├── generates-speech.json
+│   │   │   │   │       │   └── streams-speech.json
+│   │   │   │   │       ├── google-transcription
+│   │   │   │   │       │   ├── streams-speaker-turns.json
+│   │   │   │   │       │   └── transcribes-with-speakers-and-word-timestamps.json
+│   │   │   │   │       ├── google-vertex
+│   │   │   │   │       │   ├── calls-a-tool.json
+│   │   │   │   │       │   ├── continues-after-a-tool-result.json
+│   │   │   │   │       │   └── streams-text.json
+│   │   │   │   │       ├── google-video
+│   │   │   │   │       │   └── generates-a-video.json
+│   │   │   │   │       ├── groq-chat
+│   │   │   │   │       │   ├── continues-qwen-parallel-tool-calls.json
+│   │   │   │   │       │   ├── replays-gpt-oss-reasoning-through-a-tool-loop.json
+│   │   │   │   │       │   ├── streams-qwen-parsed-reasoning.json
+│   │   │   │   │       │   └── streams-text-with-usage.json
+│   │   │   │   │       ├── meta-chat
+│   │   │   │   │       │   ├── continues-a-generated-tool-call.json
+│   │   │   │   │       │   ├── streams-text-with-default-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-high-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-low-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-max-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-medium-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-minimal-reasoning.json
+│   │   │   │   │       │   └── streams-text-with-xhigh-reasoning.json
+│   │   │   │   │       ├── meta-images
+│   │   │   │   │       │   ├── edits-image-bytes-and-returns-png.json
+│   │   │   │   │       │   ├── generates-default-webp-bytes.json
+│   │   │   │   │       │   └── replays-a-signed-image-handle-for-a-responses-edit.json
+│   │   │   │   │       ├── meta-messages
+│   │   │   │   │       │   ├── replays-encrypted-thinking-through-a-tool-loop.json
+│   │   │   │   │       │   ├── streams-text-with-adaptive-thinking.json
+│   │   │   │   │       │   └── streams-text-with-enabled-thinking.json
+│   │   │   │   │       ├── meta-responses
+│   │   │   │   │       │   ├── replays-encrypted-reasoning-through-a-tool-loop.json
+│   │   │   │   │       │   ├── streams-text-with-default-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-high-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-low-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-max-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-medium-reasoning.json
+│   │   │   │   │       │   ├── streams-text-with-minimal-reasoning.json
+│   │   │   │   │       │   └── streams-text-with-xhigh-reasoning.json
+│   │   │   │   │       ├── meta-search
+│   │   │   │   │       │   ├── searches-and-replays-grounded-messages.json
+│   │   │   │   │       │   └── searches-and-replays-grounded-responses.json
+│   │   │   │   │       ├── minimax-chat
+│   │   │   │   │       │   ├── m3-continues-a-tool-loop-with-default-thinking.json
+│   │   │   │   │       │   └── m3-streams-text-with-thinking-disabled.json
+│   │   │   │   │       ├── minimax-messages
+│   │   │   │   │       │   ├── m2-7-streams-default-thinking.json
+│   │   │   │   │       │   ├── m3-continues-a-tool-loop-with-adaptive-thinking.json
+│   │   │   │   │       │   ├── m3-generates-a-named-tool-call-with-default-thinking-off.json
+│   │   │   │   │       │   ├── m3-streams-adaptive-thinking.json
+│   │   │   │   │       │   └── m3-streams-text-with-thinking-disabled.json
+│   │   │   │   │       ├── minimax-responses
+│   │   │   │   │       │   ├── m3-continues-a-tool-loop-with-effort-minimal.json
+│   │   │   │   │       │   └── m3-streams-text-with-effort-none.json
+│   │   │   │   │       ├── mistral-chat
+│   │   │   │   │       │   ├── drives-a-tool-loop.json
+│   │   │   │   │       │   ├── replays-native-reasoning.json
+│   │   │   │   │       │   └── streams-text-with-usage.json
+│   │   │   │   │       ├── mistral-chat-glm
+│   │   │   │   │       │   └── streams-an-indexed-tool-call.json
+│   │   │   │   │       ├── moonshot-chat
+│   │   │   │   │       │   ├── k3-reads-image-bytes.json
+│   │   │   │   │       │   ├── k3-respects-tool-choice-none.json
+│   │   │   │   │       │   ├── k3-respects-tool-choice-required.json
+│   │   │   │   │       │   ├── k3-returns-native-structured-output.json
+│   │   │   │   │       │   ├── k3-streams-text-with-default-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-high-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-low-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-max-effort.json
+│   │   │   │   │       │   ├── kimi-k2-6-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── kimi-k2-6-streams-text-with-default-thinking.json
+│   │   │   │   │       │   ├── kimi-k2-6-streams-text-with-disabled-thinking.json
+│   │   │   │   │       │   ├── kimi-k2-6-streams-text-with-enabled-thinking.json
+│   │   │   │   │       │   ├── kimi-k2-7-code-highspeed-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── kimi-k2-7-code-highspeed-streams-text-with-default-thinking.json
+│   │   │   │   │       │   ├── kimi-k2-7-code-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── kimi-k2-7-code-streams-text-with-default-thinking.json
+│   │   │   │   │       │   └── kimi-k3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       ├── moonshot-messages
+│   │   │   │   │       │   ├── k3-reads-image-bytes.json
+│   │   │   │   │       │   ├── k3-respects-tool-choice-none.json
+│   │   │   │   │       │   ├── k3-respects-tool-choice-required.json
+│   │   │   │   │       │   ├── k3-returns-native-structured-output.json
+│   │   │   │   │       │   ├── k3-streams-text-with-default-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-high-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-low-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-max-effort.json
+│   │   │   │   │       │   └── kimi-k3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       ├── moonshot-responses
+│   │   │   │   │       │   ├── k3-reads-image-bytes.json
+│   │   │   │   │       │   ├── k3-rejects-unsupported-tool-choice-none.json
+│   │   │   │   │       │   ├── k3-rejects-unsupported-tool-choice-required.json
+│   │   │   │   │       │   ├── k3-returns-native-structured-output.json
+│   │   │   │   │       │   ├── k3-streams-text-with-default-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-high-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-low-effort.json
+│   │   │   │   │       │   ├── k3-streams-text-with-max-effort.json
+│   │   │   │   │       │   └── kimi-k3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       ├── openai-compatible-chat
+│   │   │   │   │       │   ├── gemini-parallel-tool-signatures.json
+│   │   │   │   │       │   ├── togetherai-streams-text.json
+│   │   │   │   │       │   └── togetherai-streams-tool-call.json
+│   │   │   │   │       ├── openai-images
+│   │   │   │   │       │   ├── edits-an-image.json
+│   │   │   │   │       │   ├── generates-an-image.json
+│   │   │   │   │       │   └── streams-a-partial-image-before-the-final-image.json
+│   │   │   │   │       ├── openai-responses
+│   │   │   │   │       │   ├── openai-responses-gpt-5-5-image-tool-result.json
+│   │   │   │   │       │   ├── openai-responses-gpt-5-5-reasoning-continuation.json
+│   │   │   │   │       │   ├── openai-responses-gpt-5-5-reasoning.json
+│   │   │   │   │       │   └── openai-responses-gpt-5-5-tool-loop.json
+│   │   │   │   │       ├── openai-responses-cache
+│   │   │   │   │       │   └── reports-cached-tokens-on-identical-second-call.json
+│   │   │   │   │       ├── openai-responses-images
+│   │   │   │   │       │   └── generates-and-edits-an-image-with-the-hosted-tool.json
+│   │   │   │   │       ├── openai-responses-websocket
+│   │   │   │   │       │   ├── continues-a-tool-call-over-one-socket.json
+│   │   │   │   │       │   ├── reconstructs-full-context-after-reconnect.json
+│   │   │   │   │       │   └── recovers-from-explicit-continuation-rejection.json
+│   │   │   │   │       ├── openai-speech
+│   │   │   │   │       │   ├── generates-speech.json
+│   │   │   │   │       │   └── streams-speech.json
+│   │   │   │   │       ├── openai-transcription
+│   │   │   │   │       │   ├── diarizes-speakers-into-segments.json
+│   │   │   │   │       │   ├── returns-whisper-word-timestamps.json
+│   │   │   │   │       │   ├── streams-text-deltas.json
+│   │   │   │   │       │   └── transcribes-with-a-language-hint.json
+│   │   │   │   │       ├── opencode-zen-evaluation
+│   │   │   │   │       │   └── evaluates-choice-score-and-boolean-questions.json
+│   │   │   │   │       ├── openrouter-evaluation
+│   │   │   │   │       │   └── evaluates-choice-score-and-boolean-questions.json
+│   │   │   │   │       ├── pdf
+│   │   │   │   │       │   ├── anthropic-tool-result.json
+│   │   │   │   │       │   ├── anthropic-user-input.json
+│   │   │   │   │       │   ├── bedrock-tool-result.json
+│   │   │   │   │       │   ├── bedrock-user-input.json
+│   │   │   │   │       │   ├── gemini-tool-result.json
+│   │   │   │   │       │   ├── gemini-user-input.json
+│   │   │   │   │       │   ├── openai-tool-result.json
+│   │   │   │   │       │   ├── openai-user-input.json
+│   │   │   │   │       │   ├── xai-tool-result.json
+│   │   │   │   │       │   └── xai-user-input.json
+│   │   │   │   │       ├── replicate-images
+│   │   │   │   │       │   └── waits-for-a-prediction-and-reads-its-output.json
+│   │   │   │   │       ├── runway-video
+│   │   │   │   │       │   └── generates-a-video.json
+│   │   │   │   │       ├── stability-images
+│   │   │   │   │       │   ├── generates-an-image-inline.json
+│   │   │   │   │       │   └── upscales-an-image-through-the-results-queue.json
+│   │   │   │   │       ├── typesafe-evaluation
+│   │   │   │   │       │   └── evaluates-choice-score-and-boolean-questions.json
+│   │   │   │   │       ├── venice-chat
+│   │   │   │   │       │   ├── claude-opus-4-8-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── deepseek-v4-flash-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── gemini-3-1-pro-preview-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── gemini-preserves-per-call-signatures-through-parallel-tools.json
+│   │   │   │   │       │   ├── openai-gpt-54-mini-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── qwen-disables-reasoning.json
+│   │   │   │   │       │   └── surfaces-venice-model-errors.json
+│   │   │   │   │       ├── vercel-native
+│   │   │   │   │       │   ├── automatically-caches-distinct-claude-system-blocks.json
+│   │   │   │   │       │   ├── continues-chat-claude-reasoning-and-tools.json
+│   │   │   │   │       │   ├── continues-chat-muse-reasoning-and-tools.json
+│   │   │   │   │       │   ├── continues-messages-claude-reasoning-and-tools.json
+│   │   │   │   │       │   ├── continues-messages-deepseek-reasoning-and-tools.json
+│   │   │   │   │       │   ├── continues-messages-gemini-reasoning-and-tools.json
+│   │   │   │   │       │   ├── continues-responses-gpt-reasoning-and-tools.json
+│   │   │   │   │       │   ├── continues-responses-grok-reasoning-and-tools.json
+│   │   │   │   │       │   └── rejects-invalid-credentials-without-retryable-classification.json
+│   │   │   │   │       ├── xai-images
+│   │   │   │   │       │   ├── edits-an-image.json
+│   │   │   │   │       │   └── generates-an-image.json
+│   │   │   │   │       ├── xai-video
+│   │   │   │   │       │   └── generates-a-video.json
+│   │   │   │   │       ├── zai-chat
+│   │   │   │   │       │   ├── glm-4-5-calls-a-tool-without-streaming-arguments.json
+│   │   │   │   │       │   ├── glm-4-7-streams-thinking-disabled.json
+│   │   │   │   │       │   ├── glm-4-7-streams-thinking-enabled.json
+│   │   │   │   │       │   ├── glm-5-2-streams-high-effort.json
+│   │   │   │   │       │   ├── glm-5-2-streams-low-effort.json
+│   │   │   │   │       │   ├── glm-5-2-streams-max-effort.json
+│   │   │   │   │       │   ├── glm-5-2-streams-medium-effort.json
+│   │   │   │   │       │   ├── glm-5-2-streams-minimal-effort.json
+│   │   │   │   │       │   ├── glm-5-2-streams-none-effort.json
+│   │   │   │   │       │   ├── glm-5-2-streams-thinking-disabled.json
+│   │   │   │   │       │   ├── glm-5-2-streams-thinking-enabled.json
+│   │   │   │   │       │   ├── glm-5-2-streams-xhigh-effort.json
+│   │   │   │   │       │   ├── glm-5-3-flash-reads-image-bytes.json
+│   │   │   │   │       │   ├── glm-5-3-preserves-reasoning-through-a-tool-loop-and-follow-up.json
+│   │   │   │   │       │   ├── glm-5-3-rejects-disabled-thinking.json
+│   │   │   │   │       │   ├── glm-5-3-returns-a-json-object.json
+│   │   │   │   │       │   ├── glm-5-3-streams-default-effort.json
+│   │   │   │   │       │   ├── glm-5-3-streams-high-effort.json
+│   │   │   │   │       │   ├── glm-5-3-streams-low-effort.json
+│   │   │   │   │       │   └── glm-5-3-streams-max-effort.json
+│   │   │   │   │       ├── zai-images
+│   │   │   │   │       │   └── generates-an-image.json
+│   │   │   │   │       ├── openrouter-reasoning-tool-loop.json
+│   │   │   │   │       ├── openrouter-reasoning.json
+│   │   │   │   │       ├── vercel-ai-gateway-reasoning-tool-loop.json
+│   │   │   │   │       └── vercel-ai-gateway-reasoning.json
+│   │   │   │   ├── lib
+│   │   │   │   │   ├── effect.ts
+│   │   │   │   │   ├── env.ts
+│   │   │   │   │   ├── http.ts
+│   │   │   │   │   ├── image.ts
+│   │   │   │   │   ├── openai-chunks.ts
+│   │   │   │   │   ├── sse.ts
+│   │   │   │   │   └── tool-runtime.ts
+│   │   │   │   ├── provider
+│   │   │   │   │   ├── alibaba-capabilities.recorded.test.ts
+│   │   │   │   │   ├── alibaba.recorded.test.ts
+│   │   │   │   │   ├── alibaba.test.ts
+│   │   │   │   │   ├── anthropic-compaction.test.ts
+│   │   │   │   │   ├── anthropic-messages-cache.recorded.test.ts
+│   │   │   │   │   ├── anthropic-messages.recorded.test.ts
+│   │   │   │   │   ├── anthropic-messages.test.ts
+│   │   │   │   │   ├── anthropic-thinking-binding.test.ts
+│   │   │   │   │   ├── assemblyai-transcription.recorded.test.ts
+│   │   │   │   │   ├── azure.recorded.test.ts
+│   │   │   │   │   ├── bedrock-converse-cache.recorded.test.ts
+│   │   │   │   │   ├── bedrock-converse-cache.test.ts
+│   │   │   │   │   ├── bedrock-converse-thinking-binding.recorded.test.ts
+│   │   │   │   │   ├── bedrock-converse-thinking-binding.test.ts
+│   │   │   │   │   ├── bedrock-converse.test.ts
+│   │   │   │   │   ├── bedrock-mantle.test.ts
+│   │   │   │   │   ├── bedrock-mistral-ids.test.ts
+│   │   │   │   │   ├── bfl-images.recorded.test.ts
+│   │   │   │   │   ├── cartesia-speech.recorded.test.ts
+│   │   │   │   │   ├── checkpoint.test.ts
+│   │   │   │   │   ├── cloudflare.test.ts
+│   │   │   │   │   ├── cohere.recorded.test.ts
+│   │   │   │   │   ├── cohere.test.ts
+│   │   │   │   │   ├── compaction-websocket.test.ts
+│   │   │   │   │   ├── compaction.recorded.test.ts
+│   │   │   │   │   ├── compaction.test.ts
+│   │   │   │   │   ├── conversation-lowering.test.ts
+│   │   │   │   │   ├── deepgram-speech.recorded.test.ts
+│   │   │   │   │   ├── deepgram-transcription.recorded.test.ts
+│   │   │   │   │   ├── digitalocean.recorded.test.ts
+│   │   │   │   │   ├── digitalocean.test.ts
+│   │   │   │   │   ├── elevenlabs-speech.recorded.test.ts
+│   │   │   │   │   ├── elevenlabs-transcription.recorded.test.ts
+│   │   │   │   │   ├── empty-tool-choice.test.ts
+│   │   │   │   │   ├── error-retention.test.ts
+│   │   │   │   │   ├── evaluation.recorded.test.ts
+│   │   │   │   │   ├── explicit-compaction.test.ts
+│   │   │   │   │   ├── fal-images.recorded.test.ts
+│   │   │   │   │   ├── fal-video.recorded.test.ts
+│   │   │   │   │   ├── gemini-cache.recorded.test.ts
+│   │   │   │   │   ├── gemini-openai-chat.recorded.test.ts
+│   │   │   │   │   ├── gemini.test.ts
+│   │   │   │   │   ├── golden.recorded.test.ts
+│   │   │   │   │   ├── google-images.recorded.test.ts
+│   │   │   │   │   ├── google-interactions.recorded.test.ts
+│   │   │   │   │   ├── google-speech.recorded.test.ts
+│   │   │   │   │   ├── google-transcription.recorded.test.ts
+│   │   │   │   │   ├── google-vertex-interactions.test.ts
+│   │   │   │   │   ├── google-vertex.recorded.test.ts
+│   │   │   │   │   ├── google-vertex.test.ts
+│   │   │   │   │   ├── google-video.recorded.test.ts
+│   │   │   │   │   ├── groq.recorded.test.ts
+│   │   │   │   │   ├── groq.test.ts
+│   │   │   │   │   ├── image-detail.test.ts
+│   │   │   │   │   ├── meta-capabilities.test.ts
+│   │   │   │   │   ├── meta-images.recorded.test.ts
+│   │   │   │   │   ├── meta-messages.recorded.test.ts
+│   │   │   │   │   ├── meta-search.recorded.test.ts
+│   │   │   │   │   ├── meta.recorded.test.ts
+│   │   │   │   │   ├── meta.test.ts
+│   │   │   │   │   ├── minimax.recorded.test.ts
+│   │   │   │   │   ├── minimax.test.ts
+│   │   │   │   │   ├── missing-tool-input.test.ts
+│   │   │   │   │   ├── mistral-chat.test.ts
+│   │   │   │   │   ├── mistral.recorded.test.ts
+│   │   │   │   │   ├── moonshot-capabilities.recorded.test.ts
+│   │   │   │   │   ├── moonshot.recorded.test.ts
+│   │   │   │   │   ├── moonshot.test.ts
+│   │   │   │   │   ├── native-providers.test.ts
+│   │   │   │   │   ├── open-responses-errors.test.ts
+│   │   │   │   │   ├── open-responses-finals.test.ts
+│   │   │   │   │   ├── open-responses-lifecycle.test.ts
+│   │   │   │   │   ├── open-responses-replay.test.ts
+│   │   │   │   │   ├── openai-chat-reasoning.recorded.test.ts
+│   │   │   │   │   ├── openai-chat.test.ts
+│   │   │   │   │   ├── openai-compatible-chat.test.ts
+│   │   │   │   │   ├── openai-compatible-responses.test.ts
+│   │   │   │   │   ├── openai-images.recorded.test.ts
+│   │   │   │   │   ├── openai-responses-cache.recorded.test.ts
+│   │   │   │   │   ├── openai-responses-images.recorded.test.ts
+│   │   │   │   │   ├── openai-responses-websocket.recorded.test.ts
+│   │   │   │   │   ├── openai-responses.test.ts
+│   │   │   │   │   ├── openai-speech.recorded.test.ts
+│   │   │   │   │   ├── openai-transcription.recorded.test.ts
+│   │   │   │   │   ├── openrouter.test.ts
+│   │   │   │   │   ├── pdf.recorded.test.ts
+│   │   │   │   │   ├── queued-recording.ts
+│   │   │   │   │   ├── replicate-images.recorded.test.ts
+│   │   │   │   │   ├── runway-video.recorded.test.ts
+│   │   │   │   │   ├── speech-recording.ts
+│   │   │   │   │   ├── stability-images.recorded.test.ts
+│   │   │   │   │   ├── transcription-recording.ts
+│   │   │   │   │   ├── venice.recorded.test.ts
+│   │   │   │   │   ├── venice.test.ts
+│   │   │   │   │   ├── vercel-ai-gateway.recorded.test.ts
+│   │   │   │   │   ├── vercel-ai-gateway.test.ts
+│   │   │   │   │   ├── xai-images.recorded.test.ts
+│   │   │   │   │   ├── xai-images.test.ts
+│   │   │   │   │   ├── xai-responses.test.ts
+│   │   │   │   │   ├── xai-video.recorded.test.ts
+│   │   │   │   │   ├── zai-capabilities.recorded.test.ts
+│   │   │   │   │   ├── zai-images.recorded.test.ts
+│   │   │   │   │   ├── zai-images.test.ts
+│   │   │   │   │   ├── zai.recorded.test.ts
+│   │   │   │   │   └── zai.test.ts
+│   │   │   │   ├── provider-options
+│   │   │   │   │   ├── alibaba.types.ts
+│   │   │   │   │   ├── anthropic-compatible.types.ts
+│   │   │   │   │   ├── anthropic.types.ts
+│   │   │   │   │   ├── azure.types.ts
+│   │   │   │   │   ├── checkpoint.types.ts
+│   │   │   │   │   ├── cloudflare.types.ts
+│   │   │   │   │   ├── compaction.types.ts
+│   │   │   │   │   ├── google-vertex-chat.types.ts
+│   │   │   │   │   ├── google-vertex-interactions.types.ts
+│   │   │   │   │   ├── google-vertex-messages.types.ts
+│   │   │   │   │   ├── google-vertex-responses.types.ts
+│   │   │   │   │   ├── google-vertex.types.ts
+│   │   │   │   │   ├── google.types.ts
+│   │   │   │   │   ├── minimax.types.ts
+│   │   │   │   │   ├── mistral.types.ts
+│   │   │   │   │   ├── moonshot.types.ts
+│   │   │   │   │   ├── openai-compatible-responses.types.ts
+│   │   │   │   │   ├── openai-compatible.types.ts
+│   │   │   │   │   ├── openai.types.ts
+│   │   │   │   │   ├── openrouter.types.ts
+│   │   │   │   │   ├── venice.types.ts
+│   │   │   │   │   ├── vercel-ai-gateway.types.ts
+│   │   │   │   │   ├── xai.types.ts
+│   │   │   │   │   └── zai.types.ts
+│   │   │   │   ├── adapter.test.ts
+│   │   │   │   ├── auth-options.types.ts
+│   │   │   │   ├── auth.test.ts
+│   │   │   │   ├── cache-policy.test.ts
+│   │   │   │   ├── compaction-http.test.ts
+│   │   │   │   ├── compaction.test.ts
+│   │   │   │   ├── compile.test.ts
+│   │   │   │   ├── continuation-scenarios.ts
+│   │   │   │   ├── effort-updates.test.ts
+│   │   │   │   ├── endpoint.test.ts
+│   │   │   │   ├── evaluation.test.ts
+│   │   │   │   ├── evaluation.types.ts
+│   │   │   │   ├── executor.test.ts
+│   │   │   │   ├── exports.test.ts
+│   │   │   │   ├── generate-object.test.ts
+│   │   │   │   ├── generation.test.ts
+│   │   │   │   ├── http-timeout.test.ts
+│   │   │   │   ├── image.test.ts
+│   │   │   │   ├── image.types.ts
+│   │   │   │   ├── llm-option-types.types.ts
+│   │   │   │   ├── llm.test.ts
+│   │   │   │   ├── media.test.ts
+│   │   │   │   ├── partial-json.test.ts
+│   │   │   │   ├── promise.test.ts
+│   │   │   │   ├── provider-error.test.ts
+│   │   │   │   ├── provider-package.test.ts
+│   │   │   │   ├── provider.types.ts
+│   │   │   │   ├── recorded-golden.ts
+│   │   │   │   ├── recorded-runner.ts
+│   │   │   │   ├── recorded-scenarios.ts
+│   │   │   │   ├── recorded-test.ts
+│   │   │   │   ├── recorded-utils.ts
+│   │   │   │   ├── response.test.ts
+│   │   │   │   ├── route.test.ts
+│   │   │   │   ├── schema.test.ts
+│   │   │   │   ├── speech.test.ts
+│   │   │   │   ├── speech.types.ts
+│   │   │   │   ├── testing.test.ts
+│   │   │   │   ├── tool-history.test.ts
+│   │   │   │   ├── tool-runtime.test.ts
+│   │   │   │   ├── tool-schema-projection.test.ts
+│   │   │   │   ├── tool-stream.test.ts
+│   │   │   │   ├── tool.types.ts
+│   │   │   │   ├── transcription.test.ts
+│   │   │   │   ├── transcription.types.ts
+│   │   │   │   ├── video.test.ts
+│   │   │   │   └── video.types.ts
+│   │   │   ├── AGENTS.md
+│   │   │   ├── README.md
+│   │   │   ├── package.json
+│   │   │   ├── sst-env.d.ts
+│   │   │   ├── tsconfig.build.json
+│   │   │   ├── tsconfig.json
+│   │   │   └── tsconfig.types.json
+│   │   ├── app
+│   │   │   ├── component-tests
+│   │   │   │   ├── browser-pane-restore.spec.ts
+│   │   │   │   ├── browser-pane.spec.ts
+│   │   │   │   ├── composer.spec.ts
+│   │   │   │   ├── extension-graph.spec.ts
+│   │   │   │   ├── extension-host.fixture.tsx
+│   │   │   │   ├── extension-host.spec.ts
+│   │   │   │   ├── line-comment.spec.ts
+│   │   │   │   ├── new-session-wordmark.spec.ts
+│   │   │   │   ├── open-in-border.spec.ts
+│   │   │   │   ├── session-question-dock.spec.ts
+│   │   │   │   ├── ssh-reconnect.spec.ts
+│   │   │   │   ├── timeline-detail.spec.ts
+│   │   │   │   ├── timeline-virtualizer.fixture.tsx
+│   │   │   │   ├── timeline-virtualizer.spec.ts
+│   │   │   │   └── websearch.spec.ts
+│   │   │   ├── e2e
+│   │   │   │   ├── performance
+│   │   │   │   │   ├── composer-history
+│   │   │   │   │   │   ├── README.md
+│   │   │   │   │   │   ├── composer-history.bench.ts
+│   │   │   │   │   │   ├── fixture.tsx
+│   │   │   │   │   │   ├── index.html
+│   │   │   │   │   │   ├── playwright.config.ts
+│   │   │   │   │   │   └── vite.config.ts
+│   │   │   │   │   ├── devex
+│   │   │   │   │   │   ├── desktop-startup-benchmark.spec.ts
+│   │   │   │   │   │   ├── desktop-startup.ts
+│   │   │   │   │   │   └── playwright.config.ts
+│   │   │   │   │   ├── markdown
+│   │   │   │   │   │   ├── README.md
+│   │   │   │   │   │   ├── lifetime.bench.ts
+│   │   │   │   │   │   ├── playwright.config.ts
+│   │   │   │   │   │   └── probe.ts
+│   │   │   │   │   ├── patch-groups
+│   │   │   │   │   │   ├── README.md
+│   │   │   │   │   │   ├── fixture.tsx
+│   │   │   │   │   │   ├── index.html
+│   │   │   │   │   │   ├── patch-groups.bench.ts
+│   │   │   │   │   │   ├── playwright.config.ts
+│   │   │   │   │   │   ├── serve.ts
+│   │   │   │   │   │   └── vite.config.ts
+│   │   │   │   │   ├── terminals
+│   │   │   │   │   │   ├── README.md
+│   │   │   │   │   │   ├── playwright.config.ts
+│   │   │   │   │   │   ├── probe.ts
+│   │   │   │   │   │   ├── shell.ps1
+│   │   │   │   │   │   ├── terminal-benchmark.spec.ts
+│   │   │   │   │   │   └── vite.config.ts
+│   │   │   │   │   ├── timeline
+│   │   │   │   │   │   ├── composer-write-batch-benchmark.spec.ts
+│   │   │   │   │   │   ├── first-navigation-benchmark.spec.ts
+│   │   │   │   │   │   ├── first-navigation-metrics.ts
+│   │   │   │   │   │   ├── first-navigation-probe.ts
+│   │   │   │   │   │   ├── home-session-index-benchmark.spec.ts
+│   │   │   │   │   │   ├── home-session-index.fixture.ts
+│   │   │   │   │   │   ├── home-tab-navigation-benchmark.spec.ts
+│   │   │   │   │   │   ├── inactive-tab-prefetch-benchmark.spec.ts
+│   │   │   │   │   │   ├── laggy-session-benchmark.md
+│   │   │   │   │   │   ├── laggy-session-benchmark.spec.ts
+│   │   │   │   │   │   ├── laggy-session-report.ts
+│   │   │   │   │   │   ├── navigation-milestones.spec.ts
+│   │   │   │   │   │   ├── navigation-milestones.ts
+│   │   │   │   │   │   ├── projection.playwright.config.ts
+│   │   │   │   │   │   ├── projection.vite.config.ts
+│   │   │   │   │   │   ├── provider-memory-benchmark.spec.ts
+│   │   │   │   │   │   ├── review-pane-scaling-benchmark.spec.ts
+│   │   │   │   │   │   ├── session-entry-benchmark.spec.ts
+│   │   │   │   │   │   ├── session-parent-hydration-benchmark.spec.ts
+│   │   │   │   │   │   ├── session-tab-flash.spec.ts
+│   │   │   │   │   │   ├── session-tab-repaint-probe.ts
+│   │   │   │   │   │   ├── session-tab-switch-benchmark.spec.ts
+│   │   │   │   │   │   ├── session-tab-switch-metrics.ts
+│   │   │   │   │   │   ├── session-tab-switch-probe.spec.ts
+│   │   │   │   │   │   ├── session-tab-switch-probe.ts
+│   │   │   │   │   │   ├── session-tab-switch.fixture.ts
+│   │   │   │   │   │   ├── session-timeline-benchmark.fixture.ts
+│   │   │   │   │   │   ├── session-timeline-benchmark.spec.ts
+│   │   │   │   │   │   ├── session-timeline-profile.ts
+│   │   │   │   │   │   ├── session-timeline-search-benchmark.spec.ts
+│   │   │   │   │   │   ├── session-timeline-search-probe.ts
+│   │   │   │   │   │   ├── session-timeline-stream-probe.ts
+│   │   │   │   │   │   ├── timeline-projection-benchmark.spec.ts
+│   │   │   │   │   │   ├── timeline-projection.md
+│   │   │   │   │   │   └── timeline-test-helpers.ts
+│   │   │   │   │   ├── timeline-stability
+│   │   │   │   │   │   ├── README.md
+│   │   │   │   │   │   ├── adverse.spec.ts
+│   │   │   │   │   │   ├── environment-matrix.spec.ts
+│   │   │   │   │   │   ├── file-matrix.spec.ts
+│   │   │   │   │   │   ├── file-mutation.spec.ts
+│   │   │   │   │   │   ├── fixture.test.ts
+│   │   │   │   │   │   ├── interaction.spec.ts
+│   │   │   │   │   │   ├── lifecycle.spec.ts
+│   │   │   │   │   │   ├── oracle-browser.spec.ts
+│   │   │   │   │   │   ├── playwright.config.ts
+│   │   │   │   │   │   ├── scroll-interaction.spec.ts
+│   │   │   │   │   │   ├── shell-matrix.spec.ts
+│   │   │   │   │   │   ├── tool-mutation.spec.ts
+│   │   │   │   │   │   ├── tools.spec.ts
+│   │   │   │   │   │   └── transition-matrix.spec.ts
+│   │   │   │   │   ├── unit
+│   │   │   │   │   │   ├── chrome-trace-write.test.ts
+│   │   │   │   │   │   ├── desktop-startup.test.ts
+│   │   │   │   │   │   ├── first-navigation-metrics.test.ts
+│   │   │   │   │   │   ├── home-session-index-fixture.test.ts
+│   │   │   │   │   │   ├── mock-server.test.ts
+│   │   │   │   │   │   ├── navigation-milestones.test.ts
+│   │   │   │   │   │   ├── session-tab-repaint-probe.test.ts
+│   │   │   │   │   │   ├── session-tab-switch-metrics.test.ts
+│   │   │   │   │   │   ├── session-tab-switch-probe.test.ts
+│   │   │   │   │   │   ├── session-timeline-stream-probe.test.ts
+│   │   │   │   │   │   ├── session-timeline-visual-tracking.test.ts
+│   │   │   │   │   │   ├── tab-switch-reporter.test.ts
+│   │   │   │   │   │   └── visual-stability.test.ts
+│   │   │   │   │   ├── AGENTS.md
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── benchmark.ts
+│   │   │   │   │   ├── chrome-trace.ts
+│   │   │   │   │   ├── command-palette-benchmark.spec.ts
+│   │   │   │   │   ├── playwright.config.ts
+│   │   │   │   │   ├── playwright.uncapped.config.ts
+│   │   │   │   │   ├── tab-switch-reporter.ts
+│   │   │   │   │   └── tab-switch-server.ts
+│   │   │   │   ├── regression
+│   │   │   │   │   ├── background-read-failure.spec.ts
+│   │   │   │   │   ├── btw-sidebar.spec.ts
+│   │   │   │   │   ├── command-palette.spec.ts
+│   │   │   │   │   ├── composer.spec.ts
+│   │   │   │   │   ├── home.spec.ts
+│   │   │   │   │   ├── mcp-workspace-toggle.spec.ts
+│   │   │   │   │   ├── mobile-composer-submit-focus.spec.ts
+│   │   │   │   │   ├── mobile-extension-drawers.spec.ts
+│   │   │   │   │   ├── mobile-extensions.spec.ts
+│   │   │   │   │   ├── mobile-model-pickers.spec.ts
+│   │   │   │   │   ├── mobile-session-options.spec.ts
+│   │   │   │   │   ├── mobile-session.spec.ts
+│   │   │   │   │   ├── mobile-timeline-scroll.spec.ts
+│   │   │   │   │   ├── multi-server.spec.ts
+│   │   │   │   │   ├── new-session.spec.ts
+│   │   │   │   │   ├── patch-border.spec.ts
+│   │   │   │   │   ├── patch-sticky-header.spec.ts
+│   │   │   │   │   ├── review.spec.ts
+│   │   │   │   │   ├── session-header.spec.ts
+│   │   │   │   │   ├── session-location-sync.spec.ts
+│   │   │   │   │   ├── session-notice-truncation.spec.ts
+│   │   │   │   │   ├── session-panel-scrollbar.spec.ts
+│   │   │   │   │   ├── session-queue.spec.ts
+│   │   │   │   │   ├── session-request-docks.spec.ts
+│   │   │   │   │   ├── session-summary.spec.ts
+│   │   │   │   │   ├── session-timeline-accessibility.spec.ts
+│   │   │   │   │   ├── session-timeline-locale-projection.spec.ts
+│   │   │   │   │   ├── session-timeline-reducer-projection.spec.ts
+│   │   │   │   │   ├── session-timeline-tool-projection.spec.ts
+│   │   │   │   │   ├── settings-search.spec.ts
+│   │   │   │   │   ├── settings-wsl.spec.ts
+│   │   │   │   │   ├── settings.spec.ts
+│   │   │   │   │   ├── shell-panel-spacing.spec.ts
+│   │   │   │   │   ├── side-panels.spec.ts
+│   │   │   │   │   ├── subagent-child-navigation.spec.ts
+│   │   │   │   │   ├── tabs.spec.ts
+│   │   │   │   │   ├── terminal-input.spec.ts
+│   │   │   │   │   ├── timeline-cache.spec.ts
+│   │   │   │   │   ├── timeline-geometry.spec.ts
+│   │   │   │   │   ├── timeline-history.spec.ts
+│   │   │   │   │   ├── timeline-stream.spec.ts
+│   │   │   │   │   └── whats-new.spec.ts
+│   │   │   │   ├── reproduction
+│   │   │   │   │   └── timeline-suspense
+│   │   │   │   │       ├── index.html
+│   │   │   │   │       ├── main.tsx
+│   │   │   │   │       ├── playwright.config.ts
+│   │   │   │   │       ├── timeline-suspense.repro.ts
+│   │   │   │   │       └── vite.config.ts
+│   │   │   │   ├── screenshots
+│   │   │   │   │   └── session-project-menu.png
+│   │   │   │   ├── service-worker
+│   │   │   │   │   ├── cache.spec.ts
+│   │   │   │   │   └── playwright.config.ts
+│   │   │   │   ├── user-story
+│   │   │   │   │   └── model-selection-flow.spec.ts
+│   │   │   │   ├── utils
+│   │   │   │   │   ├── visual-stability
+│   │   │   │   │   │   ├── analyzer.ts
+│   │   │   │   │   │   ├── capture.ts
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   ├── invariant.ts
+│   │   │   │   │   │   ├── model.ts
+│   │   │   │   │   │   ├── probe.ts
+│   │   │   │   │   │   ├── regions.ts
+│   │   │   │   │   │   ├── reporter.ts
+│   │   │   │   │   │   └── scenario.ts
+│   │   │   │   │   ├── app-direction.fixture.tsx
+│   │   │   │   │   ├── app-direction.html
+│   │   │   │   │   ├── app.ts
+│   │   │   │   │   ├── command-palette.ts
+│   │   │   │   │   ├── direction.ts
+│   │   │   │   │   ├── errors.ts
+│   │   │   │   │   ├── markdown-sessions.ts
+│   │   │   │   │   ├── mock-api.ts
+│   │   │   │   │   ├── mock-server.ts
+│   │   │   │   │   ├── prompt-motion.ts
+│   │   │   │   │   ├── session-fixture.ts
+│   │   │   │   │   ├── settings-wsl.fixture.tsx
+│   │   │   │   │   ├── settings-wsl.html
+│   │   │   │   │   ├── sse-transport.ts
+│   │   │   │   │   ├── timeline.ts
+│   │   │   │   │   ├── visual-stability.ts
+│   │   │   │   │   ├── waits.ts
+│   │   │   │   │   ├── windows-menu.fixture.tsx
+│   │   │   │   │   ├── windows-menu.html
+│   │   │   │   │   └── workspace.ts
+│   │   │   │   ├── AGENTS.md
+│   │   │   │   └── tsconfig.json
+│   │   │   ├── public
+│   │   │   │   ├── assets
+│   │   │   │   │   ├── Inter.ttf
+│   │   │   │   │   └── JetBrainsMonoNerdFontMono-Regular.woff2
+│   │   │   │   ├── _headers
+│   │   │   │   ├── apple-touch-icon-v3.png
+│   │   │   │   ├── apple-touch-icon.png
+│   │   │   │   ├── favicon-96x96-v3.png
+│   │   │   │   ├── favicon-96x96.png
+│   │   │   │   ├── favicon-v3.ico
+│   │   │   │   ├── favicon-v3.svg
+│   │   │   │   ├── favicon.ico
+│   │   │   │   ├── favicon.svg
+│   │   │   │   ├── oc-theme-preload.js
+│   │   │   │   ├── social-share-zen.png
+│   │   │   │   ├── social-share.png
+│   │   │   │   ├── web-app-manifest-192x192.png
+│   │   │   │   └── web-app-manifest-512x512.png
+│   │   │   ├── src
+│   │   │   │   ├── composer
+│   │   │   │   │   ├── attachments
+│   │   │   │   │   │   ├── attachments.css
+│   │   │   │   │   │   ├── attachments.ts
+│   │   │   │   │   │   ├── destination.ts
+│   │   │   │   │   │   └── uploads.tsx
+│   │   │   │   │   ├── editor
+│   │   │   │   │   │   ├── actions.test.ts
+│   │   │   │   │   │   ├── actions.ts
+│   │   │   │   │   │   ├── dom.test.ts
+│   │   │   │   │   │   ├── dom.ts
+│   │   │   │   │   │   ├── editor.css
+│   │   │   │   │   │   ├── editor.tsx
+│   │   │   │   │   │   ├── interaction.test.ts
+│   │   │   │   │   │   └── interaction.ts
+│   │   │   │   │   ├── history
+│   │   │   │   │   │   ├── entry.test.ts
+│   │   │   │   │   │   ├── entry.ts
+│   │   │   │   │   │   └── store.ts
+│   │   │   │   │   ├── suggestions
+│   │   │   │   │   │   ├── machine.test.ts
+│   │   │   │   │   │   └── machine.ts
+│   │   │   │   │   ├── adapter.ts
+│   │   │   │   │   ├── client-slash-command.test.ts
+│   │   │   │   │   ├── client-slash-command.ts
+│   │   │   │   │   ├── commands.tsx
+│   │   │   │   │   ├── comment-note.test.ts
+│   │   │   │   │   ├── comment-note.ts
+│   │   │   │   │   ├── comments.test.ts
+│   │   │   │   │   ├── comments.tsx
+│   │   │   │   │   ├── composer.stories.tsx
+│   │   │   │   │   ├── composer.tsx
+│   │   │   │   │   ├── dropzone.tsx
+│   │   │   │   │   ├── model.ts
+│   │   │   │   │   ├── persistence.tsx
+│   │   │   │   │   ├── prompt-parts.ts
+│   │   │   │   │   ├── prompt.test.ts
+│   │   │   │   │   ├── prompt.ts
+│   │   │   │   │   ├── request.test.ts
+│   │   │   │   │   ├── request.ts
+│   │   │   │   │   ├── schema.test.ts
+│   │   │   │   │   ├── schema.ts
+│   │   │   │   │   ├── selection.ts
+│   │   │   │   │   ├── state.ts
+│   │   │   │   │   ├── submission-state.ts
+│   │   │   │   │   ├── submit.test.ts
+│   │   │   │   │   ├── submit.ts
+│   │   │   │   │   └── types.ts
+│   │   │   │   ├── home
+│   │   │   │   │   ├── projects
+│   │   │   │   │   │   ├── add.ts
+│   │   │   │   │   │   ├── controller.tsx
+│   │   │   │   │   │   ├── file-manager.ts
+│   │   │   │   │   │   ├── region.tsx
+│   │   │   │   │   │   ├── reveal.ts
+│   │   │   │   │   │   ├── view.css
+│   │   │   │   │   │   └── view.tsx
+│   │   │   │   │   ├── sessions
+│   │   │   │   │   │   ├── alt-hold.test.ts
+│   │   │   │   │   │   ├── alt-hold.ts
+│   │   │   │   │   │   ├── archive.test.ts
+│   │   │   │   │   │   ├── archive.ts
+│   │   │   │   │   │   ├── command-palette.tsx
+│   │   │   │   │   │   ├── controller.tsx
+│   │   │   │   │   │   ├── index.test.ts
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   ├── open.test.ts
+│   │   │   │   │   │   ├── open.ts
+│   │   │   │   │   │   ├── records.test.ts
+│   │   │   │   │   │   ├── records.ts
+│   │   │   │   │   │   ├── region.tsx
+│   │   │   │   │   │   ├── search.ts
+│   │   │   │   │   │   ├── view.css
+│   │   │   │   │   │   └── view.tsx
+│   │   │   │   │   ├── model.ts
+│   │   │   │   │   ├── route.tsx
+│   │   │   │   │   └── scroll.ts
+│   │   │   │   ├── new-session
+│   │   │   │   │   ├── project
+│   │   │   │   │   │   ├── controller.ts
+│   │   │   │   │   │   ├── selector.test.tsx
+│   │   │   │   │   │   └── selector.tsx
+│   │   │   │   │   ├── workspace
+│   │   │   │   │   │   ├── controller.test.ts
+│   │   │   │   │   │   ├── controller.ts
+│   │   │   │   │   │   └── selector.tsx
+│   │   │   │   │   ├── commands.tsx
+│   │   │   │   │   ├── composer-adapter.ts
+│   │   │   │   │   ├── layout.ts
+│   │   │   │   │   ├── mcp.ts
+│   │   │   │   │   ├── route.tsx
+│   │   │   │   │   ├── screen.tsx
+│   │   │   │   │   ├── view.tsx
+│   │   │   │   │   ├── wordmark.css
+│   │   │   │   │   ├── wordmark.stories.tsx
+│   │   │   │   │   └── wordmark.tsx
+│   │   │   │   ├── providers
+│   │   │   │   │   ├── catalog
+│   │   │   │   │   │   ├── console.test.ts
+│   │   │   │   │   │   ├── console.ts
+│   │   │   │   │   │   ├── integrations.ts
+│   │   │   │   │   │   ├── order.ts
+│   │   │   │   │   │   ├── plugin.ts
+│   │   │   │   │   │   └── providers.ts
+│   │   │   │   │   ├── connect
+│   │   │   │   │   │   ├── chatgpt-usage-limit.stories.tsx
+│   │   │   │   │   │   ├── chatgpt-usage-limit.tsx
+│   │   │   │   │   │   ├── chatgpt-welcome.stories.tsx
+│   │   │   │   │   │   ├── chatgpt-welcome.tsx
+│   │   │   │   │   │   ├── console.tsx
+│   │   │   │   │   │   ├── controller.ts
+│   │   │   │   │   │   ├── dialog.stories.tsx
+│   │   │   │   │   │   ├── dialog.tsx
+│   │   │   │   │   │   ├── mcp-dialog.tsx
+│   │   │   │   │   │   ├── mcp.ts
+│   │   │   │   │   │   ├── models.css
+│   │   │   │   │   │   ├── remote.test.ts
+│   │   │   │   │   │   ├── remote.tsx
+│   │   │   │   │   │   └── usage-exceeded.tsx
+│   │   │   │   │   ├── credentials
+│   │   │   │   │   │   ├── dialog.tsx
+│   │   │   │   │   │   ├── form.test.ts
+│   │   │   │   │   │   └── form.ts
+│   │   │   │   │   ├── models
+│   │   │   │   │   │   ├── agent.test.ts
+│   │   │   │   │   │   ├── agent.ts
+│   │   │   │   │   │   ├── configured.ts
+│   │   │   │   │   │   ├── manage.tsx
+│   │   │   │   │   │   ├── models.tsx
+│   │   │   │   │   │   ├── provider-group.tsx
+│   │   │   │   │   │   ├── search.test.ts
+│   │   │   │   │   │   ├── search.ts
+│   │   │   │   │   │   ├── select-dialog.css
+│   │   │   │   │   │   ├── select-dialog.stories.tsx
+│   │   │   │   │   │   ├── select-dialog.tsx
+│   │   │   │   │   │   ├── selection.tsx
+│   │   │   │   │   │   ├── tooltip.tsx
+│   │   │   │   │   │   ├── unpaid.stories.tsx
+│   │   │   │   │   │   ├── unpaid.tsx
+│   │   │   │   │   │   ├── variant.test.ts
+│   │   │   │   │   │   └── variant.ts
+│   │   │   │   │   ├── custom-managed-provider.svg
+│   │   │   │   │   └── opencode-logo.tsx
+│   │   │   │   ├── runtime
+│   │   │   │   │   ├── extension
+│   │   │   │   │   │   ├── attachment.ts
+│   │   │   │   │   │   ├── builtins.ts
+│   │   │   │   │   │   ├── commands.tsx
+│   │   │   │   │   │   ├── embeds.tsx
+│   │   │   │   │   │   ├── hmr.tsx
+│   │   │   │   │   │   ├── host-apis.tsx
+│   │   │   │   │   │   ├── host.tsx
+│   │   │   │   │   │   ├── installed.ts
+│   │   │   │   │   │   ├── ipc.test.ts
+│   │   │   │   │   │   ├── ipc.ts
+│   │   │   │   │   │   ├── located.ts
+│   │   │   │   │   │   ├── menubar-items.ts
+│   │   │   │   │   │   ├── mobile.tsx
+│   │   │   │   │   │   ├── mounted-session.ts
+│   │   │   │   │   │   ├── panel-keys.ts
+│   │   │   │   │   │   ├── panel-trigger.tsx
+│   │   │   │   │   │   ├── panels.tsx
+│   │   │   │   │   │   ├── render.tsx
+│   │   │   │   │   │   ├── root.tsx
+│   │   │   │   │   │   ├── server-shell.tsx
+│   │   │   │   │   │   ├── servers.tsx
+│   │   │   │   │   │   ├── settings-page-dev.tsx
+│   │   │   │   │   │   ├── settings-page-view.tsx
+│   │   │   │   │   │   ├── settings-pages.ts
+│   │   │   │   │   │   ├── side-region.tsx
+│   │   │   │   │   │   ├── stores.ts
+│   │   │   │   │   │   ├── tab-strip-scroll.test.ts
+│   │   │   │   │   │   ├── tab-strip-scroll.ts
+│   │   │   │   │   │   └── titlebar-items.tsx
+│   │   │   │   │   ├── i18n
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── ar.ts
+│   │   │   │   │   │   ├── az.ts
+│   │   │   │   │   │   ├── bg.ts
+│   │   │   │   │   │   ├── bn.ts
+│   │   │   │   │   │   ├── br.ts
+│   │   │   │   │   │   ├── bs.ts
+│   │   │   │   │   │   ├── ca.ts
+│   │   │   │   │   │   ├── cs.ts
+│   │   │   │   │   │   ├── da.ts
+│   │   │   │   │   │   ├── de.ts
+│   │   │   │   │   │   ├── desktop-native.test.ts
+│   │   │   │   │   │   ├── desktop-native.ts
+│   │   │   │   │   │   ├── dv.ts
+│   │   │   │   │   │   ├── dz.ts
+│   │   │   │   │   │   ├── el.ts
+│   │   │   │   │   │   ├── en.ts
+│   │   │   │   │   │   ├── es.ts
+│   │   │   │   │   │   ├── et.ts
+│   │   │   │   │   │   ├── fa.ts
+│   │   │   │   │   │   ├── fi.ts
+│   │   │   │   │   │   ├── fo.ts
+│   │   │   │   │   │   ├── fr.ts
+│   │   │   │   │   │   ├── he.ts
+│   │   │   │   │   │   ├── hi.ts
+│   │   │   │   │   │   ├── hr.ts
+│   │   │   │   │   │   ├── hu.ts
+│   │   │   │   │   │   ├── hy.ts
+│   │   │   │   │   │   ├── id.ts
+│   │   │   │   │   │   ├── is.ts
+│   │   │   │   │   │   ├── it.ts
+│   │   │   │   │   │   ├── ja.ts
+│   │   │   │   │   │   ├── ka.ts
+│   │   │   │   │   │   ├── km.ts
+│   │   │   │   │   │   ├── ko.ts
+│   │   │   │   │   │   ├── language.test.ts
+│   │   │   │   │   │   ├── language.tsx
+│   │   │   │   │   │   ├── lo.ts
+│   │   │   │   │   │   ├── lt.ts
+│   │   │   │   │   │   ├── lv.ts
+│   │   │   │   │   │   ├── mk.ts
+│   │   │   │   │   │   ├── mn.ts
+│   │   │   │   │   │   ├── ms.ts
+│   │   │   │   │   │   ├── my.ts
+│   │   │   │   │   │   ├── ne.ts
+│   │   │   │   │   │   ├── nl.ts
+│   │   │   │   │   │   ├── no.ts
+│   │   │   │   │   │   ├── pa.ts
+│   │   │   │   │   │   ├── pl.ts
+│   │   │   │   │   │   ├── ro.ts
+│   │   │   │   │   │   ├── ru.ts
+│   │   │   │   │   │   ├── si.ts
+│   │   │   │   │   │   ├── sk.ts
+│   │   │   │   │   │   ├── sl.ts
+│   │   │   │   │   │   ├── sq.ts
+│   │   │   │   │   │   ├── sr.ts
+│   │   │   │   │   │   ├── sv.ts
+│   │   │   │   │   │   ├── tg.ts
+│   │   │   │   │   │   ├── th.ts
+│   │   │   │   │   │   ├── tk.ts
+│   │   │   │   │   │   ├── tr.ts
+│   │   │   │   │   │   ├── uk.ts
+│   │   │   │   │   │   ├── ur.ts
+│   │   │   │   │   │   ├── uz.ts
+│   │   │   │   │   │   ├── vi.ts
+│   │   │   │   │   │   ├── zh.ts
+│   │   │   │   │   │   └── zht.ts
+│   │   │   │   │   ├── persistence
+│   │   │   │   │   │   ├── README.md
+│   │   │   │   │   │   ├── base64.ts
+│   │   │   │   │   │   ├── consumers.test.ts
+│   │   │   │   │   │   ├── drafts.test.ts
+│   │   │   │   │   │   ├── drafts.ts
+│   │   │   │   │   │   ├── equality.ts
+│   │   │   │   │   │   ├── namespace.test.ts
+│   │   │   │   │   │   ├── namespace.ts
+│   │   │   │   │   │   ├── persist.test.ts
+│   │   │   │   │   │   ├── persist.ts
+│   │   │   │   │   │   ├── schema.test.ts
+│   │   │   │   │   │   ├── schema.ts
+│   │   │   │   │   │   ├── storage.test.ts
+│   │   │   │   │   │   ├── storage.ts
+│   │   │   │   │   │   ├── uuid.test.ts
+│   │   │   │   │   │   └── uuid.ts
+│   │   │   │   │   ├── platform
+│   │   │   │   │   │   ├── external-link.tsx
+│   │   │   │   │   │   ├── keyboard.ts
+│   │   │   │   │   │   ├── platform.tsx
+│   │   │   │   │   │   ├── pwa.ts
+│   │   │   │   │   │   └── web.ts
+│   │   │   │   │   ├── server
+│   │   │   │   │   │   ├── global-sync
+│   │   │   │   │   │   │   ├── bootstrap.test.ts
+│   │   │   │   │   │   │   ├── bootstrap.ts
+│   │   │   │   │   │   │   ├── child-store.test.ts
+│   │   │   │   │   │   │   ├── child-store.ts
+│   │   │   │   │   │   │   ├── eviction.test.ts
+│   │   │   │   │   │   │   ├── eviction.ts
+│   │   │   │   │   │   │   ├── mcp.test.ts
+│   │   │   │   │   │   │   ├── mcp.ts
+│   │   │   │   │   │   │   ├── queue.test.ts
+│   │   │   │   │   │   │   ├── queue.ts
+│   │   │   │   │   │   │   ├── types.ts
+│   │   │   │   │   │   │   ├── utils.test.ts
+│   │   │   │   │   │   │   └── utils.ts
+│   │   │   │   │   │   ├── server-sync
+│   │   │   │   │   │   │   ├── connection.test.ts
+│   │   │   │   │   │   │   └── connection.ts
+│   │   │   │   │   │   ├── api.test.ts
+│   │   │   │   │   │   ├── api.ts
+│   │   │   │   │   │   ├── client.test.ts
+│   │   │   │   │   │   ├── client.tsx
+│   │   │   │   │   │   ├── current.tsx
+│   │   │   │   │   │   ├── data.test.ts
+│   │   │   │   │   │   ├── data.ts
+│   │   │   │   │   │   ├── errors.test.ts
+│   │   │   │   │   │   ├── errors.ts
+│   │   │   │   │   │   ├── health.test.ts
+│   │   │   │   │   │   ├── health.ts
+│   │   │   │   │   │   ├── image.test.ts
+│   │   │   │   │   │   ├── image.ts
+│   │   │   │   │   │   ├── persistence.test.ts
+│   │   │   │   │   │   ├── persistence.ts
+│   │   │   │   │   │   ├── refcount.test.ts
+│   │   │   │   │   │   ├── refcount.ts
+│   │   │   │   │   │   ├── registry.test.ts
+│   │   │   │   │   │   ├── registry.tsx
+│   │   │   │   │   │   ├── request-queue.test.ts
+│   │   │   │   │   │   ├── request-queue.ts
+│   │   │   │   │   │   ├── runtime.tsx
+│   │   │   │   │   │   ├── scope.test.ts
+│   │   │   │   │   │   ├── scope.ts
+│   │   │   │   │   │   ├── scoped-cache.test.ts
+│   │   │   │   │   │   ├── scoped-cache.ts
+│   │   │   │   │   │   ├── sync.tsx
+│   │   │   │   │   │   └── types.ts
+│   │   │   │   │   ├── animated-presence.ts
+│   │   │   │   │   └── polyfills.ts
+│   │   │   │   ├── servers
+│   │   │   │   │   ├── connect
+│   │   │   │   │   │   ├── browser.ts
+│   │   │   │   │   │   ├── camera.ts
+│   │   │   │   │   │   ├── dialog.tsx
+│   │   │   │   │   │   ├── method.tsx
+│   │   │   │   │   │   ├── pairing.test.ts
+│   │   │   │   │   │   ├── pairing.ts
+│   │   │   │   │   │   ├── redeem.ts
+│   │   │   │   │   │   ├── scanner.css
+│   │   │   │   │   │   ├── scanner.tsx
+│   │   │   │   │   │   ├── screen.css
+│   │   │   │   │   │   └── screen.tsx
+│   │   │   │   │   └── registry
+│   │   │   │   │       ├── add-menu.tsx
+│   │   │   │   │       ├── controller.test.ts
+│   │   │   │   │       ├── controller.ts
+│   │   │   │   │       ├── extension-row.tsx
+│   │   │   │   │       ├── management.test.ts
+│   │   │   │   │       ├── management.ts
+│   │   │   │   │       ├── row-items.tsx
+│   │   │   │   │       ├── row-menu.tsx
+│   │   │   │   │       ├── row.stories.tsx
+│   │   │   │   │       └── row.tsx
+│   │   │   │   ├── session
+│   │   │   │   │   ├── commands
+│   │   │   │   │   │   ├── export.test.ts
+│   │   │   │   │   │   ├── export.ts
+│   │   │   │   │   │   ├── fork-dialog.tsx
+│   │   │   │   │   │   └── use-session-commands.tsx
+│   │   │   │   │   ├── composer
+│   │   │   │   │   │   ├── adapter.ts
+│   │   │   │   │   │   ├── controller.ts
+│   │   │   │   │   │   ├── location-missing.tsx
+│   │   │   │   │   │   ├── queue-panel.tsx
+│   │   │   │   │   │   ├── queue.test.ts
+│   │   │   │   │   │   ├── queue.ts
+│   │   │   │   │   │   ├── region.tsx
+│   │   │   │   │   │   ├── selection.test.ts
+│   │   │   │   │   │   ├── selection.ts
+│   │   │   │   │   │   ├── session-composer-region-controller.ts
+│   │   │   │   │   │   └── session-composer-region.tsx
+│   │   │   │   │   ├── header
+│   │   │   │   │   │   ├── session-header-actions.tsx
+│   │   │   │   │   │   ├── session-header.tsx
+│   │   │   │   │   │   ├── session-running-menu.tsx
+│   │   │   │   │   │   └── session-working-indicator.tsx
+│   │   │   │   │   ├── requests
+│   │   │   │   │   │   ├── auto-approve.ts
+│   │   │   │   │   │   ├── background.ts
+│   │   │   │   │   │   ├── model.ts
+│   │   │   │   │   │   ├── session-permission-dock.tsx
+│   │   │   │   │   │   ├── session-question-dock.tsx
+│   │   │   │   │   │   ├── session-request-tree.test.ts
+│   │   │   │   │   │   ├── session-request-tree.ts
+│   │   │   │   │   │   ├── session-websearch-dock.css
+│   │   │   │   │   │   ├── session-websearch-dock.tsx
+│   │   │   │   │   │   ├── websearch.test.ts
+│   │   │   │   │   │   └── websearch.ts
+│   │   │   │   │   ├── timeline
+│   │   │   │   │   │   ├── background-work.stories.tsx
+│   │   │   │   │   │   ├── cache.ts
+│   │   │   │   │   │   ├── controller-projection.test.ts
+│   │   │   │   │   │   ├── controller-projection.ts
+│   │   │   │   │   │   ├── controller.tsx
+│   │   │   │   │   │   ├── interaction.ts
+│   │   │   │   │   │   ├── message-timeline.tsx
+│   │   │   │   │   │   ├── model.test.ts
+│   │   │   │   │   │   ├── model.ts
+│   │   │   │   │   │   ├── observe-element-offset.test.ts
+│   │   │   │   │   │   ├── observe-element-offset.ts
+│   │   │   │   │   │   ├── projection.ts
+│   │   │   │   │   │   ├── search-bar.css
+│   │   │   │   │   │   ├── search-bar.tsx
+│   │   │   │   │   │   ├── search-controller.ts
+│   │   │   │   │   │   ├── virtual-items.ts
+│   │   │   │   │   │   └── virtualizer.tsx
+│   │   │   │   │   ├── handoff.ts
+│   │   │   │   │   ├── helpers.ts
+│   │   │   │   │   ├── incompatible-server-panel.tsx
+│   │   │   │   │   ├── list.test.ts
+│   │   │   │   │   ├── list.ts
+│   │   │   │   │   ├── message-id-from-hash.ts
+│   │   │   │   │   ├── model.ts
+│   │   │   │   │   ├── preparing-composer.tsx
+│   │   │   │   │   ├── revert.ts
+│   │   │   │   │   ├── route-error.tsx
+│   │   │   │   │   ├── route.tsx
+│   │   │   │   │   ├── screen-layout.ts
+│   │   │   │   │   ├── screen.tsx
+│   │   │   │   │   ├── search.ts
+│   │   │   │   │   ├── session-domain.test.ts
+│   │   │   │   │   ├── session-domain.ts
+│   │   │   │   │   ├── session-frame.tsx
+│   │   │   │   │   ├── session-identity-header.css
+│   │   │   │   │   ├── session-identity-header.tsx
+│   │   │   │   │   ├── session-layout.ts
+│   │   │   │   │   ├── session-model-helpers.test.ts
+│   │   │   │   │   ├── session-model-helpers.ts
+│   │   │   │   │   ├── session-ownership.test.ts
+│   │   │   │   │   ├── session-ownership.ts
+│   │   │   │   │   ├── session-panel-width.test.ts
+│   │   │   │   │   ├── session-panel-width.ts
+│   │   │   │   │   ├── session-resolution.ts
+│   │   │   │   │   ├── session-screen.stories.tsx
+│   │   │   │   │   ├── story-model.tsx
+│   │   │   │   │   ├── title.ts
+│   │   │   │   │   ├── usage-exceeded-dialogs.test.ts
+│   │   │   │   │   ├── usage-exceeded-dialogs.tsx
+│   │   │   │   │   ├── use-session-hash-scroll.test.ts
+│   │   │   │   │   └── use-session-hash-scroll.ts
+│   │   │   │   ├── settings
+│   │   │   │   │   ├── about
+│   │   │   │   │   │   ├── notices
+│   │   │   │   │   │   │   ├── fonts
+│   │   │   │   │   │   │   │   └── OFL-1.1.txt
+│   │   │   │   │   │   │   ├── apache-2.0.txt
+│   │   │   │   │   │   │   ├── betteroffice-notice.txt
+│   │   │   │   │   │   │   ├── crates.ts
+│   │   │   │   │   │   │   ├── dialog.tsx
+│   │   │   │   │   │   │   ├── fonts.ts
+│   │   │   │   │   │   │   └── notices.ts
+│   │   │   │   │   │   ├── about.tsx
+│   │   │   │   │   │   ├── animated-wordmark.tsx
+│   │   │   │   │   │   ├── anomaly-brush.svg
+│   │   │   │   │   │   ├── contributors.test.ts
+│   │   │   │   │   │   ├── contributors.ts
+│   │   │   │   │   │   └── legal.svg
+│   │   │   │   │   ├── appearance
+│   │   │   │   │   │   └── appearance.tsx
+│   │   │   │   │   ├── experimental
+│   │   │   │   │   │   └── experimental.tsx
+│   │   │   │   │   ├── general
+│   │   │   │   │   │   ├── behavior.ts
+│   │   │   │   │   │   ├── controllers.test.ts
+│   │   │   │   │   │   ├── controllers.ts
+│   │   │   │   │   │   └── general.tsx
+│   │   │   │   │   ├── keybinds
+│   │   │   │   │   │   ├── keybinds.tsx
+│   │   │   │   │   │   └── migration.ts
+│   │   │   │   │   ├── models
+│   │   │   │   │   │   └── models.tsx
+│   │   │   │   │   ├── notifications
+│   │   │   │   │   │   └── notifications.tsx
+│   │   │   │   │   ├── providers
+│   │   │   │   │   │   ├── accounts.test.ts
+│   │   │   │   │   │   ├── accounts.ts
+│   │   │   │   │   │   ├── extensions.tsx
+│   │   │   │   │   │   └── providers.tsx
+│   │   │   │   │   ├── servers
+│   │   │   │   │   │   ├── inventory.test.ts
+│   │   │   │   │   │   ├── inventory.ts
+│   │   │   │   │   │   └── servers.tsx
+│   │   │   │   │   ├── workspaces
+│   │   │   │   │   │   ├── project-extensions.tsx
+│   │   │   │   │   │   ├── project-lsp.test.ts
+│   │   │   │   │   │   ├── project-lsp.ts
+│   │   │   │   │   │   ├── project-model.ts
+│   │   │   │   │   │   ├── project-options.tsx
+│   │   │   │   │   │   ├── project-row.tsx
+│   │   │   │   │   │   ├── project.css
+│   │   │   │   │   │   ├── project.tsx
+│   │   │   │   │   │   ├── projects.tsx
+│   │   │   │   │   │   ├── queries.ts
+│   │   │   │   │   │   └── workspaces.tsx
+│   │   │   │   │   ├── command.tsx
+│   │   │   │   │   ├── list.tsx
+│   │   │   │   │   ├── model.test.ts
+│   │   │   │   │   ├── model.tsx
+│   │   │   │   │   ├── navigation.tsx
+│   │   │   │   │   ├── pages.ts
+│   │   │   │   │   ├── route.test.ts
+│   │   │   │   │   ├── route.ts
+│   │   │   │   │   ├── row.tsx
+│   │   │   │   │   ├── search-catalog.ts
+│   │   │   │   │   ├── search-empty.tsx
+│   │   │   │   │   ├── search-field.tsx
+│   │   │   │   │   ├── search-index.ts
+│   │   │   │   │   ├── search-results.test.ts
+│   │   │   │   │   ├── search-results.ts
+│   │   │   │   │   ├── search-reveal.ts
+│   │   │   │   │   ├── search.css
+│   │   │   │   │   ├── search.tsx
+│   │   │   │   │   ├── server-scope.tsx
+│   │   │   │   │   ├── settings.css
+│   │   │   │   │   ├── shell.tsx
+│   │   │   │   │   ├── surface.tsx
+│   │   │   │   │   ├── timeline-detail.css
+│   │   │   │   │   ├── timeline-detail.stories.tsx
+│   │   │   │   │   └── timeline-detail.tsx
+│   │   │   │   ├── shell
+│   │   │   │   │   ├── commands
+│   │   │   │   │   │   ├── command.test.ts
+│   │   │   │   │   │   ├── command.tsx
+│   │   │   │   │   │   ├── desktop-menu.ts
+│   │   │   │   │   │   ├── desktop.tsx
+│   │   │   │   │   │   ├── dialog.css
+│   │   │   │   │   │   ├── dialog.tsx
+│   │   │   │   │   │   ├── menu-dismiss.ts
+│   │   │   │   │   │   ├── palette.ts
+│   │   │   │   │   │   ├── search-keydown.ts
+│   │   │   │   │   │   └── search.ts
+│   │   │   │   │   ├── errors
+│   │   │   │   │   │   ├── description.test.ts
+│   │   │   │   │   │   ├── description.ts
+│   │   │   │   │   │   └── error.tsx
+│   │   │   │   │   ├── layout
+│   │   │   │   │   │   ├── helpers.test.ts
+│   │   │   │   │   │   ├── helpers.ts
+│   │   │   │   │   │   ├── project-avatar-state.ts
+│   │   │   │   │   │   ├── project-icon.tsx
+│   │   │   │   │   │   └── session-tab-avatar.tsx
+│   │   │   │   │   ├── notifications
+│   │   │   │   │   │   ├── coordinator.ts
+│   │   │   │   │   │   ├── notification-alert.test.ts
+│   │   │   │   │   │   ├── notification.test.ts
+│   │   │   │   │   │   ├── notification.tsx
+│   │   │   │   │   │   ├── sound.ts
+│   │   │   │   │   │   └── toast.tsx
+│   │   │   │   │   ├── routes
+│   │   │   │   │   │   ├── routes.tsx
+│   │   │   │   │   │   ├── session-ui-provider.tsx
+│   │   │   │   │   │   ├── session.test.ts
+│   │   │   │   │   │   └── session.ts
+│   │   │   │   │   ├── state
+│   │   │   │   │   │   ├── helpers.ts
+│   │   │   │   │   │   ├── layout.test.ts
+│   │   │   │   │   │   ├── layout.tsx
+│   │   │   │   │   │   ├── scroll.test.ts
+│   │   │   │   │   │   ├── scroll.ts
+│   │   │   │   │   │   ├── session-tabs.test.ts
+│   │   │   │   │   │   └── session-tabs.ts
+│   │   │   │   │   ├── tabs
+│   │   │   │   │   │   ├── closed.ts
+│   │   │   │   │   │   ├── memory.ts
+│   │   │   │   │   │   ├── schema.ts
+│   │   │   │   │   │   ├── tabs.test.ts
+│   │   │   │   │   │   └── tabs.tsx
+│   │   │   │   │   ├── titlebar
+│   │   │   │   │   │   ├── history.test.ts
+│   │   │   │   │   │   ├── history.ts
+│   │   │   │   │   │   ├── recently-closed-tabs-menu.tsx
+│   │   │   │   │   │   ├── right-slot.test.ts
+│   │   │   │   │   │   ├── right-slot.tsx
+│   │   │   │   │   │   ├── session-events.test.ts
+│   │   │   │   │   │   ├── session-events.ts
+│   │   │   │   │   │   ├── tab-nav.css
+│   │   │   │   │   │   ├── tab-nav.tsx
+│   │   │   │   │   │   ├── tab-order.test.ts
+│   │   │   │   │   │   ├── tab-order.ts
+│   │   │   │   │   │   ├── tab-popover.css
+│   │   │   │   │   │   ├── tab-popover.tsx
+│   │   │   │   │   │   ├── tab-strip.tsx
+│   │   │   │   │   │   ├── tab-title.test.ts
+│   │   │   │   │   │   ├── tab-title.ts
+│   │   │   │   │   │   ├── titlebar.css
+│   │   │   │   │   │   ├── titlebar.tsx
+│   │   │   │   │   │   ├── windows-menu.test.ts
+│   │   │   │   │   │   └── windows-menu.tsx
+│   │   │   │   │   ├── mobile-drawer.css
+│   │   │   │   │   ├── mobile-drawer.tsx
+│   │   │   │   │   ├── mobile-panel-drawer.css
+│   │   │   │   │   ├── mobile-panel-drawer.tsx
+│   │   │   │   │   ├── shell.tsx
+│   │   │   │   │   └── time.ts
+│   │   │   │   ├── workspaces
+│   │   │   │   │   ├── files
+│   │   │   │   │   │   ├── artifact.test.ts
+│   │   │   │   │   │   ├── artifact.ts
+│   │   │   │   │   │   ├── content-cache-accounting.test.ts
+│   │   │   │   │   │   ├── content-cache.ts
+│   │   │   │   │   │   ├── model.tsx
+│   │   │   │   │   │   ├── path.test.ts
+│   │   │   │   │   │   ├── path.ts
+│   │   │   │   │   │   ├── tree-store.ts
+│   │   │   │   │   │   ├── types.ts
+│   │   │   │   │   │   ├── view-cache.ts
+│   │   │   │   │   │   ├── watcher.test.ts
+│   │   │   │   │   │   └── watcher.ts
+│   │   │   │   │   ├── selection
+│   │   │   │   │   │   ├── dialog.css
+│   │   │   │   │   │   ├── dialog.tsx
+│   │   │   │   │   │   ├── domain.test.ts
+│   │   │   │   │   │   ├── domain.ts
+│   │   │   │   │   │   ├── picker.test.ts
+│   │   │   │   │   │   ├── picker.tsx
+│   │   │   │   │   │   └── policy.ts
+│   │   │   │   │   ├── create.test.ts
+│   │   │   │   │   ├── create.ts
+│   │   │   │   │   ├── inventory.test.ts
+│   │   │   │   │   ├── inventory.ts
+│   │   │   │   │   ├── location.tsx
+│   │   │   │   │   ├── path-key.ts
+│   │   │   │   │   ├── paths.test.ts
+│   │   │   │   │   └── paths.ts
+│   │   │   │   ├── app.tsx
+│   │   │   │   ├── custom-elements.d.ts
+│   │   │   │   ├── desktop.ts
+│   │   │   │   ├── entry.tsx
+│   │   │   │   ├── env.d.ts
+│   │   │   │   ├── index.css
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── sst-env.d.ts
+│   │   │   │   └── theme-preload.test.ts
+│   │   │   ├── test-browser
+│   │   │   │   ├── fixtures
+│   │   │   │   │   └── model-selection.ts
+│   │   │   │   ├── animated-presence-state.test.ts
+│   │   │   │   ├── auto-scroll.test.ts
+│   │   │   │   ├── command-palette-search.test.ts
+│   │   │   │   ├── command-palette.test.ts
+│   │   │   │   ├── composer-attachment-ownership.test.tsx
+│   │   │   │   ├── composer-drag-cancel.test.tsx
+│   │   │   │   ├── composer-write-batch.test.ts
+│   │   │   │   ├── draft-history-cache.test.ts
+│   │   │   │   ├── extension-installed.test.ts
+│   │   │   │   ├── extension-migrations.test.ts
+│   │   │   │   ├── extension-primitives.test.ts
+│   │   │   │   ├── message-page-publication.test.ts
+│   │   │   │   ├── model-selection.test.ts
+│   │   │   │   ├── motion-spring.test.ts
+│   │   │   │   ├── persisted-consumers.test.ts
+│   │   │   │   ├── playwright-config.test.ts
+│   │   │   │   ├── prompt-motion.test.ts
+│   │   │   │   ├── prompt-persistence.test.ts
+│   │   │   │   ├── prompt-scope.test.ts
+│   │   │   │   ├── prompt-submission-state.test.ts
+│   │   │   │   ├── provider-catalog.test.ts
+│   │   │   │   ├── pwa-route.test.ts
+│   │   │   │   ├── schema-persistence.test.ts
+│   │   │   │   ├── server-connection-sync.test.ts
+│   │   │   │   ├── session-background.test.ts
+│   │   │   │   ├── session-ownership.test.ts
+│   │   │   │   ├── session-resolution.test.ts
+│   │   │   │   ├── session-router.test.ts
+│   │   │   │   ├── settings-keybinds.test.ts
+│   │   │   │   ├── solid-router-cleanup.test.ts
+│   │   │   │   ├── solid-runtime.test.ts
+│   │   │   │   ├── solid-virtual.test.ts
+│   │   │   │   ├── ssh-composer.test.ts
+│   │   │   │   ├── ssh-health.test.ts
+│   │   │   │   ├── timeline-cache.test.ts
+│   │   │   │   ├── timeline-projection.test.ts
+│   │   │   │   ├── toast-owner.test.ts
+│   │   │   │   └── websearch-request.test.ts
+│   │   │   ├── .gitignore
+│   │   │   ├── AGENTS.md
+│   │   │   ├── README.md
+│   │   │   ├── bunfig.toml
+│   │   │   ├── happydom.ts
+│   │   │   ├── index.html
+│   │   │   ├── manifest.json
+│   │   │   ├── package.json
+│   │   │   ├── playwright.components.config.ts
+│   │   │   ├── playwright.config.ts
+│   │   │   ├── sst-env.d.ts
+│   │   │   ├── tsconfig.json
+│   │   │   ├── vite.config.ts
+│   │   │   ├── vite.icons.test.ts
+│   │   │   ├── vite.icons.ts
+│   │   │   ├── vite.js
+│   │   │   └── vite.pwa.ts
+│   │   ├── cli
+│   │   │   ├── bin
+│   │   │   │   ├── opencode.cjs
+│   │   │   │   └── opencode2.cjs
+│   │   │   ├── dev
+│   │   │   │   ├── README.md
+│   │   │   │   ├── entry.ts
+│   │   │   │   ├── error-overlay.tsx
+│   │   │   │   ├── host.d.ts
+│   │   │   │   ├── host.js
+│   │   │   │   ├── refresh-runtime.d.ts
+│   │   │   │   ├── refresh.ts
+│   │   │   │   ├── route.tsx
+│   │   │   │   ├── tui.ts
+│   │   │   │   └── vite.ts
+│   │   │   ├── script
+│   │   │   │   ├── app-assets.ts
+│   │   │   │   ├── build-node.ts
+│   │   │   │   ├── build.ts
+│   │   │   │   ├── entitlements.plist
+│   │   │   │   ├── files.ts
+│   │   │   │   ├── node-assets.ts
+│   │   │   │   ├── opencode-pty.ts
+│   │   │   │   ├── postinstall.mjs
+│   │   │   │   ├── publish-aur.ts
+│   │   │   │   ├── publish-homebrew.ts
+│   │   │   │   ├── publish.ts
+│   │   │   │   ├── schema.ts
+│   │   │   │   ├── service-smoke.ts
+│   │   │   │   └── verify-artifact.ts
+│   │   │   ├── src
+│   │   │   │   ├── acp
+│   │   │   │   │   ├── agent.ts
+│   │   │   │   │   ├── capabilities.ts
+│   │   │   │   │   ├── catalog.ts
+│   │   │   │   │   ├── child.ts
+│   │   │   │   │   ├── client.ts
+│   │   │   │   │   ├── compaction.ts
+│   │   │   │   │   ├── config-option.ts
+│   │   │   │   │   ├── connection.ts
+│   │   │   │   │   ├── content.ts
+│   │   │   │   │   ├── directories.ts
+│   │   │   │   │   ├── elicitation.ts
+│   │   │   │   │   ├── error.ts
+│   │   │   │   │   ├── permission.ts
+│   │   │   │   │   ├── prompt.ts
+│   │   │   │   │   ├── replay.ts
+│   │   │   │   │   ├── service.ts
+│   │   │   │   │   ├── sessions.ts
+│   │   │   │   │   ├── tool.ts
+│   │   │   │   │   ├── translate.ts
+│   │   │   │   │   └── turn.ts
+│   │   │   │   ├── commands
+│   │   │   │   │   ├── handlers
+│   │   │   │   │   │   ├── auth
+│   │   │   │   │   │   │   ├── account.ts
+│   │   │   │   │   │   │   ├── export.ts
+│   │   │   │   │   │   │   ├── form.ts
+│   │   │   │   │   │   │   ├── import.ts
+│   │   │   │   │   │   │   ├── list.ts
+│   │   │   │   │   │   │   ├── login.ts
+│   │   │   │   │   │   │   ├── logout.ts
+│   │   │   │   │   │   │   ├── shared.ts
+│   │   │   │   │   │   │   └── switch.ts
+│   │   │   │   │   │   ├── debug
+│   │   │   │   │   │   │   ├── agents.ts
+│   │   │   │   │   │   │   ├── config.ts
+│   │   │   │   │   │   │   ├── paths.ts
+│   │   │   │   │   │   │   └── redact.ts
+│   │   │   │   │   │   ├── mcp
+│   │   │   │   │   │   │   ├── add.ts
+│   │   │   │   │   │   │   ├── auth.ts
+│   │   │   │   │   │   │   ├── list.ts
+│   │   │   │   │   │   │   ├── logout.ts
+│   │   │   │   │   │   │   └── resolve.ts
+│   │   │   │   │   │   ├── plugin
+│   │   │   │   │   │   │   ├── add.ts
+│   │   │   │   │   │   │   ├── check.ts
+│   │   │   │   │   │   │   ├── inventory.ts
+│   │   │   │   │   │   │   ├── list.ts
+│   │   │   │   │   │   │   ├── remove.ts
+│   │   │   │   │   │   │   └── update.ts
+│   │   │   │   │   │   ├── service
+│   │   │   │   │   │   │   ├── get.ts
+│   │   │   │   │   │   │   ├── restart.ts
+│   │   │   │   │   │   │   ├── set.ts
+│   │   │   │   │   │   │   ├── start.ts
+│   │   │   │   │   │   │   ├── status.ts
+│   │   │   │   │   │   │   ├── stop.ts
+│   │   │   │   │   │   │   └── unset.ts
+│   │   │   │   │   │   ├── session
+│   │   │   │   │   │   │   ├── delete.ts
+│   │   │   │   │   │   │   ├── export.ts
+│   │   │   │   │   │   │   ├── import.ts
+│   │   │   │   │   │   │   └── list.ts
+│   │   │   │   │   │   ├── acp.ts
+│   │   │   │   │   │   ├── api.test.ts
+│   │   │   │   │   │   ├── api.ts
+│   │   │   │   │   │   ├── default.ts
+│   │   │   │   │   │   ├── mini.ts
+│   │   │   │   │   │   ├── models.ts
+│   │   │   │   │   │   ├── pair.ts
+│   │   │   │   │   │   ├── reload.ts
+│   │   │   │   │   │   ├── run.ts
+│   │   │   │   │   │   ├── serve.ts
+│   │   │   │   │   │   ├── stats.ts
+│   │   │   │   │   │   ├── uninstall.ts
+│   │   │   │   │   │   └── upgrade.ts
+│   │   │   │   │   └── commands.ts
+│   │   │   │   ├── config
+│   │   │   │   │   ├── config.ts
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── migrate.ts
+│   │   │   │   │   └── schema.ts
+│   │   │   │   ├── framework
+│   │   │   │   │   ├── runtime.ts
+│   │   │   │   │   └── spec.ts
+│   │   │   │   ├── node
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── plugin-runtime.effect.ts
+│   │   │   │   │   ├── plugin-runtime.promise.ts
+│   │   │   │   │   └── target.ts
+│   │   │   │   ├── run
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── noninteractive.ts
+│   │   │   │   │   ├── run.ts
+│   │   │   │   │   ├── ui.ts
+│   │   │   │   │   └── v1.ts
+│   │   │   │   ├── services
+│   │   │   │   │   ├── remote-tunnel.ts
+│   │   │   │   │   ├── retained-image.ts
+│   │   │   │   │   ├── server-connection.ts
+│   │   │   │   │   ├── service-config.ts
+│   │   │   │   │   ├── service-registration.ts
+│   │   │   │   │   ├── standalone.ts
+│   │   │   │   │   ├── update-preflight.tsx
+│   │   │   │   │   ├── updater-action.ts
+│   │   │   │   │   ├── updater.test.ts
+│   │   │   │   │   ├── updater.ts
+│   │   │   │   │   └── web-ui.ts
+│   │   │   │   ├── ui
+│   │   │   │   │   ├── integration-picker.ts
+│   │   │   │   │   ├── prompt.ts
+│   │   │   │   │   └── timeline.tsx
+│   │   │   │   ├── util
+│   │   │   │   │   ├── error.ts
+│   │   │   │   │   ├── io.ts
+│   │   │   │   │   └── process.ts
+│   │   │   │   ├── app-archive.ts
+│   │   │   │   ├── app-assets.ts
+│   │   │   │   ├── cpu-profile.ts
+│   │   │   │   ├── database-path.ts
+│   │   │   │   ├── env.ts
+│   │   │   │   ├── heap.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── mini-host.ts
+│   │   │   │   └── … (listing truncated)
+│   │   │   └── … (listing truncated)
+│   │   └── … (listing truncated)
+│   └── … (listing truncated)
+└── … (listing truncated)

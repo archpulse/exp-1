@@ -438,6 +438,18 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             return true;
         }
         "/clear" => {
+            // The screen is the visible half of a conversation; the other half
+            // is the history the server sends the model, so both are emptied.
+            let conn = ctx.conn.clone();
+            let tx = ctx.events.clone();
+            let sessions = [ctx.session(0), ctx.session(1)];
+            tokio::spawn(async move {
+                for session in sessions {
+                    if let Err(err) = conn.clear(&session).await {
+                        let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+                    }
+                }
+            });
             let thread = app.thread_mut();
             thread.transcript.clear();
             thread.live.clear();
@@ -452,6 +464,8 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             app.threads[1].transcript.clear();
             app.threads[1].history.lock().unwrap().clear();
             app.threads[1].name.clear();
+            app.thread_mut()
+                .push(Role::System, "cleared; this conversation starts over");
         }
         "/status" => {
             let plan = app
