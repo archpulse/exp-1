@@ -3274,6 +3274,11 @@ async fn login(
     // Picking a provider that is already signed in should switch to it, not
     // send the user through the sign-in page a second time.
     if has_credential(provider) && !body.force {
+        // A credential stored before the shared-key groups existed still has to
+        // reach its siblings, so the group is completed here too.
+        if let Some(key) = store::api_key(provider.id) {
+            let _ = store_key(provider, &key);
+        }
         if let Ok(mut slot) = shared.agent.provider.lock() {
             *slot = provider.id.to_string();
         }
