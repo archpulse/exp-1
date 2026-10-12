@@ -277,7 +277,7 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
         "/help" => {
             app.thread_mut().push(
                 Role::System,
-                "enter send · ctrl-c quit · ctrl-/ switch thread · ctrl-backspace deletes a word · esc esc interrupts",
+                "enter send · ctrl-c quit · ctrl-o tool output · ctrl-v paste image · ctrl-backspace deletes a word · esc esc interrupts\nctrl-/ switches thread · ctrl-g jumps to the newest message · ctrl-t to the oldest · pgup/pgdn or the wheel scroll",
             );
         }
         "/cd" => {
@@ -1380,6 +1380,17 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
             // the call lines are the story, the output is the footnote.
             if ch == 'o' && key.modifiers.contains(KeyModifiers::CONTROL) {
                 app.show_tool_output = !app.show_tool_output;
+                return;
+            }
+            // ctrl+g goes back to the newest message, ctrl+t to the oldest:
+            // paging through a long conversation should not be the only way.
+            if ch == 'g' && key.modifiers.contains(KeyModifiers::CONTROL) {
+                app.thread_mut().scroll = 0;
+                return;
+            }
+            if ch == 't' && key.modifiers.contains(KeyModifiers::CONTROL) {
+                // Clamped to the transcript's own length when it is drawn.
+                app.thread_mut().scroll = u16::MAX;
                 return;
             }
             // Typing stays available while a turn runs, so a /btw side question

@@ -1673,7 +1673,7 @@ impl App {
         } else if thread.busy() {
             "esc esc interrupts · /btw runs alongside".to_string()
         } else {
-            "enter send · ctrl-c quit · ctrl-o output · ↑↓ history · scroll to page".to_string()
+            "enter send · ctrl-c quit · ctrl-o output · ctrl-g bottom · ↑↓ history".to_string()
         };
         let left_style = if thread.error.is_some() {
             Style::default().fg(theme.warn)

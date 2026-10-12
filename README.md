@@ -207,9 +207,10 @@ input band with a `›` prompt and a blinking `│` caret, then a model line and
   difference between following the work and reading it.
 - A subagent reports its current step on **one line that updates** (`subagent → grep tokenizer`)
   rather than a line per step, and the call that started it reads `task: <description>`.
-- The transcript sticks to the newest message; the mouse wheel or `PageUp` scrolls upwards through
-  history, and a view scrolled up stays where it is while new lines arrive instead of being
-  dragged back to the bottom.
+- The transcript sticks to the newest message; the mouse wheel or `PageUp`/`PageDown` scrolls
+  upwards through history, `ctrl-g` jumps back to the newest message and `ctrl-t` to the oldest, and
+  a view scrolled up stays where it is while new lines arrive instead of being dragged back to the
+  bottom.
 - Dragging with the mouse selects text anywhere on the screen — masthead included — and releasing
   puts it on the clipboard: OSC 52 first, so it also works over ssh, then `wl-copy`, `xclip` or
   `xsel` when they exist. A `copied N chars` note confirms it in the hint line. The selection is a
