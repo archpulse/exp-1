@@ -25,7 +25,7 @@ impl Dictation {
         F: FnMut(String) + Send + 'static,
         G: FnOnce() + Send + 'static,
     {
-        let program = std::env::var("EXP1_DICTATE").unwrap_or_else(|_| "whistle".to_string());
+        let program = program();
         let mut command = Command::new(&program);
         command.arg("--mic");
         if let Ok(language) = std::env::var("EXP1_DICTATE_LANG")
@@ -38,12 +38,27 @@ impl Dictation {
         {
             command.arg("-k").arg(keywords.trim());
         }
+        // If the interface dies without stopping the dictation, the recognizer
+        // must not keep recording: the operating system takes it down with us.
+        #[cfg(unix)]
+        unsafe {
+            use std::os::unix::process::CommandExt;
+            command.pre_exec(|| {
+                libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM);
+                Ok(())
+            });
+        }
         let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .spawn()
-            .with_context(|| format!("could not start {program} --mic"))?;
+            .with_context(|| {
+                format!(
+                    "could not start `{program} --mic` — install whistle, or point \
+                     EXP1_DICTATE at it"
+                )
+            })?;
         let stdout = child.stdout.take().context("the recognizer has no output")?;
         std::thread::spawn(move || {
             let mut on_text = on_text;
@@ -73,6 +88,31 @@ impl Dictation {
             }
             std::thread::sleep(std::time::Duration::from_millis(50));
         }
+        let _ = self.child.kill();
+    }
+}
+
+/// Where the recognizer is: what the environment says, then the user-local
+/// spot a hand-built binary usually ends up in, then whatever PATH finds.
+fn program() -> String {
+    if let Ok(custom) = std::env::var("EXP1_DICTATE")
+        && !custom.trim().is_empty()
+    {
+        return custom.trim().to_string();
+    }
+    if let Some(home) = std::env::var_os("HOME") {
+        let local = std::path::PathBuf::from(home).join(".local/bin/whistle");
+        if local.is_file() {
+            return local.display().to_string();
+        }
+    }
+    "whistle".to_string()
+}
+
+impl Drop for Dictation {
+    /// A recognizer nobody stopped is killed, so quitting mid-dictation does
+    /// not leave the microphone on.
+    fn drop(&mut self) {
         let _ = self.child.kill();
     }
 }
