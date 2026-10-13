@@ -3351,6 +3351,14 @@ async fn models(
     let mut order: Vec<&crate::providers::Provider> = crate::providers::PROVIDERS
         .iter()
         .filter(|provider| has_credential(provider))
+        // A provider whose models speak a protocol no backend implements has
+        // nothing the picker could offer.
+        .filter(|provider| {
+            provider
+                .models
+                .iter()
+                .any(|(_, wire)| wire.is_remote() || *wire == crate::providers::Wire::CodexResponses)
+        })
         .collect();
     order.sort_by_key(|provider| provider.id != active);
 

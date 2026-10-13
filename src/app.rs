@@ -230,6 +230,8 @@ pub enum PickerKind {
     Session,
     Provider,
     Scoped,
+    /// What to do with one of your own messages: copy it, or go back to it.
+    Message,
 }
 
 impl Picker {
@@ -639,6 +641,8 @@ pub struct App {
     /// What the last frame drew that a click can act on. Interior mutability
     /// because the render passes only borrow the app.
     pub clicks: std::cell::RefCell<Vec<ClickTarget>>,
+    /// The message a click asked about, while its little menu is open.
+    pub message_target: Option<(usize, String)>,
     /// The running recognizer, when the microphone is on.
     pub dictation: Option<crate::dictate::Dictation>,
     /// When the current dictation started, for the button's timer.
@@ -731,6 +735,7 @@ impl App {
             first_run: false,
             show_tool_output: false,
             clicks: std::cell::RefCell::new(Vec::new()),
+            message_target: None,
             dictation: None,
             dictating_since: None,
             selection: None,
@@ -1012,6 +1017,29 @@ impl App {
                 .iter()
                 .position(|provider| provider.active)
                 .unwrap_or(0),
+        });
+    }
+
+    /// A click on your own message asks what to do with it. Two things can
+    /// happen, and neither is a surprise.
+    pub fn open_message_picker(&mut self, index: usize, text: String) {
+        let preview: String = text.chars().take(60).collect();
+        self.message_target = Some((index, text));
+        self.picker = Some(Picker {
+            kind: PickerKind::Message,
+            title: format!("Message · {preview}"),
+            items: vec![
+                PickerItem {
+                    label: "copy".to_string(),
+                    description: "put the text on the clipboard".to_string(),
+                },
+                PickerItem {
+                    label: "revert".to_string(),
+                    description: "go back to it: the conversation and the file changes after it go"
+                        .to_string(),
+                },
+            ],
+            selected: 0,
         });
     }
 

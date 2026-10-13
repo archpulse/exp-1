@@ -899,6 +899,21 @@ fn select_from_picker(app: &mut App, ctx: &Ctx) {
         app::PickerKind::Scoped => {
             toggle_scoped(app, index);
         }
+        app::PickerKind::Message => {
+            // The picked row is the choice: 0 copies, 1 goes back.
+            let choice = index;
+            let Some((message_index, text)) = app.message_target.take() else {
+                return;
+            };
+            if choice == 0 {
+                let chars = text.chars().count();
+                if copy_to_clipboard(&text) {
+                    app.copied = Some((format!("copied {chars} chars"), Instant::now()));
+                }
+            } else {
+                revert_to(app, ctx, message_index, text);
+            }
+        }
         app::PickerKind::Session => {
             let Some(meta) = app.session_list.get(index).cloned() else {
                 return;
@@ -1183,6 +1198,17 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
                 }
             }
             KeyCode::Esc => {
+                // A message menu is answered, not saved: closing it forgets
+                // which message it was about.
+                if app
+                    .picker
+                    .as_ref()
+                    .is_some_and(|picker| picker.kind == app::PickerKind::Message)
+                {
+                    app.message_target = None;
+                    app.picker = None;
+                    return;
+                }
                 let scoped = app
                     .picker
                     .as_ref()
@@ -1487,25 +1513,33 @@ fn click_at(app: &mut App, ctx: &Ctx, column: u16, row: u16) {
         app::ClickAction::Link(url) => crate::oauth::open_in_browser(&url),
         app::ClickAction::Mic => toggle_dictation(app, ctx),
         app::ClickAction::Rewind { index, text } => {
-            let conn = ctx.conn.clone();
-            let session = ctx.session(0);
-            let tx = ctx.events.clone();
-            tokio::spawn(async move {
-                match conn.rewind(&session, index, &text).await {
-                    Ok(_) => {
-                        // The transcript is the server's now, note and all.
-                        if let Ok(snapshot) = conn.snapshot(&session).await {
-                            let _ = tx.send(AgentMsg::Loaded(0, snapshot));
-                        }
-                        let _ = tx.send(AgentMsg::Rewound(text));
-                    }
-                    Err(err) => {
-                        let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
-                    }
-                }
-            });
+            // Not straight to reverting: a click asks what to do with it.
+            app.open_message_picker(index, text);
         }
     }
+}
+
+/// Goes back to a message: the conversation, what the model was told after it
+/// and the file changes those turns made.
+fn revert_to(app: &mut App, ctx: &Ctx, index: usize, text: String) {
+    let conn = ctx.conn.clone();
+    let session = ctx.session(0);
+    let tx = ctx.events.clone();
+    app.threads[0].error = None;
+    tokio::spawn(async move {
+        match conn.rewind(&session, index, &text).await {
+            Ok(_) => {
+                // The transcript is the server's now, note and all.
+                if let Ok(snapshot) = conn.snapshot(&session).await {
+                    let _ = tx.send(AgentMsg::Loaded(0, snapshot));
+                }
+                let _ = tx.send(AgentMsg::Rewound(text));
+            }
+            Err(err) => {
+                let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+            }
+        }
+    });
 }
 
 /// The microphone button: the first press starts the recognizer, the second

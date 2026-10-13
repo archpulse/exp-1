@@ -42,7 +42,14 @@ impl Wire {
         }
     }
 
-    /// True for the protocols our own backends implement.
+    /// True for the protocols our own backends implement: the Codex client
+    /// speaks `responses` against its own endpoint, so it is not one of them.
+    pub fn is_remote(self) -> bool {
+        matches!(
+            self,
+            Wire::OpenAiChat | Wire::Anthropic | Wire::OpenAiResponses | Wire::Gemini
+        )
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

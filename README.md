@@ -214,11 +214,12 @@ input band with a `›` prompt and a blinking `│` caret, then a model line and
   the pointer is.
 - A subagent reports its current step on **one line that updates** (`subagent → grep tokenizer`)
   rather than a line per step, and the call that started it reads `task: <description>`.
-- **A click on your own message rewinds to it.** Everything after it goes: the conversation, what
-  the model below that point was told, and every file change the turns after it made, which the
-  undo log puts back. The message itself leaves the transcript and its text returns to the prompt,
-  so it can be edited and sent again. The text is checked before anything is thrown away — a click
-  that lands on the wrong message does nothing.
+- **A click on your own message asks what to do with it**, rather than doing it: a small menu with
+  `copy` (the text goes on the clipboard) and `revert`. Reverting drops everything after that
+  message — the conversation, what the model below that point was told, and every file change the
+  turns after it made, which the undo log puts back. The message itself leaves the transcript and
+  its text returns to the prompt, so it can be edited and sent again. The text is checked before
+  anything is thrown away, so a click that lands on the wrong message does nothing.
 - The transcript sticks to the newest message; the mouse wheel or `PageUp`/`PageDown` scrolls
   upwards through history, `ctrl-g` jumps back to the newest message and `ctrl-t` to the oldest, and
   a view scrolled up stays where it is while new lines arrive instead of being dragged back to the
