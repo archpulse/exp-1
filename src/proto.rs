@@ -73,6 +73,15 @@ pub struct WireAnswerRequest {
     pub submit_label: String,
 }
 
+/// `POST /sessions/{id}/rewind`: go back to one user message.
+#[derive(Debug, Deserialize)]
+pub struct RewindBody {
+    /// The transcript index of that message.
+    pub index: usize,
+    /// Its text, checked before anything is thrown away.
+    pub text: String,
+}
+
 /// Streamed over SSE while a session is attached.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]

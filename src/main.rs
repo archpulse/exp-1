@@ -9,6 +9,7 @@ mod backends;
 mod catalog;
 mod client;
 mod daemon;
+mod dictate;
 mod latex;
 mod mcp;
 mod md;
@@ -105,6 +106,12 @@ enum AgentMsg {
     Catalog(Vec<proto::WireModel>),
     /// A saved conversation arrived, to fill a thread that just attached.
     Loaded(usize, proto::WireSnapshot),
+    /// A user message was clicked: the conversation goes back to it.
+    Rewound(String),
+    /// A piece of dictated text arrived.
+    Dictation(String),
+    /// The recognizer ended: the button goes back to its idle look.
+    DictationStopped,
     /// A login completed: label, model, effort, and the line to show.
     ProviderChanged(String, String, String, String),
     Ask(usize, proto::WireAnswerRequest),
@@ -453,8 +460,7 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
                 }
             });
             let thread = app.thread_mut();
-            thread.transcript.clear();
-            thread.live.clear();
+            thread.clear_transcript();
             thread.reasoning.clear();
             thread.usage = None;
             thread.error = None;
@@ -466,7 +472,7 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             // The footer shows the thread's name, so both threads lose theirs:
             // a cleared conversation is not "Анализ проекта" any more.
             app.threads[0].name.clear();
-            app.threads[1].transcript.clear();
+            app.threads[1].clear_transcript();
             app.threads[1].history.lock().unwrap().clear();
             app.threads[1].name.clear();
             app.thread_mut()
@@ -1382,6 +1388,12 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
                 app.show_tool_output = !app.show_tool_output;
                 return;
             }
+            // ctrl+r is the microphone: the first press starts dictation, the
+            // second stops it.
+            if ch == 'r' && key.modifiers.contains(KeyModifiers::CONTROL) {
+                toggle_dictation(app, ctx);
+                return;
+            }
             // ctrl+g goes back to the newest message, ctrl+t to the oldest:
             // paging through a long conversation should not be the only way.
             if ch == 'g' && key.modifiers.contains(KeyModifiers::CONTROL) {
@@ -1437,6 +1449,58 @@ fn click_at(app: &mut App, ctx: &Ctx, column: u16, row: u16) {
             app.picker = None;
         }
         app::ClickAction::Link(url) => crate::oauth::open_in_browser(&url),
+        app::ClickAction::Mic => toggle_dictation(app, ctx),
+        app::ClickAction::Rewind { index, text } => {
+            let conn = ctx.conn.clone();
+            let session = ctx.session(0);
+            let tx = ctx.events.clone();
+            tokio::spawn(async move {
+                match conn.rewind(&session, index, &text).await {
+                    Ok(_) => {
+                        // The transcript is the server's now, note and all.
+                        if let Ok(snapshot) = conn.snapshot(&session).await {
+                            let _ = tx.send(AgentMsg::Loaded(0, snapshot));
+                        }
+                        let _ = tx.send(AgentMsg::Rewound(text));
+                    }
+                    Err(err) => {
+                        let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+                    }
+                }
+            });
+        }
+    }
+}
+
+/// The microphone button: the first press starts the recognizer, the second
+/// stops it and lets it flush the words still in flight.
+fn toggle_dictation(app: &mut App, ctx: &Ctx) {
+    if let Some(dictation) = app.dictation.take() {
+        app.dictating_since = None;
+        // Stopping waits for the recognizer to finish, so it does not block the
+        // interface.
+        tokio::spawn(async move { dictation.stop() });
+        return;
+    }
+    let tx = ctx.events.clone();
+    let ready = tx.clone();
+    match crate::dictate::Dictation::start(
+        move |text| {
+            let _ = tx.send(AgentMsg::Dictation(text));
+        },
+        move || {
+            let _ = ready.send(AgentMsg::DictationStopped);
+        },
+    ) {
+        Ok(dictation) => {
+            app.dictation = Some(dictation);
+            app.dictating_since = Some(Instant::now());
+        }
+        Err(err) => {
+            // The transcript is the server's; a local note would put the two
+            // out of step, so failures go in the footer's error slot instead.
+            app.threads[0].error = Some(format!("dictation did not start: {err:#}"));
+        }
     }
 }
 
@@ -1616,8 +1680,7 @@ fn apply(app: &mut App, message: AgentMsg) {
         })),
         AgentMsg::Loaded(index, snapshot) => (index, Box::new(move |app: &mut App| {
             let thread = &mut app.threads[index];
-            thread.transcript.clear();
-            thread.live.clear();
+            thread.clear_transcript();
             thread.error = snapshot.error.clone();
             thread.usage = snapshot.usage.as_ref().map(|usage| Usage {
                 input_tokens: usage.input_tokens,
@@ -1651,6 +1714,34 @@ fn apply(app: &mut App, message: AgentMsg) {
                 app.session_title = snapshot.title.clone();
             }
         })),
+        AgentMsg::Rewound(text) => (0, Box::new(move |app: &mut App| {
+            // The server has already cut the conversation and put the files
+            // back; the prompt returns so it can be edited and sent again.
+            let thread = &mut app.threads[0];
+            thread.input = text.chars().collect();
+            thread.cursor = thread.input.len();
+            thread.popup_open = false;
+            thread.error = None;
+            thread.scroll = 0;
+        })),
+        AgentMsg::Dictation(text) => (0, Box::new(move |app: &mut App| {
+            let thread = &mut app.threads[0];
+            // Words arrive one committed piece at a time; they belong in the
+            // prompt with a space between pieces.
+            let needs_space = thread
+                .input
+                .last()
+                .is_some_and(|ch| !ch.is_whitespace());
+            if needs_space {
+                thread.input.push(' ');
+            }
+            thread.input.extend(text.chars());
+            thread.cursor = thread.input.len();
+        })),
+        AgentMsg::DictationStopped => (0, Box::new(move |app: &mut App| {
+            app.dictation = None;
+            app.dictating_since = None;
+        })),
         AgentMsg::Catalog(list) => (0, Box::new(move |app: &mut App| {
             app.all_models = list.clone();
         })),
@@ -1671,8 +1762,7 @@ fn apply(app: &mut App, message: AgentMsg) {
         })),
         AgentMsg::Attached(index, name) => (index, Box::new(move |app: &mut App| {
             let thread = &mut app.threads[index];
-            thread.transcript.clear();
-            thread.live.clear();
+            thread.clear_transcript();
             thread.usage = None;
             thread.error = None;
             thread.phase = Phase::Idle;

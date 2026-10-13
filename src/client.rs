@@ -67,6 +67,28 @@ impl Connection {
     /// Everything a session already holds: its transcript, title and usage.
     /// The event stream only carries what happens next, so attaching to a
     /// saved conversation has to ask for the past separately.
+    /// Goes back to one user message: the transcript, the model's history and
+    /// the file changes after it are dropped. Returns the server's note.
+    pub async fn rewind(&self, session: &str, index: usize, text: &str) -> Result<String> {
+        let response = self
+            .auth(self.http.post(format!("{}/sessions/{session}/rewind", self.url)))
+            .json(&serde_json::json!({ "index": index, "text": text }))
+            .send()
+            .await
+            .context("rewind the session")?;
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            bail!("rewind failed: HTTP {status}: {body}");
+        }
+        let answer: serde_json::Value = response.json().await.context("read the rewind answer")?;
+        Ok(answer
+            .get("note")
+            .and_then(|note| note.as_str())
+            .unwrap_or_default()
+            .to_string())
+    }
+
     pub async fn snapshot(&self, session: &str) -> Result<WireSnapshot> {
         let response = self
             .auth(self.http.get(format!("{}/sessions/{session}", self.url)))

@@ -214,6 +214,11 @@ input band with a `›` prompt and a blinking `│` caret, then a model line and
   the pointer is.
 - A subagent reports its current step on **one line that updates** (`subagent → grep tokenizer`)
   rather than a line per step, and the call that started it reads `task: <description>`.
+- **A click on your own message rewinds to it.** Everything after it goes: the conversation, what
+  the model below that point was told, and every file change the turns after it made, which the
+  undo log puts back. The message itself leaves the transcript and its text returns to the prompt,
+  so it can be edited and sent again. The text is checked before anything is thrown away — a click
+  that lands on the wrong message does nothing.
 - The transcript sticks to the newest message; the mouse wheel or `PageUp`/`PageDown` scrolls
   upwards through history, `ctrl-g` jumps back to the newest message and `ctrl-t` to the oldest, and
   a view scrolled up stays where it is while new lines arrive instead of being dragged back to the
@@ -406,6 +411,28 @@ agent is given the output, so a result is never silently lost behind long work:
 ```
 • interrupted: a background command finished
 ```
+
+## Dictation
+
+The microphone button in the bottom corner (`ctrl-r` does the same) dictates into the prompt: press
+it, speak, press it again. Text arrives while you speak, because the recognizer streams, and the
+button carries a timer while it listens.
+
+The recognizer is **whistle** — the on-device speech engine in `../mygame/whistle_rs` — started as
+`whistle --mic`. That mode is what makes it stream: it records
+raw 16 kHz mono from pipewire's `pw-record` a second at a time, runs each second through the
+streaming decoder, and prints one JSON line per update (`text` is what is committed, `pending` what
+is still in flight). A newline on its stdin ends the stream and flushes the tail. The command, the
+language, bias words and the audio source come from the environment:
+
+```sh
+EXP1_DICTATE=/path/to/whistle     # default: whistle on PATH
+EXP1_DICTATE_LANG=en              # default: whatever it detects
+EXP1_DICTATE_KEYWORDS=country,Americans
+WHISTLE_SOURCE=…                  # default: the system's own input
+```
+
+Dictation is Linux-only, because the recorder is; the rest of the agent is not.
 
 ## Providers
 

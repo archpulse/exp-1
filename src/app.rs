@@ -343,6 +343,10 @@ pub enum ClickAction {
     Link(String),
     /// The footer hint that switches between the main and side threads.
     SideThread,
+    /// A user message: go back to it, dropping everything after it.
+    Rewind { index: usize, text: String },
+    /// The microphone button: start or stop dictation.
+    Mic,
 }
 
 /// Where a link sits inside one message's own lines.
@@ -538,6 +542,17 @@ impl Thread {
         }
     }
 
+    /// Empties the conversation and the lines built from it. Whoever rebuilds
+    /// the transcript has to say so, or the old lines are drawn again from the
+    /// cache.
+    pub fn clear_transcript(&mut self) {
+        self.transcript.clear();
+        self.live.clear();
+        self.lines.clear();
+        self.links.clear();
+        self.last_total = 0;
+    }
+
     pub fn clear_input(&mut self) {
         self.input.clear();
         self.cursor = 0;
@@ -624,6 +639,10 @@ pub struct App {
     /// What the last frame drew that a click can act on. Interior mutability
     /// because the render passes only borrow the app.
     pub clicks: std::cell::RefCell<Vec<ClickTarget>>,
+    /// The running recognizer, when the microphone is on.
+    pub dictation: Option<crate::dictate::Dictation>,
+    /// When the current dictation started, for the button's timer.
+    pub dictating_since: Option<Instant>,
     /// A mouse drag over the screen: anchor and head, both (column, row).
     pub selection: Option<((u16, u16), (u16, u16))>,
     /// Plain text of every drawn screen row, refreshed each render, so a
@@ -712,6 +731,8 @@ impl App {
             first_run: false,
             show_tool_output: false,
             clicks: std::cell::RefCell::new(Vec::new()),
+            dictation: None,
+            dictating_since: None,
             selection: None,
             screen: Vec::new(),
             copied: None,
@@ -1483,6 +1504,7 @@ impl App {
             absolute += 1;
         }
         for (message, msg_lines) in thread.lines.iter().enumerate() {
+            let first = absolute;
             for (line_index, line) in msg_lines.iter().enumerate() {
                 keep(line, absolute, &mut visible);
                 if absolute >= offset
@@ -1503,6 +1525,29 @@ impl App {
                     }
                 }
                 absolute += 1;
+            }
+            // A click on a prompt goes back to it: everything after it — the
+            // conversation and the file changes — is what a rewind drops.
+            if thread.kind == ThreadKind::Main
+                && let Some(msg) = thread.transcript.get(message)
+                && msg.role == Role::User
+            {
+                let from = first.max(offset);
+                let to = absolute.min(offset + height);
+                if to > from {
+                    self.clicks.borrow_mut().push(ClickTarget {
+                        area: Rect::new(
+                            area.x,
+                            area.y + (from - offset) as u16,
+                            area.width,
+                            (to - from) as u16,
+                        ),
+                        action: ClickAction::Rewind {
+                            index: message,
+                            text: msg.text.clone(),
+                        },
+                    });
+                }
             }
         }
         for line in tail.iter() {
@@ -1796,11 +1841,26 @@ impl App {
         const INDENT: usize = 2;
         let width = hint_area.width as usize;
 
+        // The microphone button lives in the corner, past the thread hint: a
+        // click starts dictation, a second click stops it.
+        let mic = match self.dictating_since {
+            Some(start) => format!("● mic {}s", start.elapsed().as_secs()),
+            None => "mic".to_string(),
+        };
+        let mic_len = mic.chars().count();
+        let mic_style = if self.dictating_since.is_some() {
+            Style::default().fg(theme.warn)
+        } else {
+            Style::default().fg(theme.dim)
+        };
+        let separator = "  ·  ";
         let mut right = right.to_string();
-        if right.chars().count() + INDENT + 1 > width {
-            right = right.chars().take(width.saturating_sub(INDENT + 1)).collect();
+        // The button is the last thing to give way when space runs out.
+        let room = width.saturating_sub(INDENT + 1 + separator.chars().count() + mic_len);
+        if right.chars().count() > room {
+            right = right.chars().take(room).collect();
         }
-        let right_len = right.chars().count();
+        let right_len = right.chars().count() + separator.chars().count() + mic_len;
 
         let budget = width.saturating_sub(INDENT + 1 + right_len);
         let mut left_text: String = left_text.chars().take(budget).collect();
@@ -1821,11 +1881,27 @@ impl App {
         line.push(Span::styled(left_text, left_style));
         line.push(Span::raw(" ".repeat(gap)));
         line.push(Span::styled(right, right_style));
+        line.push(Span::styled(separator, Style::default().fg(theme.dim)));
+        line.push(Span::styled(mic, mic_style));
         frame.render_widget(Paragraph::new(Line::from(line)), hint_area);
-        // The thread switch is a button as much as a hint.
+        // Both ends of that line are buttons.
+        self.clicks.borrow_mut().push(ClickTarget {
+            area: Rect::new(
+                hint_area.x + (right_column + right_len - mic_len) as u16,
+                hint_area.y,
+                mic_len as u16,
+                1,
+            ),
+            action: ClickAction::Mic,
+        });
         if note.is_none() {
             self.clicks.borrow_mut().push(ClickTarget {
-                area: Rect::new(hint_area.x + right_column as u16, hint_area.y, right_len as u16, 1),
+                area: Rect::new(
+                    hint_area.x + right_column as u16,
+                    hint_area.y,
+                    (right_len - separator.chars().count() - mic_len) as u16,
+                    1,
+                ),
                 action: ClickAction::SideThread,
             });
         }

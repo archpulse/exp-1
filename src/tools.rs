@@ -302,9 +302,18 @@ impl UndoLog {
         }
     }
 
-    /// Takes the last turn, for restoring.
-    pub fn take_last(&mut self) -> Vec<(PathBuf, Option<Vec<u8>>)> {
-        self.turns.pop().unwrap_or_default()
+    /// How many turns have been opened; a rewind keeps this many.
+    pub fn turns(&self) -> usize {
+        self.turns.len()
+    }
+
+    /// Drops every turn from `keep` on and hands it back for restoring, oldest
+    /// first. A rewind to a point in the conversation uses this.
+    pub fn rewind_to(&mut self, keep: usize) -> Vec<Vec<(PathBuf, Option<Vec<u8>>)>> {
+        if keep >= self.turns.len() {
+            return Vec::new();
+        }
+        self.turns.split_off(keep)
     }
 
     /// The last turn as it stands, for a diff.
@@ -2342,6 +2351,34 @@ mod tests {
         // Nothing found is still an answer, with the number of files searched.
         let outcome = runtime.block_on(grep(&dir, &json!({ "pattern": "nothing-here" })));
         assert!(outcome.output.contains("no matches"), "{}", outcome.output);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Rewinding the log hands back the turns after a point, newest last, and
+    /// keeps the ones before it.
+    #[test]
+    fn the_undo_log_can_be_rewound_to_a_point() {
+        let dir = std::env::temp_dir().join(format!("exp1-rewind-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        let mut log = UndoLog::default();
+
+        for turn in 0..3 {
+            log.begin();
+            let file = dir.join(format!("file-{turn}.txt"));
+            std::fs::write(&file, format!("turn {turn}")).expect("write");
+            log.record(&file);
+        }
+        assert_eq!(log.turns(), 3);
+        // Back to the start of turn 1: turns 1 and 2 are handed back.
+        let taken = log.rewind_to(1);
+        assert_eq!(taken.len(), 2);
+        assert_eq!(log.turns(), 1);
+        assert_eq!(taken[0].len(), 1, "one file per turn");
+        assert!(taken[0][0].0.ends_with("file-1.txt"));
+        assert!(taken[1][0].0.ends_with("file-2.txt"));
+        // Nothing left to go back to returns nothing.
+        assert!(log.rewind_to(1).is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }
 
