@@ -31,6 +31,8 @@ pub struct Entry {
     pub wire: Option<Wire>,
     /// The context window in tokens, when the catalogue states one.
     pub context: Option<u64>,
+    /// The reasoning levels it takes, in the order the catalogue lists them.
+    pub efforts: Vec<String>,
 }
 
 #[derive(Default)]
@@ -78,6 +80,19 @@ struct RawModel {
     provider: Option<RawPackage>,
     #[serde(default)]
     limit: Option<RawLimit>,
+    #[serde(default)]
+    reasoning_options: Vec<RawReasoning>,
+}
+
+/// How a model can be asked to think. `effort` carries the levels; a plain
+/// `toggle` says the model reasons or does not, which is not a level.
+#[derive(serde::Deserialize)]
+struct RawReasoning {
+    #[serde(default, rename = "type")]
+    kind: String,
+    /// A level can be `null` in the catalogue, which is not a level.
+    #[serde(default)]
+    values: Vec<Option<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -94,12 +109,15 @@ struct RawLimit {
 
 /// Parses the whole catalogue into `provider id → models`.
 fn parse(raw: &str) -> HashMap<String, Vec<Entry>> {
-    let Ok(providers) = serde_json::from_str::<HashMap<String, RawProvider>>(raw) else {
+    // Parsed provider by provider: the catalogue is a live external file, and
+    // one entry worded differently must not cost the rest of the list.
+    let Ok(providers) = serde_json::from_str::<HashMap<String, serde_json::Value>>(raw) else {
         return HashMap::new();
     };
     providers
         .into_iter()
-        .map(|(id, provider)| {
+        .filter_map(|(id, value)| {
+            let provider: RawProvider = serde_json::from_value(value).ok()?;
             let mut models: Vec<Entry> = provider
                 .models
                 .into_iter()
@@ -110,11 +128,18 @@ fn parse(raw: &str) -> HashMap<String, Vec<Entry>> {
                         .as_deref()
                         .and_then(wire_from_npm),
                     context: model.limit.and_then(|limit| limit.context),
+                    efforts: model
+                        .reasoning_options
+                        .into_iter()
+                        .filter(|option| option.kind == "effort")
+                        .flat_map(|option| option.values)
+                        .flatten()
+                        .collect(),
                     slug,
                 })
                 .collect();
             models.sort_by(|a, b| a.slug.cmp(&b.slug));
-            (id, models)
+            Some((id, models))
         })
         .collect()
 }
@@ -148,6 +173,17 @@ pub fn wire_for(provider: &str, slug: &str) -> Option<Wire> {
         .iter()
         .find(|entry| entry.slug == slug)?
         .wire
+}
+
+/// The reasoning levels the catalogue gives a model, in its own order.
+pub fn levels_for(provider: &str, slug: &str) -> Vec<String> {
+    let guard = slot().read().expect("models.dev catalogue");
+    guard
+        .providers
+        .get(provider)
+        .and_then(|models| models.iter().find(|entry| entry.slug == slug))
+        .map(|entry| entry.efforts.clone())
+        .unwrap_or_default()
 }
 
 /// The context window the catalogue states for a model. Without one the
@@ -252,6 +288,52 @@ mod tests {
         assert_eq!(entry("space-bunny").and_then(|e| e.wire), Some(Wire::OpenAiChat));
         assert_eq!(entry("mystery").and_then(|e| e.wire), None);
         assert!(providers.get("empty").is_some_and(|models| models.is_empty()));
+    }
+
+    /// The levels a model takes come from the catalogue, in its order; a
+    /// toggle is not a level and is left out.
+    #[test]
+    fn reasoning_levels_come_from_the_catalogue() {
+        let raw = r#"{
+            "opencode-go": { "models": {
+                "grok": { "reasoning_options": [
+                    { "type": "effort", "values": ["low", "medium", "xhigh"] }
+                ] },
+                "plain": { "reasoning_options": [ { "type": "toggle" } ] },
+                "none": {}
+            } }
+        }"#;
+        let providers = parse(raw);
+        let go = providers.get("opencode-go").expect("provider");
+        let levels = |slug: &str| {
+            go.iter()
+                .find(|entry| entry.slug == slug)
+                .map(|entry| entry.efforts.clone())
+                .unwrap_or_default()
+        };
+        assert_eq!(levels("grok"), vec!["low", "medium", "xhigh"]);
+        assert!(levels("plain").is_empty());
+        assert!(levels("none").is_empty());
+    }
+
+    /// A level written as null is not a level, and one provider the catalogue
+    /// words differently must not take the others down with it.
+    #[test]
+    fn a_loose_entry_costs_only_itself() {
+        let raw = r#"{
+            "loose": { "models": {
+                "odd": { "reasoning_options": [
+                    { "type": "effort", "values": [null, "low", "high"] }
+                ] }
+            } },
+            "broken": { "models": "not an object" },
+            "fine": { "models": { "ok": {} } }
+        }"#;
+        let providers = parse(raw);
+        let loose = providers.get("loose").expect("the loose provider stays");
+        assert_eq!(loose[0].efforts, vec!["low", "high"]);
+        assert!(providers.get("fine").is_some(), "its neighbour survives");
+        assert!(providers.get("broken").is_none(), "and only the broken one goes");
     }
 
     /// Nonsense in the cache must not take the list down with it.

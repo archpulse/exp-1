@@ -51,28 +51,6 @@ pub fn compact_threshold_percent() -> u64 {
         .unwrap_or(COMPACT_THRESHOLD_PERCENT)
 }
 
-impl ModelInfo {
-    pub fn supports(&self, effort: &str) -> bool {
-        self.efforts.iter().any(|(name, _)| name == effort)
-    }
-
-    /// The effort to use after switching to this model.
-    pub fn settle_effort(&self, current: &str) -> String {
-        if self.supports(current) {
-            return current.to_string();
-        }
-        if let Some(default) = &self.default_effort
-            && self.supports(default)
-        {
-            return default.clone();
-        }
-        self.efforts
-            .first()
-            .map(|(name, _)| name.clone())
-            .unwrap_or_else(|| "medium".to_string())
-    }
-}
-
 #[derive(Deserialize)]
 struct Cache {
     #[serde(default)]
@@ -203,20 +181,6 @@ mod tests {
             listed: visibility != "hide",
             context_window: 272_000,
         }
-    }
-
-    #[test]
-    fn unsupported_effort_falls_back_to_the_default() {
-        let model = sample("m", &["low", "medium", "high"], "medium", "list");
-        assert_eq!(model.settle_effort("high"), "high");
-        assert_eq!(model.settle_effort("xhigh"), "medium");
-        assert_eq!(model.settle_effort("ultra"), "medium");
-    }
-
-    #[test]
-    fn default_that_is_itself_unsupported_falls_through_to_the_first() {
-        let model = sample("m", &["low", "high"], "xhigh", "list");
-        assert_eq!(model.settle_effort("max"), "low");
     }
 
     #[test]

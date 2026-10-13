@@ -334,6 +334,19 @@ impl AskView {
     }
 }
 
+/// The effort to use after switching to a model that takes `levels`: the one in
+/// use when it is among them, its stated default, or the first it offers. A
+/// model with no levels takes whatever it is given.
+pub fn settle_effort(levels: &[String], default: Option<&str>, current: &str) -> String {
+    if levels.is_empty() || levels.iter().any(|level| level == current) {
+        return current.to_string();
+    }
+    default
+        .filter(|default| levels.iter().any(|level| level == default))
+        .map(str::to_string)
+        .unwrap_or_else(|| levels[0].clone())
+}
+
 /// The key a scope entry uses for one model. The provider is part of it,
 /// because the same name can be offered by two of them and ticking one must not
 /// tick the other.
@@ -652,6 +665,9 @@ pub struct App {
     /// What the last frame drew that a click can act on. Interior mutability
     /// because the render passes only borrow the app.
     pub clicks: std::cell::RefCell<Vec<ClickTarget>>,
+    /// What is typed while a picker is open, narrowing the rows shown. Long
+    /// lists (every provider's models, say) are unusable without it.
+    pub picker_filter: String,
     /// The message a click asked about, while its little menu is open.
     pub message_target: Option<(usize, String)>,
     /// The running recognizer, when the microphone is on.
@@ -746,6 +762,7 @@ impl App {
             first_run: false,
             show_tool_output: false,
             clicks: std::cell::RefCell::new(Vec::new()),
+            picker_filter: String::new(),
             message_target: None,
             dictation: None,
             dictating_since: None,
@@ -947,6 +964,69 @@ impl App {
             .collect()
     }
 
+    /// Opens a picker with nothing typed in it yet, so the rows are the whole
+    /// list.
+    fn set_picker(&mut self, picker: Picker) {
+        self.picker_filter.clear();
+        self.picker = Some(picker);
+    }
+
+    /// Puts the selection on the first row the filter leaves.
+    pub fn select_first_shown_row(&mut self) {
+        let Some(picker) = self.picker.as_ref() else {
+            return;
+        };
+        let first = self
+            .shown_picker_items(picker)
+            .first()
+            .map(|(index, _)| *index);
+        if let (Some(first), Some(picker)) = (first, self.picker.as_mut()) {
+            picker.selected = first;
+        }
+    }
+
+    /// The rows a picker shows, with their place in the full list: the filter
+    /// narrows them, and everything remembers where it came from.
+    pub fn shown_picker_items<'a>(&self, picker: &'a Picker) -> Vec<(usize, &'a PickerItem)> {
+        let needle = self.picker_filter.trim().to_lowercase();
+        picker
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| {
+                needle.is_empty()
+                    || item.label.to_lowercase().contains(&needle)
+                    || item.description.to_lowercase().contains(&needle)
+            })
+            .collect()
+    }
+
+    /// Moves the picker's selection by `delta` places through the rows it is
+    /// showing, keeping it inside them.
+    pub fn move_picker_selection(&mut self, delta: isize) {
+        let Some(picker) = self.picker.as_ref() else {
+            return;
+        };
+        let shown: Vec<usize> = self
+            .shown_picker_items(picker)
+            .into_iter()
+            .map(|(index, _)| index)
+            .collect();
+        if shown.is_empty() {
+            return;
+        }
+        let at = shown.iter().position(|index| *index == picker.selected);
+        let next = match (at, delta) {
+            (Some(at), _) => (at as isize + delta).clamp(0, shown.len() as isize - 1) as usize,
+            (None, 1) => 0,
+            (None, _) => shown.len() - 1,
+        };
+        let selected = shown[next];
+        if let Some(picker) = self.picker.as_mut() {
+            picker.selected = selected;
+        }
+    }
+
     /// The id of the provider in use, when the list has arrived.
     pub fn active_provider_id(&self) -> Option<&str> {
         self.providers
@@ -975,7 +1055,7 @@ impl App {
             })
             .collect();
         let selected = offered.iter().position(mine).unwrap_or(0);
-        self.picker = Some(Picker {
+        self.set_picker(Picker {
             kind: PickerKind::Model,
             title: "Select Model and Effort".to_string(),
             items,
@@ -1003,7 +1083,7 @@ impl App {
             .iter()
             .position(|(level, _)| *level == current)
             .unwrap_or(0);
-        self.picker = Some(Picker {
+        self.set_picker(Picker {
             kind: PickerKind::Effort,
             title: title.to_string(),
             items,
@@ -1034,7 +1114,7 @@ impl App {
                 }
             })
             .collect();
-        self.picker = Some(Picker {
+        self.set_picker(Picker {
             kind: PickerKind::Provider,
             title: "Login".to_string(),
             items,
@@ -1051,7 +1131,7 @@ impl App {
     pub fn open_message_picker(&mut self, index: usize, text: String) {
         let preview: String = text.chars().take(60).collect();
         self.message_target = Some((index, text));
-        self.picker = Some(Picker {
+        self.set_picker(Picker {
             kind: PickerKind::Message,
             title: format!("Message · {preview}"),
             items: vec![
@@ -1083,7 +1163,7 @@ impl App {
                 description: model.description.clone(),
             })
             .collect();
-        self.picker = Some(Picker {
+        self.set_picker(Picker {
             kind: PickerKind::Scoped,
             title: "Models shown in /model".to_string(),
             items,
@@ -1100,7 +1180,7 @@ impl App {
             })
             .collect();
         self.session_list = sessions;
-        self.picker = Some(Picker {
+        self.set_picker(Picker {
             kind: PickerKind::Session,
             title: "Sessions".to_string(),
             items,
@@ -1121,7 +1201,7 @@ impl App {
                 description: "colour scheme".to_string(),
             })
             .collect();
-        self.picker = Some(Picker {
+        self.set_picker(Picker {
             kind: PickerKind::Theme,
             title: "Select Theme".to_string(),
             items,
@@ -1683,42 +1763,49 @@ impl App {
             lines.push(Line::raw(""));
         }
 
-        let total = picker.items.len();
+        // What is typed narrows the rows; each keeps its place in the full
+        // list, which is what a pick means.
+        let shown = self.shown_picker_items(picker);
+        let total = shown.len();
         // One row for the hints, plus one for the range line when not compact.
         let tail = if compact { 1 } else { 2 };
         let capacity = height
             .saturating_sub(lines.len() + tail)
             .max(1);
         let visible = capacity.min(total);
+        let selection = shown
+            .iter()
+            .position(|(index, _)| *index == picker.selected)
+            .unwrap_or(0);
         let start = if total <= visible {
             0
         } else {
             // Centre the window on the selection so it cannot scroll out of sight.
-            picker
-                .selected
+            selection
                 .saturating_sub(visible / 2)
                 .min(total - visible)
         };
 
-        let column = picker
-            .items
+        let column = shown
             .iter()
-            .map(|item| item.label.chars().count())
+            .map(|(_, item)| item.label.chars().count())
             .max()
             .unwrap_or(0)
             + 2;
         let items_top = lines.len();
-        for (offset, item) in picker.items[start..start + visible].iter().enumerate() {
-            let index = start + offset;
+        for (offset, (index, item)) in shown[start..start + visible].iter().enumerate() {
+            let index = *index;
             self.clicks.borrow_mut().push(ClickTarget {
                 area: Rect::new(area.x, area.y + (items_top + offset) as u16, area.width, 1),
                 action: ClickAction::PickerRow(index),
             });
             let selected = index == picker.selected;
             let marker = if selected { ">" } else { " " };
+            // Numbered as they are shown, not as they sit in the full list: a
+            // filtered list that starts at 73 reads like a mistake.
             let body: String = format!(
                 " {marker} {}. {:<column$}{}",
-                index + 1,
+                start + offset + 1,
                 item.label,
                 item.description
             );
@@ -1732,14 +1819,34 @@ impl App {
 
         if !compact && total > visible {
             lines.push(Line::styled(
-                format!("  ({}-{} of {total})", start + 1, start + visible),
+                format!(
+                    "  ({}-{} of {total}{})",
+                    start + 1,
+                    start + visible,
+                    if self.picker_filter.is_empty() {
+                        String::new()
+                    } else {
+                        format!(", filter '{}'", self.picker_filter)
+                    }
+                ),
+                Style::default().fg(theme.dim),
+            ));
+        } else if !compact && !self.picker_filter.is_empty() {
+            lines.push(Line::styled(
+                format!("  ({total} matching '{}')", self.picker_filter),
+                Style::default().fg(theme.dim),
+            ));
+        }
+        if total == 0 {
+            lines.push(Line::styled(
+                "  nothing matches — backspace to widen",
                 Style::default().fg(theme.dim),
             ));
         }
         let hints = match picker.kind {
-            PickerKind::Scoped => "enter tick · a all · esc save",
+            PickerKind::Scoped => "type to filter · enter tick · ctrl-a all · esc save",
             PickerKind::Message => "enter pick · esc back",
-            _ => "enter select · esc back",
+            _ => "type to filter · enter select · esc back",
         };
         lines.push(Line::from(vec![
             Span::raw("  "),
@@ -1978,6 +2085,20 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The level a switch lands on: the one in use when the model takes it, the
+    /// model's default when that fits, and the first level otherwise.
+    #[test]
+    fn settling_an_effort_follows_the_model() {
+        let levels = |list: &[&str]| list.iter().map(|level| level.to_string()).collect::<Vec<_>>();
+        let grok = levels(&["low", "medium", "high", "xhigh"]);
+        assert_eq!(settle_effort(&grok, Some("medium"), "high"), "high");
+        assert_eq!(settle_effort(&grok, Some("medium"), "max"), "medium");
+        assert_eq!(settle_effort(&grok, None, "max"), "low");
+        assert_eq!(settle_effort(&grok, Some("nonsense"), "max"), "low");
+        // A model with no levels keeps whatever it is given.
+        assert_eq!(settle_effort(&[], None, "max"), "max");
+    }
 
     /// A link in a message is recorded where it was drawn, so a click can open
     /// it: the label is what a reader sees, the address is what it points at.

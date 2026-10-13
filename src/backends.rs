@@ -29,6 +29,9 @@ pub struct Target {
     pub model: String,
     /// Headers the provider needs on top of its own.
     pub headers: Vec<(String, String)>,
+    /// The reasoning effort in use. Every model has levels of its own, and the
+    /// request has to carry the one the user picked.
+    pub effort: String,
 }
 
 pub async fn stream(target: Target, instructions: String, input: Vec<InputItem>, tools: Vec<Value>) -> Result<mpsc::Receiver<ApiEvent>> {
@@ -48,7 +51,7 @@ async fn openai_responses(
     input: Vec<InputItem>,
     tools: Vec<Value>,
 ) -> Result<mpsc::Receiver<ApiEvent>> {
-    let Target { provider, endpoint, key: api_key, model, headers, .. } = target;
+    let Target { provider, endpoint, key: api_key, model, headers, effort, .. } = target;
     let model = model.as_str();
     let payload = serde_json::to_value(crate::protocol::ResponsesRequest {
         model: model.to_string(),
@@ -59,7 +62,7 @@ async fn openai_responses(
         tool_choice: "auto",
         parallel_tool_calls: true,
         reasoning: crate::protocol::Reasoning {
-            effort: "medium".to_string(),
+            effort,
             summary: "auto",
         },
         store: false,
@@ -274,9 +277,9 @@ async fn openai_chat(
     input: Vec<InputItem>,
     tools: Vec<Value>,
 ) -> Result<mpsc::Receiver<ApiEvent>> {
-    let Target { provider, endpoint, key: api_key, model, headers, .. } = target;
+    let Target { provider, endpoint, key: api_key, model, headers, effort, .. } = target;
     let model = model.as_str();
-    let payload = json!({
+    let mut payload = json!({
         "model": model,
         "stream": true,
         "stream_options": { "include_usage": true },
@@ -284,6 +287,11 @@ async fn openai_chat(
         "tools": chat_tools(&tools),
         "tool_choice": "auto",
     });
+    // The opencode gateways take the level as the OpenAI field; other providers
+    // speak their own dialect, or none, so nothing is sent on their behalf.
+    if crate::providers::key_group(provider.id) == Some("opencode") && !effort.is_empty() {
+        payload["reasoning_effort"] = json!(effort);
+    }
 
     let mut request = reqwest::Client::new()
         .post(&endpoint)

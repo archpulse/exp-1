@@ -565,13 +565,7 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             app.model = row.slug.clone();
             // Switching models without naming an effort still has to land on an
             // effort the new model accepts.
-            let settled = if levels.is_empty() || levels.iter().any(|name| name == &app.effort) {
-                app.effort.clone()
-            } else {
-                row.default_effort
-                    .clone()
-                    .unwrap_or_else(|| levels[0].clone())
-            };
+            let settled = app::settle_effort(&levels, row.default_effort.as_deref(), &app.effort);
             app.effort = settled.clone();
             // A model from another provider means switching to it first.
             let switch = (!row.provider.is_empty()
@@ -811,11 +805,10 @@ fn select_from_picker(app: &mut App, ctx: &Ctx) {
                     .active_provider_id()
                     .is_none_or(|active| active != row.provider))
             .then(|| row.provider.clone());
-            // The new model may not accept the effort we were using.
-            let settled = app
-                .model_info(&slug)
-                .map(|model| model.settle_effort(&app.effort))
-                .unwrap_or_else(|| app.effort.clone());
+            // The levels belong to the row that was picked, and only Codex
+            // models have any: a model without them takes the effort as it is.
+            let levels: Vec<String> = row.efforts.iter().map(|entry| entry.effort.clone()).collect();
+            let settled = app::settle_effort(&levels, row.default_effort.as_deref(), &app.effort);
             app.model = slug.clone();
             app.effort = settled.clone();
             let conn = ctx.conn.clone();
@@ -826,8 +819,11 @@ fn select_from_picker(app: &mut App, ctx: &Ctx) {
                 }
                 let _ = conn.configure(Some(model), Some(effort)).await;
             });
-            // Choosing a model is only half of it; follow with the effort.
-            app.open_effort_picker("Select Model and Effort");
+            // Choosing a model is only half of it when the model has levels to
+            // choose; an empty picker after picking a model is just noise.
+            if !levels.is_empty() {
+                app.open_effort_picker("Select Model and Effort");
+            }
         }
         app::PickerKind::Effort => {
             let efforts = app.efforts_for(&app.model);
@@ -1177,15 +1173,12 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
 
     if app.picker.is_some() {
         match key.code {
-            KeyCode::Up => {
-                if let Some(picker) = app.picker.as_mut() {
-                    picker.selected = picker.selected.saturating_sub(1);
-                }
-            }
-            KeyCode::Down => {
-                if let Some(picker) = app.picker.as_mut() {
-                    let last = picker.items.len().saturating_sub(1);
-                    picker.selected = (picker.selected + 1).min(last);
+            KeyCode::Up => app.move_picker_selection(-1),
+            KeyCode::Down => app.move_picker_selection(1),
+            KeyCode::Backspace => {
+                if !app.picker_filter.is_empty() {
+                    app.picker_filter.pop();
+                    app.select_first_shown_row();
                 }
             }
             KeyCode::Enter => {
@@ -1200,9 +1193,10 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
                     select_from_picker(app, ctx);
                 }
             }
-            KeyCode::Char('a') => {
-                // In the scope picker, `a` puts every model back on the shelf:
-                // an empty scope means no restriction at all.
+            KeyCode::Char('a') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                // In the scope picker, ctrl-a puts every model back on the
+                // shelf: an empty scope means no restriction at all. Plain
+                // letters belong to the filter, so it needs the modifier.
                 let scoped = app
                     .picker
                     .as_ref()
@@ -1212,7 +1206,24 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
                     app.open_scoped_picker();
                 }
             }
+            KeyCode::Char(ch)
+                if !key
+                    .modifiers
+                    .intersects(KeyModifiers::CONTROL | KeyModifiers::ALT) =>
+            {
+                // Typing narrows a long list; the picker has nothing else to do
+                // with letters.
+                app.picker_filter.push(ch);
+                app.select_first_shown_row();
+            }
             KeyCode::Esc => {
+                // Esc widens first: closing a picker with a filter still in it
+                // would look like it lost the list.
+                if !app.picker_filter.is_empty() {
+                    app.picker_filter.clear();
+                    app.select_first_shown_row();
+                    return;
+                }
                 // A message menu is answered, not saved: closing it forgets
                 // which message it was about.
                 if app

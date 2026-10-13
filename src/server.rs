@@ -197,7 +197,7 @@ async fn run_subagent(
                             Err(err) => Err(err),
                         }
                     }
-                    Some(entry) => match request_target(entry, candidate, &session).await {
+                    Some(entry) => match request_target(entry, candidate, &session, &shared.agent.effort()).await {
                         Ok(target) => crate::backends::stream(
                             target,
                             store::prompt("subagent", SUBAGENT_INSTRUCTIONS),
@@ -1238,7 +1238,7 @@ async fn run_turn(
                             Err(err) => Err(err),
                         }
                     }
-                    Some(entry) => match request_target(entry, candidate, &session).await {
+                    Some(entry) => match request_target(entry, candidate, &session, &shared.agent.effort()).await {
                         Ok(target) => {
                             crate::backends::stream(
                                 target,
@@ -2652,6 +2652,7 @@ async fn request_target(
     provider: &'static crate::providers::Provider,
     model: &str,
     session: &Arc<Session>,
+    effort: &str,
 ) -> Result<crate::backends::Target, String> {
     let stored = store::api_key(provider.id);
     let wire = provider.wire_for(model);
@@ -2677,6 +2678,7 @@ async fn request_target(
             key: Some(config.access_token),
             model: model.to_string(),
             headers,
+            effort: effort.to_string(),
         });
     }
 
@@ -2696,6 +2698,7 @@ async fn request_target(
             key: Some(oidc),
             model: model.to_string(),
             headers,
+            effort: effort.to_string(),
         });
     }
 
@@ -2711,6 +2714,7 @@ async fn request_target(
             key: Some(token),
             model: model.to_string(),
             headers,
+            effort: effort.to_string(),
         });
     }
 
@@ -2721,6 +2725,7 @@ async fn request_target(
         key: stored,
         model: model.to_string(),
         headers,
+        effort: effort.to_string(),
     })
 }
 
@@ -2731,6 +2736,15 @@ fn store_auth_file(raw: &str) -> Result<(), String> {
         std::fs::create_dir_all(parent).map_err(|err| err.to_string())?;
     }
     std::fs::write(&path, raw).map_err(|err| err.to_string())
+}
+
+/// The level to start from when a model offers several: `medium` when it is
+/// among them, the middle of the list otherwise.
+fn default_level(levels: &[String]) -> Option<String> {
+    if levels.iter().any(|level| level == "medium") {
+        return Some("medium".to_string());
+    }
+    levels.get(levels.len() / 2).cloned()
 }
 
 /// A conservative window for providers whose catalogue we do not have.
@@ -3410,15 +3424,29 @@ async fn models(
                     })
                     .collect()
             };
+            let catalog = crate::providers::catalog_id(provider.id);
             ids.into_iter()
-                .map(|(slug, context_window)| WireModel {
-                    display_name: slug.clone(),
-                    description: format!("via {}", provider.label),
-                    context_window,
-                    provider: provider.id.to_string(),
-                    slug,
-                    efforts: Vec::new(),
-                    default_effort: None,
+                .map(|(slug, context_window)| {
+                    // Every model has levels of its own; the catalogue is where
+                    // they are written down.
+                    let levels = catalog
+                        .map(|catalog| crate::models_dev::levels_for(catalog, &slug))
+                        .unwrap_or_default();
+                    WireModel {
+                        display_name: slug.clone(),
+                        description: format!("via {}", provider.label),
+                        context_window,
+                        provider: provider.id.to_string(),
+                        default_effort: default_level(&levels),
+                        efforts: levels
+                            .into_iter()
+                            .map(|effort| WireEffort {
+                                effort,
+                                description: String::new(),
+                            })
+                            .collect(),
+                        slug,
+                    }
                 })
                 .collect()
         };
