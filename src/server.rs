@@ -215,15 +215,17 @@ async fn run_subagent(
                         if attempt + 1 >= max_attempts || !transient(&last_error) {
                             break;
                         }
-                        session.push(
-                            "system",
-                            format!(
-                                "{}: {} — retrying ({}/{max_attempts})",
-                                candidate,
-                                one_line(&last_error),
-                                attempt + 2
-                            ),
+                        let note = format!(
+                            "{}: {} — retrying ({}/{max_attempts})",
+                            candidate,
+                            one_line(&last_error),
+                            attempt + 2
                         );
+                        session.push("tool", note.clone());
+                        session.broadcast(WireEvent::Tool {
+                            text: note,
+                            line: WireMsgKind::Plain,
+                        });
                         tokio::time::sleep(std::time::Duration::from_secs(1u64 << attempt.min(5))).await;
                     }
                 }
@@ -1275,16 +1277,20 @@ async fn run_turn(
                             break;
                         }
                         // Retries used to be silent, which reads as nothing
-                        // happening at all.
-                        session.push(
-                            "system",
-                            format!(
-                                "{}: {} — retrying ({}/{max_attempts})",
-                                candidate,
-                                one_line(&last_error),
-                                attempt + 2
-                            ),
+                        // happening at all. Pushed and broadcast: a message
+                        // that only lands in the transcript is not seen until
+                        // the next attach, which is the same as silence.
+                        let note = format!(
+                            "{}: {} — retrying ({}/{max_attempts})",
+                            candidate,
+                            one_line(&last_error),
+                            attempt + 2
                         );
+                        session.push("tool", note.clone());
+                        session.broadcast(WireEvent::Tool {
+                            text: note,
+                            line: WireMsgKind::Plain,
+                        });
                         // Capped exponential backoff between attempts.
                         let delay = std::time::Duration::from_secs(1u64 << attempt.min(5));
                         tokio::time::sleep(delay).await;
@@ -1871,6 +1877,20 @@ mod tests {
         assert!(dropped >= 2, "{dropped}");
         assert!(before - after > 80_000, "{}", before - after);
         assert!(after < before);
+    }
+
+    /// The session header carries the shape the gateways route by: `ses_` and
+    /// 64 hex digits, whatever the session id looks like.
+    #[test]
+    fn the_gateway_session_id_has_the_shape_they_route_by() {
+        let id = gateway_session_id("3a0a41f9-e2b9-4c9f-ba3a-3015b3a923a7");
+        assert!(id.starts_with("ses_"), "{id}");
+        assert_eq!(id.len(), 68, "{id}");
+        let hex = &id[4..];
+        assert_eq!(hex.len(), 64);
+        assert!(hex.chars().all(|ch| ch.is_ascii_hexdigit()), "{id}");
+        // Two sessions must not collide.
+        assert_ne!(id, gateway_session_id("11111111-2222-3333-4444-555555555555"));
     }
 
     /// A tool preview is cut at a character boundary. The old code truncated at
@@ -2692,13 +2712,30 @@ fn gateway_headers(
         return Vec::new();
     }
     vec![
-        ("x-opencode-session".to_string(), session.id.clone()),
+        (
+            "x-opencode-session".to_string(),
+            gateway_session_id(&session.id),
+        ),
         (
             "x-opencode-project".to_string(),
             session.cwd().display().to_string(),
         ),
         ("x-opencode-client".to_string(), "exp-1-agent".to_string()),
     ]
+}
+
+/// The gateways route by session, and their own client sends `ses_` followed by
+/// 64 hex digits. Ours is a UUID, which the routing is left to guess at — and
+/// guessed badly, it answers "Upstream response was not valid JSON" from an
+/// upstream that was never meant for this model. The same id, in their shape.
+fn gateway_session_id(session: &str) -> String {
+    let hex: String = session.chars().filter(|ch| ch.is_ascii_hexdigit()).collect();
+    let mut id = format!("ses_{hex}");
+    while id.len() < 68 {
+        id.push_str(&hex);
+    }
+    id.truncate(68);
+    id
 }
 
 async fn request_target(
