@@ -302,6 +302,12 @@ A model the tables miss altogether still gets a protocol: its vendor prefix deci
 `gemini-*` speaks Gemini, everything else is chat), and a provider that speaks one protocol
 throughout answers for anything else.
 
+**The picker shows every provider that is signed in**, one shelf rather than one per sign-in: the
+rows carry `via <provider>` so two hats on the same model name are told apart, the provider in use
+comes first, and picking a model from another provider switches to it before setting the model. The
+scope in `/scoped-models` filters the same shelf. `/model grok-4.7` takes the provider in use when
+several offer that name, and `/model opencode-go/grok-4.7` names one exactly.
+
 Efforts genuinely differ per model, which is why guessing them does not work:
 
 | Model | Efforts |

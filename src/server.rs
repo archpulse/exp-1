@@ -3344,59 +3344,70 @@ async fn models(
         everything || scoped.is_empty() || scoped.iter().any(|chosen| chosen == slug)
     };
 
-    // Every provider but Codex publishes a plain list of model ids.
-    if let Some(provider) = crate::providers::by_id(&active)
-        && provider.models.iter().any(|(_, wire)| wire.is_remote())
-    {
-        // The live catalogue first: it is the provider's own list, refreshed in
-        // the background instead of baked into this binary. A provider with no
-        // entry there keeps the table in providers.rs.
-        let live = crate::providers::catalog_id(&active)
-            .map(crate::models_dev::models_for)
-            .unwrap_or_default();
-        let ids: Vec<String> = if live.is_empty() {
-            provider.model_ids()
-        } else {
-            live.into_iter().map(|entry| entry.slug).collect()
-        };
-        let list: Vec<WireModel> = ids
-            .into_iter()
-            .filter(|slug| allowed(slug))
-            .map(|slug| WireModel {
-                context_window: crate::providers::catalog_id(&active)
-                    .and_then(|catalog| crate::models_dev::context_limit(catalog, &slug))
-                    .unwrap_or_else(provider_context_window),
-                display_name: slug.clone(),
-                description: format!("via {}", provider.label),
-                slug,
-                efforts: Vec::new(),
-                default_effort: None,
-            })
-            .collect();
-        return Json(list).into_response();
-    }
-
-    let models: Vec<WireModel> = catalog::load()
-        .into_iter()
-        .filter(|model| model.listed)
-        .filter(|model| allowed(&model.slug))
-        .map(|model| WireModel {
-            slug: model.slug,
-            context_window: model.context_window,
-            display_name: model.display_name,
-            description: model.description,
-            efforts: model
-                .efforts
-                .into_iter()
-                .map(|(effort, description)| WireEffort {
-                    effort,
-                    description,
-                })
-                .collect(),
-            default_effort: model.default_effort,
-        })
+    // Every provider that is signed in offers its models: the picker shows the
+    // whole shelf rather than only the one in use, and picking a model from
+    // another provider switches to it. The active provider comes first, so the
+    // model in use is near the top.
+    let mut order: Vec<&crate::providers::Provider> = crate::providers::PROVIDERS
+        .iter()
+        .filter(|provider| has_credential(provider))
         .collect();
-    Json(models).into_response()
+    order.sort_by_key(|provider| provider.id != active);
+
+    let mut list: Vec<WireModel> = Vec::new();
+    for provider in order {
+        let entries: Vec<WireModel> = if provider.id == "openai-auth" {
+            // The Codex models carry their own descriptions and efforts.
+            catalog::load()
+                .into_iter()
+                .filter(|model| model.listed)
+                .map(|model| WireModel {
+                    slug: model.slug,
+                    provider: provider.id.to_string(),
+                    display_name: model.display_name,
+                    description: format!("via {} · {}", provider.label, model.description),
+                    efforts: model
+                        .efforts
+                        .into_iter()
+                        .map(|(effort, description)| WireEffort { effort, description })
+                        .collect(),
+                    default_effort: model.default_effort,
+                    context_window: model.context_window,
+                })
+                .collect()
+        } else {
+            let live = crate::providers::catalog_id(provider.id)
+                .map(crate::models_dev::models_for)
+                .unwrap_or_default();
+            let ids: Vec<(String, u64)> = if live.is_empty() {
+                provider
+                    .model_ids()
+                    .into_iter()
+                    .map(|slug| (slug, provider_context_window()))
+                    .collect()
+            } else {
+                live.into_iter()
+                    .map(|entry| {
+                        let window = entry.context.unwrap_or_else(provider_context_window);
+                        (entry.slug, window)
+                    })
+                    .collect()
+            };
+            ids.into_iter()
+                .map(|(slug, context_window)| WireModel {
+                    display_name: slug.clone(),
+                    description: format!("via {}", provider.label),
+                    context_window,
+                    provider: provider.id.to_string(),
+                    slug,
+                    efforts: Vec::new(),
+                    default_effort: None,
+                })
+                .collect()
+        };
+        list.extend(entries.into_iter().filter(|model| allowed(&model.slug)));
+    }
+    Json(list).into_response()
 }
 
 async fn list_providers(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Response {

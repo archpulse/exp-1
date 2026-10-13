@@ -43,12 +43,6 @@ impl Wire {
     }
 
     /// True for the protocols our own backends implement.
-    pub fn is_remote(self) -> bool {
-        matches!(
-            self,
-            Wire::OpenAiChat | Wire::Anthropic | Wire::OpenAiResponses | Wire::Gemini
-        )
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

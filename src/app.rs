@@ -913,24 +913,36 @@ impl App {
         self.thread().input_text().trim() == name
     }
 
+    /// The id of the provider in use, when the list has arrived.
+    pub fn active_provider_id(&self) -> Option<&str> {
+        self.providers
+            .iter()
+            .find(|provider| provider.active)
+            .map(|provider| provider.id.as_str())
+    }
+
     pub fn open_model_picker(&mut self) {
         let current = self.model.clone();
-        let listed: Vec<&crate::catalog::ModelInfo> =
-            self.catalog.iter().filter(|model| model.listed).collect();
-        let items = listed
+        let active = self.active_provider_id().map(str::to_string);
+        let mine = |model: &crate::proto::WireModel| {
+            model.slug == current && active.as_deref().is_none_or(|id| id == model.provider)
+        };
+        let items = self
+            .all_models
             .iter()
             .map(|model| PickerItem {
                 label: format!(
                     "{}{}",
                     model.display_name,
-                    if model.slug == current { " (current)" } else { "" }
+                    if mine(model) { " (current)" } else { "" }
                 ),
                 description: model.description.clone(),
             })
             .collect();
-        let selected = listed
+        let selected = self
+            .all_models
             .iter()
-            .position(|model| model.slug == current)
+            .position(mine)
             .unwrap_or(0);
         self.picker = Some(Picker {
             kind: PickerKind::Model,

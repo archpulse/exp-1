@@ -524,39 +524,69 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             }
             let mut parts = rest.split_whitespace();
             let chosen = parts.next().unwrap_or_default().to_string();
-            let Some(info) = app.model_info(&chosen).cloned() else {
+            // `provider/slug` names one exactly; a bare name takes the provider
+            // already in use when several offer it.
+            let row = match chosen.rsplit_once('/') {
+                Some((provider, slug)) => app
+                    .all_models
+                    .iter()
+                    .find(|model| model.provider == provider && model.slug == slug)
+                    .cloned(),
+                None => {
+                    let active = app.active_provider_id().map(str::to_string);
+                    app.all_models
+                        .iter()
+                        .filter(|model| model.slug == chosen)
+                        .min_by_key(|model| Some(model.provider.clone()) != active)
+                        .cloned()
+                }
+            };
+            let Some(row) = row else {
                 app.thread_mut()
                     .push(Role::System, format!("unknown model '{chosen}' — try /model"));
                 return true;
             };
+            let levels: Vec<String> = row.efforts.iter().map(|e| e.effort.clone()).collect();
             if let Some(level) = parts.next() {
-                if !info.supports(level) {
-                    let names: Vec<&str> =
-                        info.efforts.iter().map(|(name, _)| name.as_str()).collect();
+                // Providers that do not publish their levels take anything.
+                if !levels.is_empty() && !levels.iter().any(|name| name == level) {
                     app.thread_mut().push(
                         Role::System,
                         format!(
                             "'{level}' is not a {} level; this model takes {}",
-                            info.display_name,
-                            names.join(", ")
+                            row.display_name,
+                            levels.join(", ")
                         ),
                     );
                     return true;
                 }
                 app.effort = level.to_string();
             }
-            app.model = chosen.clone();
+            app.model = row.slug.clone();
             // Switching models without naming an effort still has to land on an
             // effort the new model accepts.
-            let settled = app
-                .model_info(&chosen)
-                .map(|model| model.settle_effort(&app.effort))
-                .unwrap_or_else(|| app.effort.clone());
-            app.effort = settled;
+            let settled = if levels.is_empty() || levels.iter().any(|name| name == &app.effort) {
+                app.effort.clone()
+            } else {
+                row.default_effort
+                    .clone()
+                    .unwrap_or_else(|| levels[0].clone())
+            };
+            app.effort = settled.clone();
+            // A model from another provider means switching to it first.
+            let switch = (!row.provider.is_empty()
+                && app
+                    .active_provider_id()
+                    .is_none_or(|active| active != row.provider))
+            .then(|| row.provider.clone());
             // The server owns the real values; keep the UI's copy in step.
             let conn = ctx.conn.clone();
-            let (model, effort) = (app.model.clone(), app.effort.clone());
+            let model = row.slug.clone();
+            let effort = settled.clone();
             tokio::spawn(async move {
+                if let Some(provider) = switch {
+                    let _ = conn.login(&provider, None, None, false).await;
+                }
                 let _ = conn.configure(Some(model), Some(effort)).await;
             });
             let (model, effort) = (app.model_label(), app.effort.clone());
@@ -766,15 +796,18 @@ fn select_from_picker(app: &mut App, ctx: &Ctx) {
     let thread = app.active;
     match picker.kind {
         app::PickerKind::Model => {
-            let listed: Vec<String> = app
-                .catalog
-                .iter()
-                .filter(|model| model.listed)
-                .map(|model| model.slug.clone())
-                .collect();
-            let Some(slug) = listed.get(index).cloned() else {
+            // The list is what the picker drew, which now covers every provider
+            // that is signed in; the row knows which one it belongs to.
+            let Some(row) = app.all_models.get(index).cloned() else {
                 return;
             };
+            let slug = row.slug.clone();
+            // Choosing a model from another provider means switching to it.
+            let switch = (!row.provider.is_empty()
+                && app
+                    .active_provider_id()
+                    .is_none_or(|active| active != row.provider))
+            .then(|| row.provider.clone());
             // The new model may not accept the effort we were using.
             let settled = app
                 .model_info(&slug)
@@ -785,6 +818,9 @@ fn select_from_picker(app: &mut App, ctx: &Ctx) {
             let conn = ctx.conn.clone();
             let (model, effort) = (slug, settled);
             tokio::spawn(async move {
+                if let Some(provider) = switch {
+                    let _ = conn.login(&provider, None, None, false).await;
+                }
                 let _ = conn.configure(Some(model), Some(effort)).await;
             });
             // Choosing a model is only half of it; follow with the effort.

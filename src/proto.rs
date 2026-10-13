@@ -181,6 +181,9 @@ pub struct ScopedBody {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WireModel {
     pub slug: String,
+    /// The provider that offers it, so a picker can switch to it.
+    #[serde(default)]
+    pub provider: String,
     pub display_name: String,
     pub description: String,
     pub efforts: Vec<WireEffort>,
