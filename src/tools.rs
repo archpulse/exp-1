@@ -26,11 +26,42 @@ const MAX_OUTPUT: usize = 30_000;
 const READ_DEFAULT_LINES: usize = 400;
 /// Default line cap when the caller passes no `limit`.
 const DEFAULT_LINES: usize = 200;
-/// Directory-tree entries before we stop descending.
-const TREE_MAX_ENTRIES: usize = 2000;
-/// Directories never worth walking.
-const TREE_SKIP: &[&str] = &[".git"];
-const AST_CACHE: &str = ".cache/ast";
+/// Directory-tree entries before we stop descending. The tree is an
+/// orientation view, not an inventory: a listing that runs to thousands of
+/// lines costs more context than the project is worth.
+const TREE_MAX_ENTRIES: usize = 600;
+/// Build output and tool caches. Walking them says nothing about the project:
+/// in a Rust repo they are 99% of the files (a `target` runs to tens of
+/// thousands), and listing them buries the real tree in noise.
+const ARTIFACT_DIRS: &[&str] = &[
+    "target",
+    "node_modules",
+    "dist",
+    "build",
+    "out",
+    "__pycache__",
+    ".venv",
+    "venv",
+    ".tox",
+    ".next",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "coverage",
+];
+
+/// Not the project at all, so never listed, counted or searched.
+fn hidden_dir(name: &str) -> bool {
+    name == ".git" || name == ".cache"
+}
+
+/// Directories a search never descends into: no source lives there, and their
+/// matches are noise that costs the reader a second search.
+fn search_skip(name: &str) -> bool {
+    hidden_dir(name) || ARTIFACT_DIRS.contains(&name)
+}
+
+const AST_CACHE: &str = ".cache/ast-2";
 /// Per-file line counts, beside the ast tree.
 const COUNT_CACHE: &str = ".cache/count";
 
@@ -1537,7 +1568,7 @@ fn walk(dir: &Path, prefix: &str, budget: &mut usize, out: &mut String) {
             let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
             Some((name, is_dir))
         })
-        .filter(|(name, _)| !TREE_SKIP.contains(&name.as_str()))
+        .filter(|(name, _)| !hidden_dir(name))
         .collect();
     names.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
 
@@ -1549,6 +1580,12 @@ fn walk(dir: &Path, prefix: &str, budget: &mut usize, out: &mut String) {
         *budget -= 1;
         let last = index + 1 == names.len();
         let branch = if last { "└── " } else { "├── " };
+        // Build output is named, not walked: the reader learns it is there
+        // without paying thousands of lines to see what is inside.
+        if *is_dir && ARTIFACT_DIRS.contains(&name.as_str()) {
+            out.push_str(&format!("{prefix}{branch}{name}/ (not walked)\n"));
+            continue;
+        }
         out.push_str(&format!("{prefix}{branch}{name}\n"));
         if *is_dir {
             let next_prefix = format!("{prefix}{}", if last { "    " } else { "│   " });
@@ -1692,7 +1729,7 @@ pub async fn count(cwd: &Path, args: &Value) -> Outcome {
         };
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().to_string();
-            if name == ".git" || name == ".cache" {
+            if hidden_dir(&name) || ARTIFACT_DIRS.contains(&name.as_str()) {
                 continue;
             }
             let child = entry.path();
@@ -1785,7 +1822,7 @@ const GREP_DEFAULT_MAX: usize = 100;
 const GREP_LINE_CAP: usize = 400;
 /// Directories a search never enters: version control, caches, build output and
 /// dependencies. Everything else, hidden directories included, is searched.
-const GREP_SKIP: &[&str] = &[".git", ".cache", "target", "node_modules"];
+
 
 /// Finds `pattern` in the files under `path` without pulling them into the
 /// conversation. The answer is capped, so a broad pattern returns a bounded
@@ -1826,7 +1863,7 @@ pub async fn grep(cwd: &Path, args: &Value) -> Outcome {
                 }
                 if kind.is_dir() {
                     let name = entry.file_name().to_string_lossy().to_string();
-                    if !GREP_SKIP.contains(&name.as_str()) {
+                    if !search_skip(&name) {
                         stack.push(entry.path());
                     }
                 } else {
@@ -2118,8 +2155,9 @@ pub fn specs() -> Vec<Value> {
             "name": "grep",
             "description": "Find a pattern in the files under a directory. Use it to locate \
                             code instead of reading files to look for something. `pattern` \
-                            is a regular expression. Skips .git, .cache, target and \
-                            node_modules, follows no symlinks, and ignores files that are \
+                            is a regular expression. Skips .git, .cache and build output \
+                            (target, node_modules, dist, build, out, virtualenvs and other \
+                            caches), follows no symlinks, and ignores files that are \
                             not text. The answer is capped, and a broad pattern says how to \
                             narrow it.",
             "parameters": {
@@ -2352,6 +2390,34 @@ mod tests {
         let outcome = runtime.block_on(grep(&dir, &json!({ "pattern": "nothing-here" })));
         assert!(outcome.output.contains("no matches"), "{}", outcome.output);
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A tree that descends into `target` costs thousands of lines of context
+    /// for nothing. Build output is named once, not walked.
+    #[test]
+    fn the_tree_names_build_output_without_walking_it() {
+        let root = std::env::temp_dir().join(format!("exp1-tree-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("src")).expect("temp dir");
+        std::fs::create_dir_all(root.join("target/debug/deps")).expect("temp dir");
+        std::fs::create_dir_all(root.join("node_modules/leftpad")).expect("temp dir");
+        std::fs::write(root.join("src/main.rs"), "fn main() {}\n").expect("write");
+        for i in 0..40 {
+            std::fs::write(root.join("target/debug/deps").join(format!("obj{i}.o")), "x")
+                .expect("write");
+            std::fs::write(root.join("node_modules/leftpad").join(format!("f{i}.js")), "x")
+                .expect("write");
+        }
+
+        let mut budget = TREE_MAX_ENTRIES;
+        let tree = build_tree(&root, &mut budget);
+        assert!(tree.contains("target/ (not walked)"), "{tree}");
+        assert!(tree.contains("node_modules/ (not walked)"), "{tree}");
+        assert!(tree.contains("main.rs"), "{tree}");
+        assert!(!tree.contains("obj0.o"), "build output was walked: {tree}");
+        assert!(!tree.contains("f0.js"), "node_modules was walked: {tree}");
+        assert!(tree.lines().count() < 20, "the tree stayed small: {tree}");
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     /// Rewinding the log hands back the turns after a point, newest last, and
