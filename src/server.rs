@@ -212,9 +212,19 @@ async fn run_subagent(
                     Ok(stream) => { streamed = Some(stream); break; }
                     Err(err) => {
                         last_error = format!("{err:#}");
-                        if attempt + 1 < max_attempts {
-                            tokio::time::sleep(std::time::Duration::from_secs(1u64 << attempt.min(5))).await;
+                        if attempt + 1 >= max_attempts || !transient(&last_error) {
+                            break;
                         }
+                        session.push(
+                            "system",
+                            format!(
+                                "{}: {} — retrying ({}/{max_attempts})",
+                                candidate,
+                                one_line(&last_error),
+                                attempt + 2
+                            ),
+                        );
+                        tokio::time::sleep(std::time::Duration::from_secs(1u64 << attempt.min(5))).await;
                     }
                 }
             }
@@ -1259,11 +1269,25 @@ async fn run_turn(
                     }
                     Err(err) => {
                         last_error = format!("{err:#}");
-                        if attempt + 1 < max_attempts {
-                            // Capped exponential backoff between attempts.
-                            let delay = std::time::Duration::from_secs(1u64 << attempt.min(5));
-                            tokio::time::sleep(delay).await;
+                        // A failure that will not improve is not worth five
+                        // attempts; a transient one is worth the wait.
+                        if attempt + 1 >= max_attempts || !transient(&last_error) {
+                            break;
                         }
+                        // Retries used to be silent, which reads as nothing
+                        // happening at all.
+                        session.push(
+                            "system",
+                            format!(
+                                "{}: {} — retrying ({}/{max_attempts})",
+                                candidate,
+                                one_line(&last_error),
+                                attempt + 2
+                            ),
+                        );
+                        // Capped exponential backoff between attempts.
+                        let delay = std::time::Duration::from_secs(1u64 << attempt.min(5));
+                        tokio::time::sleep(delay).await;
                     }
                 }
             }
@@ -1725,42 +1749,57 @@ async fn permission_check(
     }
 }
 
+    /// The first line of an error, short enough for a transcript note.
+    fn one_line(message: &str) -> String {
+        let first = message.lines().next().unwrap_or(message).trim();
+        let mut out: String = first.chars().take(160).collect();
+        if first.chars().count() > 160 {
+            out.push('…');
+        }
+        out
+    }
+
     /// Whether a failure deserves another attempt: server-side and transport
-    /// problems do, a rejected request does not.
-    #[cfg(test)]
+    /// problems do, a rejected request does not. It was `#[cfg(test)]` once, so
+    /// the retry loop had nothing to consult and tried everything — including
+    /// requests that would never work.
     fn transient(message: &str) -> bool {
-    let lowered = message.to_ascii_lowercase();
-    // A gateway can dress its own failure as a 400: opencode-go answers
-    // "Upstream response was not valid JSON" with a `server_error` when its
-    // upstream hiccups. That is worth another attempt; a 400 that means what it
-    // says is not.
-    if lowered.contains("server_error") || lowered.contains("not valid json") {
-        return true;
-    }
-    if lowered.contains("http 4") {
-        return false;
-    }
-    [
-        "http 5",
-        "timed out",
-        "timeout",
-        "connection",
-        "error sending request",
-        "dns error",
-        "failed to lookup address",
-        "temporary failure",
-        "temporary fail",
-        "name resolution",
-        "name or service not known",
-        "temporary failure in name resolution",
-        "could not resolve host",
-        "no such host",
-        "broken pipe",
-        "reset by peer",
-        "unexpected eof",
-    ]
-    .iter()
-    .any(|needle| lowered.contains(needle))
+        let lowered = message.to_ascii_lowercase();
+        // A gateway can dress its own failure as a 400: opencode-go answers
+        // "Upstream response was not valid JSON" with a `server_error` when its
+        // upstream hiccups. That is worth another attempt; a 400 that means what
+        // it says is not.
+        if lowered.contains("server_error") || lowered.contains("not valid json") {
+            return true;
+        }
+        // A rate limit is a wait, not a rejection.
+        if lowered.contains("http 429") || lowered.contains("rate limit") {
+            return true;
+        }
+        if lowered.contains("http 4") {
+            return false;
+        }
+        [
+            "http 5",
+            "timed out",
+            "timeout",
+            "connection",
+            "error sending request",
+            "dns error",
+            "failed to lookup address",
+            "temporary failure",
+            "temporary fail",
+            "name resolution",
+            "name or service not known",
+            "temporary failure in name resolution",
+            "could not resolve host",
+            "no such host",
+            "broken pipe",
+            "reset by peer",
+            "unexpected eof",
+        ]
+        .iter()
+        .any(|needle| lowered.contains(needle))
 }
 
 #[cfg(test)]
@@ -1867,6 +1906,7 @@ mod tests {
         ));
         assert!(transient("HTTP 400: upstream response was not valid json"));
         assert!(!transient("HTTP 400: {'error':'unknown model'}"));
+        assert!(transient("HTTP 429 Too Many Requests: rate limit reached"));
         assert!(!transient("HTTP 401: invalid api key"));
         assert!(!transient("unknown provider 'nope' — run /login"));
     }
