@@ -112,6 +112,8 @@ enum AgentMsg {
     Dictation(String),
     /// The recognizer ended: the button goes back to its idle look.
     DictationStopped,
+    /// The recognizer complained on its way out.
+    DictationFailed(String),
     /// A login completed: label, model, effort, and the line to show.
     ProviderChanged(String, String, String, String),
     Ask(usize, proto::WireAnswerRequest),
@@ -1580,9 +1582,13 @@ fn toggle_dictation(app: &mut App, ctx: &Ctx) {
     }
     let tx = ctx.events.clone();
     let ready = tx.clone();
+    let failed = tx.clone();
     match crate::dictate::Dictation::start(
         move |text| {
             let _ = tx.send(AgentMsg::Dictation(text));
+        },
+        move |complaint| {
+            let _ = failed.send(AgentMsg::DictationFailed(complaint));
         },
         move || {
             let _ = ready.send(AgentMsg::DictationStopped);
@@ -1837,6 +1843,11 @@ fn apply(app: &mut App, message: AgentMsg) {
         AgentMsg::DictationStopped => (0, Box::new(move |app: &mut App| {
             app.dictation = None;
             app.dictating_since = None;
+        })),
+        AgentMsg::DictationFailed(complaint) => (0, Box::new(move |app: &mut App| {
+            // Its own words: a build without the recording mode says so here.
+            let first = complaint.lines().next().unwrap_or_default().trim();
+            app.threads[0].error = Some(format!("dictation: {first}"));
         })),
         AgentMsg::Catalog(list) => (0, Box::new(move |app: &mut App| {
             app.all_models = list.clone();

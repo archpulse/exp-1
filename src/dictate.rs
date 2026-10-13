@@ -20,10 +20,11 @@ pub struct Dictation {
 impl Dictation {
     /// Starts the recognizer. `on_text` gets every piece of committed text as it
     /// arrives, `on_stop` runs once when the recognizer ends.
-    pub fn start<F, G>(on_text: F, on_stop: G) -> Result<Self>
+    pub fn start<F, G, H>(on_text: F, on_failure: G, on_stop: H) -> Result<Self>
     where
         F: FnMut(String) + Send + 'static,
-        G: FnOnce() + Send + 'static,
+        G: FnMut(String) + Send + 'static,
+        H: FnOnce() + Send + 'static,
     {
         let program = program();
         let mut command = Command::new(&program);
@@ -48,10 +49,12 @@ impl Dictation {
                 Ok(())
             });
         }
+        // The recognizer's own complaint is what tells a microphone that hears
+        // nothing from a build that has no `--mic` at all.
         let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::null())
+            .stderr(Stdio::piped())
             .spawn()
             .with_context(|| {
                 format!(
@@ -60,14 +63,29 @@ impl Dictation {
                 )
             })?;
         let stdout = child.stdout.take().context("the recognizer has no output")?;
+        let stderr = child.stderr.take();
         std::thread::spawn(move || {
             let mut on_text = on_text;
+            let mut on_failure = on_failure;
+            let mut heard = false;
             for line in BufReader::new(stdout).lines() {
                 let Ok(line) = line else {
                     break;
                 };
                 if let Some(text) = text_of(&line) {
+                    heard = true;
                     on_text(text);
+                }
+            }
+            // A recognizer that ends without a word may simply have heard
+            // nothing; if it also complained, that complaint is the answer.
+            if !heard && let Some(mut errors) = stderr {
+                let mut complaint = String::new();
+                use std::io::Read;
+                let _ = errors.read_to_string(&mut complaint);
+                let complaint = complaint.trim();
+                if !complaint.is_empty() {
+                    on_failure(complaint.to_string());
                 }
             }
             on_stop();

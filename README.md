@@ -446,6 +446,12 @@ WHISTLE_SOURCE=…                  # default: the system's own input
 
 Dictation is Linux-only, because the recorder is; the rest of the agent is not.
 
+That mode is local to this copy of whistle: the logic sits in its library as a `Dictation` type
+(`start`, `next`, `finish`) and its `main.rs` is a thin loop over it. whistle has no repository of
+its own here, so a fresh copy from its author has to have those two files re-applied, or
+`EXP1_DICTATE` pointed at something that speaks the same protocol. A recognizer that does not know
+`--mic` is not ignored: it says so, in its own words, in the footer.
+
 ## Providers
 
 `/login` opens a picker of providers; `/scoped-models` decides which of their models `/model`
