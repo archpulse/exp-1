@@ -232,10 +232,13 @@ input band with a `›` prompt and a blinking `│` caret, then a model line and
   scrolling, so this is the only way to copy.
 - An attached picture shows as a filled `Image 1` chip above the prompt, with `ctrl-v replaces it`
   beside it, so what is about to be sent is visible in the input band itself.
-- While a turn runs, an activity line sits **directly under the prompt it belongs to** —
-  `⠋ thinking 4s`, then `⠋ running 4s` while a tool executes. The bottom bar stays a plain
-  `GPT-6-Luna high · /path · <thread> · Main [default]` label; `esc esc interrupts` lives in the
-  hint line.
+- While a turn runs, an activity line sits **directly under the prompt it belongs to** — its own
+  label for each thing it does: `⠋ thinking 4s` while a request is in flight, `⠋ preparing write…
+  (12 KB) 8s` while the model is still writing a tool call's arguments, `⠋ running 4s` while the
+  tool executes. Each label carries its own clock, so the seconds are about what is happening now
+  and never count the whole turn; the turn's total is what `Worked for` reports at the end. The
+  bottom bar stays a plain `GPT-6-Luna high · /path · <thread> · Main [default]` label;
+  `esc esc interrupts` lives in the hint line.
 - After a turn finishes, `Worked for 5s · 12:08 PM` is appended to the transcript.
 - The model line reads `GPT-6-Luna high · /path · <thread name> · Main [default]` or `… · Agent`
   in the side thread. The thread name is taken from the first prompt.
