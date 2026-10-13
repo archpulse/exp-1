@@ -526,15 +526,15 @@ fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             let chosen = parts.next().unwrap_or_default().to_string();
             // `provider/slug` names one exactly; a bare name takes the provider
             // already in use when several offer it.
+            let offered = app.offered_models();
             let row = match chosen.rsplit_once('/') {
-                Some((provider, slug)) => app
-                    .all_models
+                Some((provider, slug)) => offered
                     .iter()
                     .find(|model| model.provider == provider && model.slug == slug)
                     .cloned(),
                 None => {
                     let active = app.active_provider_id().map(str::to_string);
-                    app.all_models
+                    offered
                         .iter()
                         .filter(|model| model.slug == chosen)
                         .min_by_key(|model| Some(model.provider.clone()) != active)
@@ -768,18 +768,21 @@ fn start_side_question(app: &mut App, ctx: &Ctx, question: String) {
 
 /// Ticks or unticks one model in the `/scoped-models` list.
 fn toggle_scoped(app: &mut App, index: usize) {
-    let Some(slug) = app.all_models.get(index).map(|model| model.slug.clone()) else {
+    let Some(model) = app.all_models.get(index).cloned() else {
         return;
     };
+    let key = app::scope_key(&model);
     // An empty set means "everything", so the first tick has to fill it in.
     if app.scoped.is_empty() {
-        app.scoped = app.all_models.iter().map(|model| model.slug.clone()).collect();
+        app.scoped = app.all_models.iter().map(app::scope_key).collect();
     }
-    if !app.scoped.remove(&slug) {
-        app.scoped.insert(slug);
+    if !app.scoped.remove(&key) {
+        app.scoped.insert(key);
     }
-    // Ticking everything is the same as the default, so collapse to empty.
-    if app.scoped.len() == app.all_models.len() {
+    // Ticking every row is the same as no scope at all.
+    let every: std::collections::BTreeSet<String> =
+        app.all_models.iter().map(app::scope_key).collect();
+    if app.scoped == every {
         app.scoped.clear();
     }
     app.open_scoped_picker();
@@ -796,9 +799,9 @@ fn select_from_picker(app: &mut App, ctx: &Ctx) {
     let thread = app.active;
     match picker.kind {
         app::PickerKind::Model => {
-            // The list is what the picker drew, which now covers every provider
-            // that is signed in; the row knows which one it belongs to.
-            let Some(row) = app.all_models.get(index).cloned() else {
+            // The list is what the picker drew: the rows the scope allows,
+            // each knowing which provider it belongs to.
+            let Some(row) = app.offered_models().get(index).cloned() else {
                 return;
             };
             let slug = row.slug.clone();
@@ -1195,6 +1198,18 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
                     toggle_scoped(app, index);
                 } else {
                     select_from_picker(app, ctx);
+                }
+            }
+            KeyCode::Char('a') => {
+                // In the scope picker, `a` puts every model back on the shelf:
+                // an empty scope means no restriction at all.
+                let scoped = app
+                    .picker
+                    .as_ref()
+                    .is_some_and(|picker| picker.kind == app::PickerKind::Scoped);
+                if scoped {
+                    app.scoped.clear();
+                    app.open_scoped_picker();
                 }
             }
             KeyCode::Esc => {
@@ -1843,11 +1858,8 @@ fn apply(app: &mut App, message: AgentMsg) {
             app.open_provider_picker();
         })),
         AgentMsg::Models(list) => (0, Box::new(move |app: &mut App| {
-            app.scoped = list
-                .iter()
-                .map(|model| model.slug.clone())
-                .filter(|slug| app.scoped.is_empty() || app.scoped.contains(slug))
-                .collect();
+            // The scope is only changed by ticking; opening the picker must not
+            // rewrite it, or a provider's entry would stamp out another's.
             app.all_models = list;
             app.open_scoped_picker();
         })),
@@ -2067,7 +2079,9 @@ async fn main() -> Result<()> {
         let _ = conn.configure(args.model.clone(), args.effort.clone()).await;
     }
 
-    let models = conn.models().await.unwrap_or_default();
+    // The picker draws every provider's models; the scope decides what it
+    // offers, and comes with the config so it is right from the first use.
+    let models = conn.models_all().await.unwrap_or_default();
     let catalog: Vec<catalog::ModelInfo> = models
         .into_iter()
         .map(|model| catalog::ModelInfo {
@@ -2107,6 +2121,7 @@ async fn main() -> Result<()> {
         app.model = active.model;
         app.effort = active.effort;
         app.plan = active.plan;
+        app.scoped = active.scoped.into_iter().collect();
     }
 
     enable_raw_mode()?;

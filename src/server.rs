@@ -924,6 +924,9 @@ pub struct WireConfig {
     pub model: String,
     pub effort: String,
     pub plan: Option<String>,
+    /// The scope `/model` is held to, so a client knows it from the start.
+    #[serde(default)]
+    pub scoped: Vec<String>,
 }
 
 /// What a `/login` actually did, so the client can say the truth: a provider
@@ -3340,8 +3343,14 @@ async fn models(
         .as_deref()
         .is_some_and(|value| value == "1" || value == "true");
     let scoped = store::load_settings().scoped_models;
-    let allowed = |slug: &str| {
-        everything || scoped.is_empty() || scoped.iter().any(|chosen| chosen == slug)
+    // A scope entry names one provider's model; a bare name in an older scope
+    // still means "this name, from any provider".
+    let allowed = |provider: &str, slug: &str| {
+        everything
+            || scoped.is_empty()
+            || scoped
+                .iter()
+                .any(|chosen| chosen == slug || chosen == &format!("{provider}/{slug}"))
     };
 
     // Every provider that is signed in offers its models: the picker shows the
@@ -3413,7 +3422,11 @@ async fn models(
                 })
                 .collect()
         };
-        list.extend(entries.into_iter().filter(|model| allowed(&model.slug)));
+        list.extend(
+            entries
+                .into_iter()
+                .filter(|model| allowed(&model.provider, &model.slug)),
+        );
     }
     Json(list).into_response()
 }
@@ -3697,6 +3710,7 @@ async fn get_config(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Re
         model: shared.agent.model(),
         effort: shared.agent.effort(),
         plan: shared.plan.lock().ok().and_then(|guard| guard.clone()),
+        scoped: store::load_settings().scoped_models.into_iter().collect(),
     })
     .into_response()
 }

@@ -306,7 +306,10 @@ throughout answers for anything else.
 **The picker shows every provider that is signed in**, one shelf rather than one per sign-in: the
 rows carry `via <provider>` so two hats on the same model name are told apart, the provider in use
 comes first, and picking a model from another provider switches to it before setting the model. The
-scope in `/scoped-models` filters the same shelf. `/model grok-4.7` takes the provider in use when
+scope in `/scoped-models` filters the same shelf and names one provider's model
+(`opencode-go/grok-4.7`), so the same name from two providers is two entries;
+an older scope holding bare names still means "this name, from any provider",
+and `a` in that picker clears the scope, which offers everything again. `/model grok-4.7` takes the provider in use when
 several offer that name, and `/model opencode-go/grok-4.7` names one exactly.
 
 Efforts genuinely differ per model, which is why guessing them does not work:

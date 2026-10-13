@@ -334,6 +334,17 @@ impl AskView {
     }
 }
 
+/// The key a scope entry uses for one model. The provider is part of it,
+/// because the same name can be offered by two of them and ticking one must not
+/// tick the other.
+pub fn scope_key(model: &crate::proto::WireModel) -> String {
+    if model.provider.is_empty() {
+        model.slug.clone()
+    } else {
+        format!("{}/{}", model.provider, model.slug)
+    }
+}
+
 /// What a click on a screen cell does.
 #[derive(Clone, PartialEq, Eq)]
 pub enum ClickAction {
@@ -918,6 +929,24 @@ impl App {
         self.thread().input_text().trim() == name
     }
 
+    /// Whether the scope lets this row through. An empty scope means every
+    /// row does, and a bare name in an older scope means "this name, from any
+    /// provider that offers it".
+    pub fn model_allowed(&self, model: &crate::proto::WireModel) -> bool {
+        self.scoped.is_empty()
+            || self.scoped.contains(&scope_key(model))
+            || self.scoped.contains(&model.slug)
+    }
+
+    /// The models `/model` offers: everything, or what the scope allows.
+    pub fn offered_models(&self) -> Vec<crate::proto::WireModel> {
+        self.all_models
+            .iter()
+            .filter(|model| self.model_allowed(model))
+            .cloned()
+            .collect()
+    }
+
     /// The id of the provider in use, when the list has arrived.
     pub fn active_provider_id(&self) -> Option<&str> {
         self.providers
@@ -932,8 +961,9 @@ impl App {
         let mine = |model: &crate::proto::WireModel| {
             model.slug == current && active.as_deref().is_none_or(|id| id == model.provider)
         };
-        let items = self
-            .all_models
+        // What the scope allows, which is everything when it is empty.
+        let offered = self.offered_models();
+        let items = offered
             .iter()
             .map(|model| PickerItem {
                 label: format!(
@@ -944,11 +974,7 @@ impl App {
                 description: model.description.clone(),
             })
             .collect();
-        let selected = self
-            .all_models
-            .iter()
-            .position(mine)
-            .unwrap_or(0);
+        let selected = offered.iter().position(mine).unwrap_or(0);
         self.picker = Some(Picker {
             kind: PickerKind::Model,
             title: "Select Model and Effort".to_string(),
@@ -1051,12 +1077,8 @@ impl App {
             .map(|model| crate::app::PickerItem {
                 label: format!(
                     "{} {}",
-                    if self.scoped.is_empty() || self.scoped.contains(&model.slug) {
-                        "[x]"
-                    } else {
-                        "[ ]"
-                    },
-                    model.slug
+                    if self.model_allowed(model) { "[x]" } else { "[ ]" },
+                    scope_key(model)
                 ),
                 description: model.description.clone(),
             })
@@ -1714,9 +1736,14 @@ impl App {
                 Style::default().fg(theme.dim),
             ));
         }
+        let hints = match picker.kind {
+            PickerKind::Scoped => "enter tick · a all · esc save",
+            PickerKind::Message => "enter pick · esc back",
+            _ => "enter select · esc back",
+        };
         lines.push(Line::from(vec![
             Span::raw("  "),
-            Span::styled("enter select · esc back", Style::default().fg(theme.dim)),
+            Span::styled(hints, Style::default().fg(theme.dim)),
         ]));
 
         let block = Block::default().style(Style::default().bg(theme.input_bg));
