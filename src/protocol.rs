@@ -91,8 +91,9 @@ pub struct Preparing {
 }
 
 impl Preparing {
-    /// A line worth showing for this event, if any. Shared by both Responses
-    /// readers (the Codex client and the plain one), which see the same events.
+    /// A line worth showing for this Responses event, if any. Shared by both
+    /// Responses readers (the Codex client and the plain one), which see the
+    /// same events.
     pub fn note(&mut self, kind: &str, event: &Value) -> Option<String> {
         match kind {
             "response.output_item.added" => {
@@ -100,33 +101,57 @@ impl Preparing {
                 if item.get("type").and_then(Value::as_str) != Some("function_call") {
                     return None;
                 }
-                self.name = item
+                let name = item
                     .get("name")
                     .and_then(Value::as_str)
                     .unwrap_or("a tool")
                     .to_string();
-                self.bytes = 0;
-                self.shown = 0;
-                Some(format!("preparing {}…", self.name))
+                Some(self.start(&name))
             }
             "response.function_call_arguments.delta" => {
                 let delta = event.get("delta").and_then(Value::as_str)?;
-                self.bytes += delta.len();
-                // Once per 4 KB: often enough to look alive, rare enough not to
-                // flood the transcript.
-                if self.bytes < self.shown + 4096 {
-                    return None;
-                }
-                self.shown = self.bytes;
-                let name = if self.name.is_empty() {
-                    "a tool"
-                } else {
-                    self.name.as_str()
-                };
-                Some(format!("preparing {name}… ({} KB)", self.bytes / 1024))
+                self.grew(delta)
             }
             _ => None,
         }
+    }
+
+    /// Wires that name the tool once and then stream its arguments in pieces:
+    /// the chat dialects and Anthropic's partial JSON.
+    pub fn fragment(&mut self, name: Option<&str>, args: Option<&str>) -> Option<String> {
+        if let Some(name) = name.filter(|name| !name.is_empty()) {
+            return Some(self.start(name));
+        }
+        self.grew(args?)
+    }
+
+    /// The tool is about to be written; this line goes up at once, before any
+    /// of its arguments exist.
+    pub fn start(&mut self, name: &str) -> String {
+        self.name = if name.is_empty() {
+            "a tool".to_string()
+        } else {
+            name.to_string()
+        };
+        self.bytes = 0;
+        self.shown = 0;
+        format!("preparing {}…", self.name)
+    }
+
+    fn grew(&mut self, delta: &str) -> Option<String> {
+        self.bytes += delta.len();
+        // Once per 4 KB: often enough to look alive, rare enough not to flood
+        // the transcript.
+        if self.bytes < self.shown + 4096 {
+            return None;
+        }
+        self.shown = self.bytes;
+        let name = if self.name.is_empty() {
+            "a tool"
+        } else {
+            self.name.as_str()
+        };
+        Some(format!("preparing {name}… ({} KB)", self.bytes / 1024))
     }
 }
 
@@ -164,5 +189,57 @@ impl Usage {
             "in {} / out {}{}",
             self.input_tokens, self.output_tokens, cached
         )
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn preparing_names_the_tool_and_counts_its_arguments() {
+        let mut preparing = Preparing::default();
+        // A text item is not a tool call and says nothing about one.
+        let message = json!({"item": {"type": "message"}});
+        assert!(preparing.note("response.output_item.added", &message).is_none());
+        let call = json!({"item": {"type": "function_call", "name": "write"}});
+        assert_eq!(
+            preparing.note("response.output_item.added", &call).as_deref(),
+            Some("preparing write…")
+        );
+        // Small arguments stay quiet: the first line already said what it was.
+        let small = json!({"delta": "x".repeat(100)});
+        assert!(
+            preparing
+                .note("response.function_call_arguments.delta", &small)
+                .is_none()
+        );
+        // Past four kilobytes it says how much has been written.
+        let big = json!({"delta": "x".repeat(4096)});
+        assert_eq!(
+            preparing
+                .note("response.function_call_arguments.delta", &big)
+                .as_deref(),
+            Some("preparing write… (4 KB)")
+        );
+    }
+
+    #[test]
+    fn preparing_covers_the_wires_that_stream_fragments() {
+        let mut preparing = Preparing::default();
+        // The chat wire names the tool once and then streams its arguments.
+        assert_eq!(
+            preparing.fragment(Some("edit"), None).as_deref(),
+            Some("preparing edit…")
+        );
+        assert!(preparing.fragment(None, Some("{}")).is_none());
+        assert_eq!(
+            preparing
+                .fragment(None, Some(&"x".repeat(4096)))
+                .as_deref(),
+            Some("preparing edit… (4 KB)")
+        );
+        // Anthropic's block header carries the name, and it can be missing.
+        assert_eq!(preparing.start(""), "preparing a tool…");
     }
 }

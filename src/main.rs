@@ -84,6 +84,8 @@ impl Ctx {
 #[derive(Clone)]
 enum AgentMsg {
     Phase(usize, Phase),
+    /// What the model is preparing right now, for the activity line.
+    Preparing(usize, String),
     Delta(usize, String),
     Reasoning(usize, String),
     AssistantDone(usize, String),
@@ -135,6 +137,7 @@ fn translate(thread: usize, event: WireEvent) -> Vec<AgentMsg> {
             },
         )],
         WireEvent::Delta { text } => vec![AgentMsg::Delta(thread, text)],
+        WireEvent::Preparing { text } => vec![AgentMsg::Preparing(thread, text)],
         WireEvent::Reasoning { text } => vec![AgentMsg::Reasoning(thread, text)],
         WireEvent::Assistant { text } => vec![AgentMsg::AssistantDone(thread, text)],
         WireEvent::Tool { text, line } => vec![AgentMsg::ToolLine(thread, text, line)],
@@ -1748,6 +1751,9 @@ fn apply(app: &mut App, message: AgentMsg) {
             if phase == Phase::Streaming {
                 thread.live.clear();
             }
+            // The preparing note belongs to one request; a new phase means a new
+            // thing is happening.
+            thread.preparing = None;
             // Each request and each tool gets its own clock: the line under the
             // prompt is about what is happening now.
             thread.activity_since = match phase {
@@ -1756,8 +1762,14 @@ fn apply(app: &mut App, message: AgentMsg) {
             };
             thread.phase = phase;
         })),
+        AgentMsg::Preparing(index, text) => (index, Box::new(move |app: &mut App| {
+            app.threads[index].preparing = Some(text);
+        })),
         AgentMsg::Delta(index, delta) => (index, Box::new(move |app: &mut App| {
-            app.threads[index].live.push_str(&delta);
+            let thread = &mut app.threads[index];
+            // Visible text means the model is writing words, not a tool call.
+            thread.preparing = None;
+            thread.live.push_str(&delta);
         })),
         AgentMsg::Reasoning(index, text) => (index, Box::new(move |app: &mut App| {
             app.threads[index].reasoning.push_str(&text);

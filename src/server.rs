@@ -1343,9 +1343,10 @@ async fn run_turn(
                     session.broadcast(WireEvent::Delta { text: delta });
                 }
                 ApiEvent::Preparing(note) => {
-                    // One line that the next one replaces: a long argument
-                    // should look like work, not like a frozen screen.
-                    session.progress(note);
+                    // The activity line's label, not a transcript line: a model
+                    // writing a large file is doing one thing, and the line
+                    // under the prompt should say which.
+                    session.broadcast(WireEvent::Preparing { text: note });
                 }
                 ApiEvent::Reasoning(delta) => {
                     session.broadcast(WireEvent::Reasoning { text: delta });

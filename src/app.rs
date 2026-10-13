@@ -421,6 +421,9 @@ pub struct Thread {
     pub usage: Option<Usage>,
     pub error: Option<String>,
     pub started_at: Option<Instant>,
+    /// What the model is preparing right now (a tool call's arguments), shown
+    /// in place of the "thinking" label.
+    pub preparing: Option<String>,
     /// When the activity being shown now began: one model request, or one tool.
     /// The turn's own start is kept apart, so the live line counts the request
     /// rather than the whole turn, which made a working agent look stuck.
@@ -460,6 +463,7 @@ impl Thread {
             usage: None,
             error: None,
             started_at: None,
+            preparing: None,
             activity_since: None,
             input: Vec::new(),
             cursor: 0,
@@ -1593,12 +1597,17 @@ impl App {
                     tail.push(Line::from(spans));
                 }
             }
-        } else if thread.busy() {
-            // The activity line sits directly under the prompt it belongs to.
-            let label = if thread.phase == Phase::Running {
-                "running"
-            } else {
-                "thinking"
+        }
+        // The activity line says what is happening now: thinking, preparing a
+        // tool call, or running one. It sits under the streamed text when the
+        // model has already written some — the arguments of a large tool call
+        // are the quietest part of a turn, and this line is the only sign of
+        // life there.
+        if thread.busy() && (thread.live.is_empty() || thread.preparing.is_some()) {
+            let label: &str = match &thread.preparing {
+                Some(preparing) => preparing,
+                None if thread.phase == Phase::Running => "running",
+                None => "thinking",
             };
             let elapsed = thread
                 .activity_since

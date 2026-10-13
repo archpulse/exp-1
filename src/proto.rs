@@ -92,6 +92,10 @@ pub enum WireEvent {
     Reasoning { text: String },
     Assistant { text: String },
     Tool { text: String, #[serde(default)] line: WireMsgKind },
+    /// What the model is busy preparing right now, for the activity line: a
+    /// tool call whose arguments are still being written. It is not a
+    /// transcript line — it replaces the "thinking" label while it lasts.
+    Preparing { text: String },
     Usage { usage: WireUsage },
     Error { message: String },
     Done { label: String },

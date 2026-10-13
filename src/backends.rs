@@ -318,6 +318,7 @@ async fn openai_chat(
         // Tool calls arrive in fragments and are stitched back together here.
         let mut calls: Vec<(String, String, String)> = Vec::new();
         let mut failure: Option<String> = None;
+        let mut preparing = crate::protocol::Preparing::default();
 
         pump_sse(response, |payload| {
             let Ok(event) = serde_json::from_str::<Value>(payload) else {
@@ -373,14 +374,18 @@ async fn openai_chat(
                     slot.0.push_str(id);
                 }
                 let function = fragment.get("function");
-                if let Some(name) = function.and_then(|f| f.get("name")).and_then(Value::as_str) {
+                let name = function.and_then(|f| f.get("name")).and_then(Value::as_str);
+                let args = function
+                    .and_then(|f| f.get("arguments"))
+                    .and_then(Value::as_str);
+                if let Some(name) = name {
                     slot.1.push_str(name);
                 }
-                if let Some(args) = function
-                    .and_then(|f| f.get("arguments"))
-                    .and_then(Value::as_str)
-                {
+                if let Some(args) = args {
                     slot.2.push_str(args);
+                }
+                if let Some(note) = preparing.fragment(name, args) {
+                    let _ = tx.try_send(ApiEvent::Preparing(note));
                 }
             }
         })
@@ -661,6 +666,7 @@ async fn anthropic(
         let mut tool: Option<(String, String)> = None; // (id, name)
         let mut arguments = String::new();
         let mut failure: Option<String> = None;
+        let mut preparing = crate::protocol::Preparing::default();
 
         pump_sse(response, |payload| {
             let Ok(event) = serde_json::from_str::<Value>(payload) else {
@@ -679,6 +685,9 @@ async fn anthropic(
                         Some("input_json_delta") => {
                             if let Some(chunk) = delta.get("partial_json").and_then(Value::as_str) {
                                 arguments.push_str(chunk);
+                                if let Some(note) = preparing.fragment(None, Some(chunk)) {
+                                    let _ = tx.try_send(ApiEvent::Preparing(note));
+                                }
                             }
                         }
                         _ => {}
@@ -698,8 +707,10 @@ async fn anthropic(
                             .and_then(Value::as_str)
                             .unwrap_or("")
                             .to_string();
-                        tool = Some((id, name));
+                        tool = Some((id, name.clone()));
                         arguments.clear();
+                        let note = preparing.start(&name);
+                        let _ = tx.try_send(ApiEvent::Preparing(note));
                     }
                 }
                 Some("message_delta") => {
