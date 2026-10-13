@@ -1730,6 +1730,13 @@ async fn permission_check(
     #[cfg(test)]
     fn transient(message: &str) -> bool {
     let lowered = message.to_ascii_lowercase();
+    // A gateway can dress its own failure as a 400: opencode-go answers
+    // "Upstream response was not valid JSON" with a `server_error` when its
+    // upstream hiccups. That is worth another attempt; a 400 that means what it
+    // says is not.
+    if lowered.contains("server_error") || lowered.contains("not valid json") {
+        return true;
+    }
     if lowered.contains("http 4") {
         return false;
     }
@@ -1854,6 +1861,12 @@ mod tests {
         assert!(transient("Temporary failure: DNS lookup failed"));
         assert!(transient("temporary failure in name resolution"));
         assert!(!transient("HTTP 404: model not found"));
+        // The gateway's own failure, wearing a 400.
+        assert!(transient(
+            "opencode-go: HTTP 400 Bad Request: {\"error\":{\"type\":\"server_error\",\"message\":\"Upstream response was not valid JSON\"}}"
+        ));
+        assert!(transient("HTTP 400: upstream response was not valid json"));
+        assert!(!transient("HTTP 400: {'error':'unknown model'}"));
         assert!(!transient("HTTP 401: invalid api key"));
         assert!(!transient("unknown provider 'nope' — run /login"));
     }
