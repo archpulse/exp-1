@@ -80,6 +80,56 @@ pub struct RawEvent {
     pub error: Option<Value>,
 }
 
+/// The tool call being streamed. A model writing a large file spends a long
+/// time inside its arguments — far longer than inside the text — and without a
+/// word about it the interface looks like it died.
+#[derive(Default)]
+pub struct Preparing {
+    name: String,
+    bytes: usize,
+    shown: usize,
+}
+
+impl Preparing {
+    /// A line worth showing for this event, if any. Shared by both Responses
+    /// readers (the Codex client and the plain one), which see the same events.
+    pub fn note(&mut self, kind: &str, event: &Value) -> Option<String> {
+        match kind {
+            "response.output_item.added" => {
+                let item = event.get("item")?;
+                if item.get("type").and_then(Value::as_str) != Some("function_call") {
+                    return None;
+                }
+                self.name = item
+                    .get("name")
+                    .and_then(Value::as_str)
+                    .unwrap_or("a tool")
+                    .to_string();
+                self.bytes = 0;
+                self.shown = 0;
+                Some(format!("preparing {}…", self.name))
+            }
+            "response.function_call_arguments.delta" => {
+                let delta = event.get("delta").and_then(Value::as_str)?;
+                self.bytes += delta.len();
+                // Once per 4 KB: often enough to look alive, rare enough not to
+                // flood the transcript.
+                if self.bytes < self.shown + 4096 {
+                    return None;
+                }
+                self.shown = self.bytes;
+                let name = if self.name.is_empty() {
+                    "a tool"
+                } else {
+                    self.name.as_str()
+                };
+                Some(format!("preparing {name}… ({} KB)", self.bytes / 1024))
+            }
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Usage {
     pub input_tokens: u64,

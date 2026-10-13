@@ -1417,6 +1417,7 @@ fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
             thread.error = None;
             thread.scroll = 0;
             thread.started_at = Some(Instant::now());
+            thread.activity_since = Some(Instant::now());
             thread.phase = Phase::Streaming;
             let conn = ctx.conn.clone();
             let session = ctx.session(index);
@@ -1747,6 +1748,12 @@ fn apply(app: &mut App, message: AgentMsg) {
             if phase == Phase::Streaming {
                 thread.live.clear();
             }
+            // Each request and each tool gets its own clock: the line under the
+            // prompt is about what is happening now.
+            thread.activity_since = match phase {
+                Phase::Idle => None,
+                _ => Some(Instant::now()),
+            };
             thread.phase = phase;
         })),
         AgentMsg::Delta(index, delta) => (index, Box::new(move |app: &mut App| {

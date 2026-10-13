@@ -421,6 +421,10 @@ pub struct Thread {
     pub usage: Option<Usage>,
     pub error: Option<String>,
     pub started_at: Option<Instant>,
+    /// When the activity being shown now began: one model request, or one tool.
+    /// The turn's own start is kept apart, so the live line counts the request
+    /// rather than the whole turn, which made a working agent look stuck.
+    pub activity_since: Option<Instant>,
     pub input: Vec<char>,
     pub cursor: usize,
     pub input_history: Vec<String>,
@@ -456,6 +460,7 @@ impl Thread {
             usage: None,
             error: None,
             started_at: None,
+            activity_since: None,
             input: Vec::new(),
             cursor: 0,
             input_history: Vec::new(),
@@ -1596,7 +1601,7 @@ impl App {
                 "thinking"
             };
             let elapsed = thread
-                .started_at
+                .activity_since
                 .map(|start| start.elapsed().as_secs())
                 .unwrap_or(0);
             tail.push(Line::from(vec![

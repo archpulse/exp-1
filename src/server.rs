@@ -245,6 +245,7 @@ async fn run_subagent(
         while let Some(event) = stream.recv().await {
             match event {
                 ApiEvent::TextDelta(delta) => text.push_str(&delta),
+                ApiEvent::Preparing(_) => {}
                 ApiEvent::ItemDone(item) => {
                     if item.get("type").and_then(|t| t.as_str()) != Some("function_call") {
                         continue;
@@ -1340,6 +1341,11 @@ async fn run_turn(
                         state.live.push_str(&delta);
                     }
                     session.broadcast(WireEvent::Delta { text: delta });
+                }
+                ApiEvent::Preparing(note) => {
+                    // One line that the next one replaces: a long argument
+                    // should look like work, not like a frozen screen.
+                    session.progress(note);
                 }
                 ApiEvent::Reasoning(delta) => {
                     session.broadcast(WireEvent::Reasoning { text: delta });

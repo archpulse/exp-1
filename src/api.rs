@@ -21,6 +21,9 @@ pub enum ApiEvent {
     ItemDone(serde_json::Value),
     Completed(Usage),
     Failed(String),
+    /// The model is still writing a tool call's arguments; the text is a line
+    /// to show while it does.
+    Preparing(String),
 }
 
 pub struct CodexClient {
@@ -106,6 +109,7 @@ impl CodexClient {
 async fn pump(response: reqwest::Response, tx: mpsc::Sender<ApiEvent>) {
     let mut body = response.bytes_stream();
     let mut buffer = String::new();
+    let mut preparing = crate::protocol::Preparing::default();
 
     while let Some(chunk) = body.next().await {
         let chunk = match chunk {
@@ -128,15 +132,25 @@ async fn pump(response: reqwest::Response, tx: mpsc::Sender<ApiEvent>) {
             if payload.is_empty() || payload == "[DONE]" {
                 continue;
             }
-            dispatch(payload, &tx).await;
+            dispatch(payload, &tx, &mut preparing).await;
         }
     }
 }
 
-async fn dispatch(payload: &str, tx: &mpsc::Sender<ApiEvent>) {
+async fn dispatch(
+    payload: &str,
+    tx: &mpsc::Sender<ApiEvent>,
+    preparing: &mut crate::protocol::Preparing,
+) {
     let Ok(event) = serde_json::from_str::<RawEvent>(payload) else {
         return; // Unknown event shapes are not fatal.
     };
+
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(payload)
+        && let Some(note) = preparing.note(&event.kind, &value)
+    {
+        let _ = tx.send(ApiEvent::Preparing(note)).await;
+    }
 
     match event.kind.as_str() {
         "response.output_text.delta" => {

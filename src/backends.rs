@@ -86,10 +86,16 @@ async fn openai_responses(
     let (tx, rx) = mpsc::channel(512);
     tokio::spawn(async move {
         let mut failure: Option<String> = None;
+        let mut preparing = crate::protocol::Preparing::default();
         pump_sse(response, |payload| {
             let Ok(event) = serde_json::from_str::<Value>(payload) else {
                 return;
             };
+            if let Some(kind) = event.get("type").and_then(Value::as_str)
+                && let Some(note) = preparing.note(kind, &event)
+            {
+                let _ = tx.try_send(ApiEvent::Preparing(note));
+            }
             match event.get("type").and_then(Value::as_str) {
                 Some("response.output_text.delta") => {
                     if let Some(delta) = event.get("delta").and_then(Value::as_str) {
