@@ -3250,7 +3250,7 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
     };
 
     // Sensible starting values from the saved settings, without ever resuming.
-    let settings = store::load_settings();
+    let mut settings = store::load_settings();
     if !settings.model.is_empty() {
         if let Ok(mut model) = agent.model.lock() {
             *model = settings.model.clone();
@@ -3271,6 +3271,40 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
         && model.is_empty()
     {
         *model = first.slug.clone();
+    }
+
+    // The saved pair can be out of step — a model from one provider saved while
+    // another was in use, which makes the first request go out on a provider
+    // that has never heard of it. The model decides, here as in `/config`.
+    {
+        let stored_model = agent.model.lock().map(|model| model.clone()).unwrap_or_default();
+        let stored_provider = agent.provider.lock().map(|provider| provider.clone()).unwrap_or_default();
+        if !stored_model.is_empty()
+            && crate::providers::by_id(&stored_provider)
+                .is_some_and(|provider| !offers(provider, &stored_model))
+        {
+            match owner_of(&stored_model) {
+                Some(owner) => {
+                    if let Ok(mut provider) = agent.provider.lock() {
+                        *provider = owner.id.to_string();
+                    }
+                    settings.provider = owner.id.to_string();
+                    let _ = store::save_settings(&settings);
+                }
+                None => {
+                    // Nobody signed in offers it: keep the provider, drop the
+                    // model for its first, so a turn can run.
+                    if let Some(first) = crate::providers::by_id(&stored_provider)
+                        .and_then(|provider| provider.models.first())
+                        && let Ok(mut model) = agent.model.lock()
+                    {
+                        *model = first.0.to_string();
+                        settings.model = agent.model.lock().map(|model| model.clone()).unwrap_or_default();
+                        let _ = store::save_settings(&settings);
+                    }
+                }
+            }
+        }
     }
 
     let plan = agent.codex().ok().and_then(|client| client.plan());

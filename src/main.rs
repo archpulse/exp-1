@@ -25,7 +25,8 @@ mod tools;
 
 use anyhow::{Context, Result};
 use crossterm::event::{
-    self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind,
+    self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
+    Event, KeyCode, KeyEvent, KeyEventKind,
     KeyModifiers, KeyboardEnhancementFlags, MouseButton, MouseEventKind,
     PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
 };
@@ -2149,7 +2150,10 @@ async fn main() -> Result<()> {
     enable_raw_mode()?;
     let mut out = stdout();
     execute!(out, EnterAlternateScreen)?;
-    execute!(out, EnableMouseCapture)?;
+    // Bracketed paste is what keeps a pasted block one event: without it the
+    // terminal sends it key by key, its newlines arrive as Enter, and the first
+    // line is sent before the rest has been typed in.
+    execute!(out, EnableMouseCapture, EnableBracketedPaste)?;
     let _ = execute!(
         out,
         PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES)
@@ -2158,7 +2162,11 @@ async fn main() -> Result<()> {
 
     let outcome = event_loop(&mut terminal, &mut app, &ctx, &mut event_rx);
 
-    let _ = execute!(terminal.backend_mut(), DisableMouseCapture);
+    let _ = execute!(
+        terminal.backend_mut(),
+        DisableMouseCapture,
+        DisableBracketedPaste
+    );
     let _ = execute!(terminal.backend_mut(), PopKeyboardEnhancementFlags);
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -2177,6 +2185,7 @@ fn install_panic_hook() {
         let _ = execute!(
             std::io::stdout(),
             DisableMouseCapture,
+            DisableBracketedPaste,
             crossterm::cursor::Show,
             LeaveAlternateScreen
         );
