@@ -3753,9 +3753,35 @@ async fn config(
     }
     if let Some(model) = body.model
         && !model.trim().is_empty()
-        && let Ok(mut slot) = shared.agent.model.lock()
     {
-        *slot = model;
+        let model = model.trim().to_string();
+        // A model names its provider. Setting one the provider in use does not
+        // offer used to leave the two out of step, and the next request went
+        // out on the wrong provider with a model it had never heard of.
+        let offered = crate::providers::by_id(&shared.agent.provider())
+            .is_some_and(|provider| offers(provider, &model));
+        if !offered {
+            match owner_of(&model) {
+                Some(owner) => {
+                    if let Ok(mut slot) = shared.agent.provider.lock() {
+                        *slot = owner.id.to_string();
+                    }
+                }
+                None => {
+                    return (
+                        StatusCode::BAD_REQUEST,
+                        format!(
+                            "'{model}' is not a model of the provider in use, and no signed-in \
+                             provider offers it — run /login, or pick one from /model"
+                        ),
+                    )
+                        .into_response();
+                }
+            }
+        }
+        if let Ok(mut slot) = shared.agent.model.lock() {
+            *slot = model;
+        }
     }
     if let Some(effort) = body.effort
         && !effort.trim().is_empty()
@@ -3774,6 +3800,31 @@ async fn config(
     settings.provider = shared.agent.provider();
     let _ = store::save_settings(&settings);
     StatusCode::NO_CONTENT.into_response()
+}
+
+/// Whether a provider offers a model: its own table, the live catalogue, or —
+/// for the Codex provider — the catalogue the Codex CLI keeps.
+fn offers(provider: &crate::providers::Provider, model: &str) -> bool {
+    if provider.id == "openai-auth" {
+        return catalog::load().iter().any(|entry| entry.slug == model);
+    }
+    if provider.models.iter().any(|(id, _)| *id == model) {
+        return true;
+    }
+    crate::providers::catalog_id(provider.id)
+        .map(|catalog| {
+            crate::models_dev::models_for(catalog)
+                .iter()
+                .any(|entry| entry.slug == model)
+        })
+        .unwrap_or(false)
+}
+
+/// The signed-in provider that offers a model, when one does.
+fn owner_of(model: &str) -> Option<&'static crate::providers::Provider> {
+    crate::providers::PROVIDERS
+        .iter()
+        .find(|provider| has_credential(provider) && offers(provider, model))
 }
 
 /// Keeps `read_lock` used from one place, so the helper is not dead code.
