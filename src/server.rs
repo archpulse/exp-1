@@ -1879,6 +1879,19 @@ mod tests {
         assert!(after < before);
     }
 
+    /// The project header is an id, never a path: a path with Cyrillic in it
+    /// cannot be routed, which is what broke every turn in that directory.
+    #[test]
+    fn the_gateway_project_id_is_ascii_whatever_the_path() {
+        let id = gateway_project_id(std::path::Path::new("/home/user/projects/test/аквариум"));
+        assert!(id.chars().all(|ch| ch.is_ascii_alphanumeric()), "{id}");
+        assert_eq!(id.len(), 16, "{id}");
+        assert_ne!(
+            id,
+            gateway_project_id(std::path::Path::new("/home/user/projects/test/other"))
+        );
+    }
+
     /// The session header carries the shape the gateways route by: `ses_` and
     /// 64 hex digits, whatever the session id looks like.
     #[test]
@@ -2718,10 +2731,22 @@ fn gateway_headers(
         ),
         (
             "x-opencode-project".to_string(),
-            session.cwd().display().to_string(),
+            gateway_project_id(&session.cwd()),
         ),
         ("x-opencode-client".to_string(), "exp-1-agent".to_string()),
     ]
+}
+
+/// The gateways route by project as well, and their own client sends an
+/// internal id there — not a path. A path is not even valid header material
+/// when it holds anything but ASCII, and a request routed by a mangled project
+/// lands on an upstream that does not serve the model: "Upstream response was
+/// not valid JSON", five attempts in a row.
+fn gateway_project_id(cwd: &std::path::Path) -> String {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    cwd.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
 }
 
 /// The gateways route by session, and their own client sends `ses_` followed by
