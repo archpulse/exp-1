@@ -330,9 +330,9 @@ Tento režim je místní pro tuto kopii whistle: logika sedí v její knihovně 
 
 **Jeden klíč může pokrýt několik poskytovatelů.** `opencode-go` a `opencode-zen` jsou jeden účet za dvěma základními URL, takže přihlášení do jednoho uloží klíč pro oba (`providers::key_group` pojmenovává skupiny). Brány opencode také směrují podle relace: každý požadavek nese `x-opencode-session`, `x-opencode-project` a `x-opencode-client`, bez nichž ho brána rovnou odmítne („Request is missing x-opencode-session“).
 
-Vše, co je tu implementováno, pokrývají čtyři přenosové protokoly: API **OpenAI chat-completions**, které sdílí tucet dodavatelů, **OpenAI Responses**, **Anthropic messages** a nativní **Gemini `generateContent`** od Vertex AI. Všechny streamují SSE a všechny se dekódují do stejného proudu událostí, jaký produkuje klient Codex, takže smyčka agenta neví, se kterým mluví.
+Vše, co je tu implementováno, pokrývá pět přenosových protokolů: API **OpenAI chat-completions**, které sdílí tucet dodavatelů, **OpenAI Responses**, **Anthropic messages**, nativní **Gemini `generateContent`** od Vertex AI a **backend Codex**, s nímž mluví `openai (auth)`. Všechny streamují SSE a všechny se dekódují do stejného proudu událostí, jaký produkuje klient Codex, takže smyčka agenta neví, se kterým mluví.
 
-Klíče se ukládají po poskytovatelích v `~/.config/exp-1/sessions/credentials.json` s právy `0600`. `openai (auth)` si místo toho drží `auth.json` ve stylu Codexu, `google vertex` používá, co už přihlásil `gcloud auth application-default login` (s `GOOGLE_CLOUD_PROJECT` a `GOOGLE_CLOUD_LOCATION`, které pojmenovávají projekt a region), a poskytovatelé s kódem zařízení ukládají token, který dostanou, do stejného souboru s údaji.
+Klíče se ukládají po poskytovatelích v `~/.config/exp-1/credentials.json` s právy `0600`. `openai (auth)` si místo toho drží `auth.json` ve stylu Codexu, `google vertex` používá, co už přihlásil `gcloud auth application-default login` (s `GOOGLE_CLOUD_PROJECT` a `GOOGLE_CLOUD_LOCATION`, které pojmenovávají projekt a region), a poskytovatelé s kódem zařízení ukládají token, který dostanou, do stejného souboru s údaji.
 
 | Poskytovatel | Základní URL | Protokol |
 | --- | --- | --- |

@@ -330,9 +330,9 @@ WHISTLE_SOURCE=…                  # default: the system's own input
 
 **一个 key 可以覆盖多个提供方。** `opencode-go` 和 `opencode-zen` 是两个 base URL 背后的同一个账户，所以登录任意一个都会为两者存储 key（`providers::key_group` 为这些分组命名）。opencode 网关还按会话路由：每个请求都带有 `x-opencode-session`、`x-opencode-project` 和 `x-opencode-client`，没有这些网关会直接拒绝（"Request is missing x-opencode-session"）。
 
-四种线协议覆盖了这里实现的一切：由十几家厂商共享的 **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**，以及 Vertex AI 原生的 **Gemini `generateContent`**。它们全都以 SSE 流式传输，并全部解码为 Codex 客户端产生的同一事件流，因此代理循环并不知道自己在和哪一个对话。
+五种线协议覆盖了这里实现的一切：由十几家厂商共享的 **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**、Vertex AI 原生的 **Gemini `generateContent`**，以及 `openai (auth)` 与之对话的 **Codex 后端**。它们全都以 SSE 流式传输，并全部解码为 Codex 客户端产生的同一事件流，因此代理循环并不知道自己在和哪一个对话。
 
-key 按提供方存储在 `~/.config/exp-1/sessions/credentials.json` 中，模式 `0600`。`openai (auth)` 则保留 Codex 风格的 `auth.json`，`google vertex` 使用 `gcloud auth application-default login` 已经登录的凭据（由 `GOOGLE_CLOUD_PROJECT` 和 `GOOGLE_CLOUD_LOCATION` 指明项目和区域），设备码提供方把收到的 token 放进同一个凭据文件。
+key 按提供方存储在 `~/.config/exp-1/credentials.json` 中，模式 `0600`。`openai (auth)` 则保留 Codex 风格的 `auth.json`，`google vertex` 使用 `gcloud auth application-default login` 已经登录的凭据（由 `GOOGLE_CLOUD_PROJECT` 和 `GOOGLE_CLOUD_LOCATION` 指明项目和区域），设备码提供方把收到的 token 放进同一个凭据文件。
 
 | 提供方 | Base URL | 协议 |
 | --- | --- | --- |

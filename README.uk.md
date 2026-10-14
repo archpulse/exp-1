@@ -330,9 +330,9 @@ WHISTLE_SOURCE=…                  # default: the system's own input
 
 **Один ключ може покривати кілька провайдерів.** `opencode-go` і `opencode-zen` — це один акаунт за двома базовими URL, тож вхід у будь-який із них зберігає ключ для обох (`providers::key_group` називає групи). Шлюзи opencode також маршрутизують за сесією: кожен запит несе `x-opencode-session`, `x-opencode-project` і `x-opencode-client`, без яких шлюз відмовляє йому відразу («Request is missing x-opencode-session»).
 
-Чотири протоколи передачі покривають усе, реалізоване тут: API **OpenAI chat-completions**, який використовує десяток постачальників, **OpenAI Responses**, **Anthropic messages** і рідний **Gemini `generateContent`** від Vertex AI. Усі передають SSE потоком, і всі декодуються в той самий потік подій, який породжує клієнт Codex, тож цикл агента не знає, з яким із них говорить.
+П'ять протоколів передачі покривають усе, реалізоване тут: API **OpenAI chat-completions**, який використовує десяток постачальників, **OpenAI Responses**, **Anthropic messages**, рідний **Gemini `generateContent`** від Vertex AI і **бекенд Codex**, з яким говорить `openai (auth)`. Усі передають SSE потоком, і всі декодуються в той самий потік подій, який породжує клієнт Codex, тож цикл агента не знає, з яким із них говорить.
 
-Ключі зберігаються окремо для кожного провайдера в `~/.config/exp-1/sessions/credentials.json`, з правами `0600`. `openai (auth)` натомість тримає `auth.json` у стилі Codex, `google vertex` використовує те, у чому вже виконано вхід через `gcloud auth application-default login` (а `GOOGLE_CLOUD_PROJECT` і `GOOGLE_CLOUD_LOCATION` називають проєкт і регіон), а провайдери з кодом пристрою кладуть отриманий токен у той самий файл облікових даних.
+Ключі зберігаються окремо для кожного провайдера в `~/.config/exp-1/credentials.json`, з правами `0600`. `openai (auth)` натомість тримає `auth.json` у стилі Codex, `google vertex` використовує те, у чому вже виконано вхід через `gcloud auth application-default login` (а `GOOGLE_CLOUD_PROJECT` і `GOOGLE_CLOUD_LOCATION` називають проєкт і регіон), а провайдери з кодом пристрою кладуть отриманий токен у той самий файл облікових даних.
 
 | Провайдер | Базовий URL | Протокол |
 | --- | --- | --- |

@@ -330,9 +330,9 @@ WHISTLE_SOURCE=…                  # default: the system's own input
 
 **1 つのキーが複数のプロバイダーを覆えます。** `opencode-go` と `opencode-zen` は 2 つのベース URL の背後の 1 アカウントなので、どちらかにサインインすると両方のキーが保存されます（`providers::key_group` がグループを名付けます）。opencode のゲートウェイはセッションでもルーティングします。すべてのリクエストは `x-opencode-session`、`x-opencode-project`、`x-opencode-client` を運び、これらがないとゲートウェイはあっさり拒否します（"Request is missing x-opencode-session"）。
 
-ここに実装されたすべてを 4 つのワイヤプロトコルが覆います。十数のベンダーが共有する **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**、そして Vertex AI ネイティブの **Gemini `generateContent`** です。すべて SSE でストリーミングし、すべて Codex クライアントが生成するのと同じイベントストリームへデコードされるため、エージェントループはどこと話しているかを知りません。
+ここに実装されたすべてを 5 つのワイヤプロトコルが覆います。十数のベンダーが共有する **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**、Vertex AI ネイティブの **Gemini `generateContent`**、そして `openai (auth)` が対話する **Codex バックエンド**です。すべて SSE でストリーミングし、すべて Codex クライアントが生成するのと同じイベントストリームへデコードされるため、エージェントループはどこと話しているかを知りません。
 
-キーはプロバイダーごとに `~/.config/exp-1/sessions/credentials.json` に、モード `0600` で保存されます。`openai (auth)` は代わりに Codex 形式の `auth.json` を保持し、`google vertex` は `gcloud auth application-default login` がすでにサインインしたものを使い（`GOOGLE_CLOUD_PROJECT` と `GOOGLE_CLOUD_LOCATION` がプロジェクトとリージョンを名指しします）、デバイスコードのプロバイダーは受け取ったトークンを同じ認証情報ファイルに置きます。
+キーはプロバイダーごとに `~/.config/exp-1/credentials.json` に、モード `0600` で保存されます。`openai (auth)` は代わりに Codex 形式の `auth.json` を保持し、`google vertex` は `gcloud auth application-default login` がすでにサインインしたものを使い（`GOOGLE_CLOUD_PROJECT` と `GOOGLE_CLOUD_LOCATION` がプロジェクトとリージョンを名指しします）、デバイスコードのプロバイダーは受け取ったトークンを同じ認証情報ファイルに置きます。
 
 | プロバイダー | ベース URL | プロトコル |
 | --- | --- | --- |

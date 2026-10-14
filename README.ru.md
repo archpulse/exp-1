@@ -330,9 +330,9 @@ WHISTLE_SOURCE=…                  # default: the system's own input
 
 **Один ключ может покрывать несколько провайдеров.** `opencode-go` и `opencode-zen` — один аккаунт за двумя базовыми URL, поэтому вход в любой из них сохраняет ключ для обоих (`providers::key_group` называет группы). Шлюзы opencode к тому же маршрутизируют по сессии: каждый запрос несёт `x-opencode-session`, `x-opencode-project` и `x-opencode-client`, без которых шлюз отказывает наотрез («Request is missing x-opencode-session»).
 
-Четыре сетевых протокола покрывают всё реализованное здесь: **chat-completions OpenAI**, используемый десятком поставщиков, **OpenAI Responses**, **Anthropic messages** и нативный **Gemini `generateContent`** от Vertex AI. Все передают SSE и декодируются в тот же поток событий, который создаёт клиент Codex, так что цикл агента не знает, с кем говорит.
+Пять сетевых протоколов покрывают всё реализованное здесь: **chat-completions OpenAI**, используемый десятком поставщиков, **OpenAI Responses**, **Anthropic messages**, нативный **Gemini `generateContent`** от Vertex AI и **бэкенд Codex**, с которым говорит `openai (auth)`. Все передают SSE и декодируются в тот же поток событий, который создаёт клиент Codex, так что цикл агента не знает, с кем говорит.
 
-Ключи хранятся по провайдерам в `~/.config/exp-1/sessions/credentials.json` с правами `0600`. `openai (auth)` держит вместо этого `auth.json` в стиле Codex, `google vertex` использует то, что уже подписал `gcloud auth application-default login` (а `GOOGLE_CLOUD_PROJECT` и `GOOGLE_CLOUD_LOCATION` называют проект и регион), а провайдеры с входом по коду устройства кладут полученный токен в тот же файл учётных данных.
+Ключи хранятся по провайдерам в `~/.config/exp-1/credentials.json` с правами `0600`. `openai (auth)` держит вместо этого `auth.json` в стиле Codex, `google vertex` использует то, что уже подписал `gcloud auth application-default login` (а `GOOGLE_CLOUD_PROJECT` и `GOOGLE_CLOUD_LOCATION` называют проект и регион), а провайдеры с входом по коду устройства кладут полученный токен в тот же файл учётных данных.
 
 | Провайдер | Базовый URL | Протокол |
 | --- | --- | --- |

@@ -528,13 +528,14 @@ hinter zwei Basis-URLs, die Anmeldung bei einem von beiden speichert den Schlüs
 weiter: Jede Anfrage trägt `x-opencode-session`, `x-opencode-project` und `x-opencode-client`, ohne
 die das Gateway sie rundheraus ablehnt („Request is missing x-opencode-session").
 
-Vier Übertragungsprotokolle decken alles ab, was hier implementiert ist: die
+Fünf Übertragungsprotokolle decken alles ab, was hier implementiert ist: die
 **OpenAI-Chat-Completions**-API, die sich ein Dutzend Anbieter teilen, **OpenAI Responses**,
-**Anthropic Messages** und Vertex AIs natives **Gemini `generateContent`**. Alle streamen SSE und
+**Anthropic Messages**, Vertex AIs natives **Gemini `generateContent`** und das **Codex-Backend**,
+mit dem `openai (auth)` spricht. Alle streamen SSE und
 alle werden in denselben Ereignisstrom dekodiert, den der Codex-Client erzeugt, die
 Agentenschleife weiß also nicht, mit welchem sie spricht.
 
-Schlüssel werden pro Anbieter in `~/.config/exp-1/sessions/credentials.json` gespeichert, Modus
+Schlüssel werden pro Anbieter in `~/.config/exp-1/credentials.json` gespeichert, Modus
 `0600`. `openai (auth)` hält stattdessen eine `auth.json` im Codex-Stil, `google vertex` nutzt, was
 `gcloud auth application-default login` bereits angemeldet hat (wobei `GOOGLE_CLOUD_PROJECT` und
 `GOOGLE_CLOUD_LOCATION` Projekt und Region benennen), und die Gerätecode-Anbieter legen den

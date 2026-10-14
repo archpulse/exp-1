@@ -525,13 +525,14 @@ detrás de dos URL base, así que iniciar sesión en cualquiera de ellos guarda 
 petición lleva `x-opencode-session`, `x-opencode-project` y `x-opencode-client`, sin los cuales la
 pasarela la rechaza de plano («Request is missing x-opencode-session»).
 
-Cuatro protocolos de cable cubren todo lo implementado aquí: la API **OpenAI chat-completions**,
-compartida por una docena de proveedores, **OpenAI Responses**, **Anthropic messages** y el
-**`generateContent` de Gemini** nativo de Vertex AI. Todos transmiten SSE, y todos se decodifican en
+Cinco protocolos de cable cubren todo lo implementado aquí: la API **OpenAI chat-completions**,
+compartida por una docena de proveedores, **OpenAI Responses**, **Anthropic messages**, el
+**`generateContent` de Gemini** nativo de Vertex AI y el **backend de Codex**, con el que habla
+`openai (auth)`. Todos transmiten SSE, y todos se decodifican en
 el mismo flujo de eventos que produce el cliente de Codex, así que el bucle del agente no sabe con
 cuál está hablando.
 
-Las claves se guardan por proveedor en `~/.config/exp-1/sessions/credentials.json`, con modo `0600`.
+Las claves se guardan por proveedor en `~/.config/exp-1/credentials.json`, con modo `0600`.
 `openai (auth)` mantiene en su lugar un `auth.json` al estilo de Codex, `google vertex` usa lo que ya
 haya iniciado sesión `gcloud auth application-default login` (con `GOOGLE_CLOUD_PROJECT` y
 `GOOGLE_CLOUD_LOCATION` nombrando el proyecto y la región), y los proveedores por código de
