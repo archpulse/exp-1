@@ -1,3 +1,5 @@
+**English** · [Русский](README.ru.md) · [Українська](README.uk.md) · [Čeština](README.cs.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [中文](README.zh.md) · [日本語](README.ja.md)
+
 # exp-1 agent
 
 A minimal coding agent in Rust with a terminal UI. It authenticates **exactly the way the
