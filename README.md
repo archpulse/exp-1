@@ -440,10 +440,11 @@ streaming decoder, and prints one JSON line per update (`text` is what is commit
 is still in flight). A newline on its stdin ends the stream and flushes the tail. The command, the
 language, bias words and the audio source come from the environment:
 
-It is the recorder that is Linux-shaped (`pw-record`, pipewire): the app itself only spawns
-`EXP1_DICTATE --mic` and reads its lines, so on macOS or Windows the microphone works as soon as
-that variable points at a recognizer which streams the same way. Without one, pressing the mic
-button says so in the footer and nothing else happens.
+The recorder is the platform's own: `pw-record` (pipewire) on Linux, `ffmpeg` with avfoundation on
+macOS, `ffmpeg` with dshow on Windows (`WHISTLE_SOURCE` picks the input device, `WHISTLE_RECORDER`
+replaces the command outright). The app itself only spawns `EXP1_DICTATE --mic` and reads its JSON
+lines, so any recognizer that streams the same way works; without one, pressing the mic button says
+so in the footer and nothing else happens.
 
 ```sh
 EXP1_DICTATE=/path/to/whistle     # default: whistle on PATH

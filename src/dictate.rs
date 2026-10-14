@@ -58,8 +58,8 @@ impl Dictation {
             .spawn()
             .with_context(|| {
                 format!(
-                    "could not start `{program} --mic` — install whistle, or point \
-                     EXP1_DICTATE at it"
+                    "could not start `{program} --mic` — point EXP1_DICTATE at a \
+                     recognizer that streams JSON lines"
                 )
             })?;
         let stdout = child.stdout.take().context("the recognizer has no output")?;
