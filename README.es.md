@@ -895,3 +895,13 @@ Los detalles del protocolo se comprobaron contra el código de `openai/codex` y 
 peticiones reales: el endpoint y las cabeceras, la rotación del token de refresco, el streaming de
 texto, un ida y vuelta de `function_call` y un bucle de herramientas de varias iteraciones que
 escribió un archivo.
+
+## Créditos
+
+- **El dictado** funciona con el modelo de voz **whistle** y el motor **Needle** de Cactus
+  (`cactus-needle`, Apache-2.0): la página del producto es [cactuscompute.com/whistle](https://cactuscompute.com/whistle)
+  y los pesos y motores por plataforma están en [Hugging Face](https://huggingface.co/Cactus-Compute/whistle).
+  El motor los descarga en `~/.cache/cactus-needle`; nada de eso se incluye en este repositorio.
+- **El titulador local opcional** se apoya en [Candle](https://github.com/huggingface/candle) de Hugging Face,
+  bajo Apache-2.0 o MIT.
+- Todo lo demás son los crates de `Cargo.toml`, cada uno bajo su propia licencia.

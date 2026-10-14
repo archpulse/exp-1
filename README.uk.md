@@ -587,3 +587,13 @@ Conversation compacted; continuing from the summary
 ## Перевірено на
 
 Деталі протоколу звірено з джерельним кодом `openai/codex` і підтверджено живими запитами: ендпойнт і заголовки, ротація refresh-токена, потокове передавання тексту, повний цикл `function_call` і багатоітераційний цикл інструментів, який записав файл.
+
+## Подяки
+
+- **Диктування** працює на мовній моделі **whistle** та рушії **Needle** від Cactus
+  (`cactus-needle`, Apache-2.0): сторінка продукту — [cactuscompute.com/whistle](https://cactuscompute.com/whistle),
+  ваги та рушії для платформ — на [Hugging Face](https://huggingface.co/Cactus-Compute/whistle).
+  Рушій сам завантажує їх у `~/.cache/cactus-needle`; нічого з цього в репозиторій не вбудовано.
+- **Необов'язковий локальний титлер** збудовано на [Candle](https://github.com/huggingface/candle) від Hugging Face,
+  під Apache-2.0 або MIT.
+- Усе інше — крейти з `Cargo.toml`, кожен під власною ліцензією.

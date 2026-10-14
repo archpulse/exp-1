@@ -899,3 +899,13 @@ Dies ist ein MVP. Bekannte Lücken:
 Protokolldetails wurden gegen die Quelle von `openai/codex` geprüft und mit Live-Anfragen
 bestätigt: Endpunkt und Header, die Refresh-Rotation, Text-Streaming, ein `function_call`-Rundlauf
 und eine Werkzeugschleife mit mehreren Iterationen, die eine Datei geschrieben hat.
+
+## Danksagung
+
+- **Diktat** läuft auf dem Sprachmodell **whistle** und der Engine **Needle** von Cactus
+  (`cactus-needle`, Apache-2.0): die Produktseite ist [cactuscompute.com/whistle](https://cactuscompute.com/whistle),
+  die Gewichte und Plattform-Engines liegen auf [Hugging Face](https://huggingface.co/Cactus-Compute/whistle).
+  Die Engine lädt sie nach `~/.cache/cactus-needle`; nichts davon ist in diesem Repository enthalten.
+- **Der optionale lokale Titler** baut auf [Candle](https://github.com/huggingface/candle) von Hugging Face,
+  unter Apache-2.0 oder MIT.
+- Alles Übrige sind die Crates aus `Cargo.toml`, jede unter ihrer eigenen Lizenz.

@@ -849,3 +849,13 @@ This is an MVP. Known gaps:
 Protocol details were checked against the `openai/codex` source and confirmed with live
 requests: endpoint and headers, the refresh rotation, text streaming, a `function_call` round
 trip, and a multi-iteration tool loop that wrote a file.
+
+## Credits
+
+- **Dictation** runs on Cactus's **whistle** speech model and their **Needle** engine
+  (`cactus-needle`, Apache-2.0): the product page is [cactuscompute.com/whistle](https://cactuscompute.com/whistle)
+  and the weights and platform engines are on [Hugging Face](https://huggingface.co/Cactus-Compute/whistle).
+  The engine downloads them into `~/.cache/cactus-needle`; nothing of theirs is vendored into this repository.
+- **The optional local titler** is built on [Candle](https://github.com/huggingface/candle) by Hugging Face,
+  under Apache-2.0 or MIT.
+- Everything else is the crates listed in `Cargo.toml`, each under its own licence.

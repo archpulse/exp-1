@@ -587,3 +587,13 @@ Toto je MVP. Známé mezery:
 ## Ověřeno proti
 
 Podrobnosti protokolu byly zkontrolovány proti zdrojům `openai/codex` a potvrzeny živými požadavky: koncový bod a hlavičky, rotace obnovení, streamování textu, cesta `function_call` tam a zpět a vícenásobná smyčka nástrojů, která zapsala soubor.
+
+## Poděkování
+
+- **Diktování** běží na řečovém modelu **whistle** a enginu **Needle** od Cactus
+  (`cactus-needle`, Apache-2.0): stránka produktu je [cactuscompute.com/whistle](https://cactuscompute.com/whistle),
+  váhy a enginy pro jednotlivé platformy jsou na [Hugging Face](https://huggingface.co/Cactus-Compute/whistle).
+  Engine si je stahuje do `~/.cache/cactus-needle`; nic z toho není součástí tohoto repozitáře.
+- **Volitelný lokální titler** staví na [Candle](https://github.com/huggingface/candle) od Hugging Face,
+  pod Apache-2.0 nebo MIT.
+- Vše ostatní jsou crates z `Cargo.toml`, každý pod vlastní licencí.

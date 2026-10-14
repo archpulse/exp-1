@@ -587,3 +587,13 @@ Conversation compacted; continuing from the summary
 ## 验证依据
 
 协议细节已对照 `openai/codex` 源码检查，并用真实请求确认：端点和请求头、refresh token 轮换、文本流式传输、一次 `function_call` 往返，以及一个写出文件的多次迭代工具循环。
+
+## 致谢
+
+- **听写**基于 Cactus 的 **whistle** 语音模型与 **Needle** 引擎（`cactus-needle`，Apache-2.0）：产品页面是
+  [cactuscompute.com/whistle](https://cactuscompute.com/whistle)，权重与各平台引擎在
+  [Hugging Face](https://huggingface.co/Cactus-Compute/whistle)。引擎会把它们下载到
+  `~/.cache/cactus-needle`；本仓库不包含其中任何内容。
+- **可选的本地标题生成器**基于 Hugging Face 的 [Candle](https://github.com/huggingface/candle)，
+  采用 Apache-2.0 或 MIT。
+- 其余都是 `Cargo.toml` 中的 crate，各自遵循自己的许可证。

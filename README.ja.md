@@ -587,3 +587,13 @@ Conversation compacted; continuing from the summary
 ## 検証済みの対象
 
 プロトコルの詳細は `openai/codex` のソースに対して確認し、実際のリクエストで裏付けました。エンドポイントとヘッダー、リフレッシュのローテーション、テキストのストリーミング、`function_call` の往復、そしてファイルを書く複数回反復のツールループです。
+
+## クレジット
+
+- **音声入力**は Cactus の音声モデル **whistle** とエンジン **Needle**（`cactus-needle`、Apache-2.0）で動いています。
+  製品ページは [cactuscompute.com/whistle](https://cactuscompute.com/whistle)、重みと各プラットフォーム向けエンジンは
+  [Hugging Face](https://huggingface.co/Cactus-Compute/whistle) にあります。エンジンはそれらを
+  `~/.cache/cactus-needle` にダウンロードします。本リポジトリには含まれていません。
+- **任意のローカルタイトラー**は Hugging Face の [Candle](https://github.com/huggingface/candle) を使っています
+  （Apache-2.0 または MIT）。
+- それ以外は `Cargo.toml` にある crate で、それぞれ自らのライセンスに従います。
