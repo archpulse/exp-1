@@ -497,12 +497,12 @@ groups). The opencode gateways also route by session: every request carries
 `x-opencode-session`, `x-opencode-project` and `x-opencode-client`, without which the gateway
 refuses it outright ("Request is missing x-opencode-session").
 
-Four wire protocols cover everything implemented here: the **OpenAI chat-completions** API, shared
-by a dozen vendors, **OpenAI Responses**, **Anthropic messages**, and Vertex AI's native
-**Gemini `generateContent`**. All stream SSE, and all are decoded into the same event stream the
+Five wire protocols cover everything implemented here: the **OpenAI chat-completions** API, shared
+by a dozen vendors, **OpenAI Responses**, **Anthropic messages**, Vertex AI's native
+**Gemini `generateContent`**, and the **Codex backend** that `openai (auth)` talks to. All stream SSE, and all are decoded into the same event stream the
 Codex client produces, so the agent loop does not know which one it is talking to.
 
-Keys are stored per provider in `~/.config/exp-1/sessions/credentials.json`, mode `0600`.
+Keys are stored per provider in `~/.config/exp-1/credentials.json`, mode `0600`.
 `openai (auth)` keeps a Codex-style `auth.json` instead, `google vertex` uses whatever
 `gcloud auth application-default login` already signed in (with `GOOGLE_CLOUD_PROJECT` and
 `GOOGLE_CLOUD_LOCATION` naming the project and region), and the device-code providers put the
