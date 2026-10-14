@@ -161,6 +161,7 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
         .route("/sessions/{id}/rewind", post(rewind))
         .route("/sessions/{id}/fork", post(fork_session))
         .route("/sessions/{id}/mode", post(set_mode))
+        .route("/sessions/{id}/permissions", post(set_permissions))
         .route("/sessions/{id}/clear", post(clear_session))
         .route("/sessions/{id}/diff", post(show_diff))
         .route("/mcp", get(list_mcp))

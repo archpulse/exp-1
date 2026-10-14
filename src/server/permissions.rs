@@ -63,14 +63,14 @@ pub(crate) async fn permission_check(
     arguments: &str,
 ) -> Option<String> {
     let resource = permission_resource(name, arguments, &session.cwd());
-    let decision = tools::load_rules()
-        .decide(name, &resource)
-        .map(|rule| rule.effect.clone());
-    match decision.as_deref() {
-        Some("deny") => Some(format!(
+    let rules = tools::load_rules();
+    let decision = rules.decide(name, &resource).map(|rule| rule.effect.as_str());
+    match session.permissions().verdict(decision, name) {
+        tools::Verdict::Deny => Some(format!(
             "{name}: not permitted — permissions.json denies `{resource}`"
         )),
-        Some("ask") => {
+        tools::Verdict::Run => None,
+        tools::Verdict::Ask => {
             let question = tools::AskItem {
                 label: "Permission".to_string(),
                 text: format!("Allow `{name}` on `{resource}`?"),
@@ -92,6 +92,5 @@ pub(crate) async fn permission_check(
                 Some(format!("{name}: refused by the user (`{resource}`)"))
             }
         }
-        _ => None,
     }
 }

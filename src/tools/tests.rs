@@ -403,4 +403,61 @@ mod tests {
         assert_eq!(encode_query_value("abc-123_X.y~z"), "abc-123_X.y~z");
         assert_eq!(encode_query_value("a b&c=d"), "a%20b%26c%3Dd");
     }
+
+    /// Each mode asks for exactly its own tools: `always ask` for everything
+    /// that changes files and the shell, `never ask` for nothing, and
+    /// `ask only commands` for `shell` alone. Read-only tools never ask.
+    #[test]
+    fn every_permission_mode_asks_for_its_own_tools() {
+        for tool in ["write", "edit", "delete", "shell"] {
+            assert!(PermissionMode::AlwaysAsk.asks(tool), "always ask / {tool}");
+            assert!(!PermissionMode::NeverAsk.asks(tool), "never ask / {tool}");
+        }
+        for tool in ["read", "grep", "count", "ast", "fetch", "websearch"] {
+            assert!(!PermissionMode::AlwaysAsk.asks(tool), "always ask / {tool}");
+            assert!(!PermissionMode::NeverAsk.asks(tool), "never ask / {tool}");
+            assert!(!PermissionMode::AskOnlyCommands.asks(tool), "ask only commands / {tool}");
+        }
+        assert!(PermissionMode::AskOnlyCommands.asks("shell"));
+        for tool in ["write", "edit", "delete"] {
+            assert!(!PermissionMode::AskOnlyCommands.asks(tool), "ask only commands / {tool}");
+        }
+    }
+
+    /// The labels are the ones the footer shows and the READMEs spell out, and
+    /// the cycle walks all three and comes back.
+    #[test]
+    fn the_permission_mode_labels_and_cycle_are_the_documented_ones() {
+        assert_eq!(PermissionMode::AlwaysAsk.label(), "always ask");
+        assert_eq!(PermissionMode::NeverAsk.label(), "never ask");
+        assert_eq!(PermissionMode::AskOnlyCommands.label(), "ask only commands");
+        assert_eq!(PermissionMode::AlwaysAsk.cycle(), PermissionMode::NeverAsk);
+        assert_eq!(PermissionMode::NeverAsk.cycle(), PermissionMode::AskOnlyCommands);
+        assert_eq!(PermissionMode::AskOnlyCommands.cycle(), PermissionMode::AlwaysAsk);
+        // A fresh install starts on the always-ask default.
+        assert_eq!(PermissionMode::default(), PermissionMode::AlwaysAsk);
+    }
+
+    /// A deny rule keeps refusing in every mode, `never ask` included; the
+    /// mode only decides calls the rules leave open.
+    #[test]
+    fn a_deny_rule_denies_in_never_ask() {
+        let rules: Rules = serde_json::from_str(
+            r#"{"rules": [{"action": "write", "resource": "*", "effect": "deny"}]}"#,
+        )
+        .expect("rules");
+        let decision = rules.decide("write", "/etc/hosts").map(|rule| rule.effect.as_str());
+        assert_eq!(decision, Some("deny"));
+        assert_eq!(PermissionMode::NeverAsk.verdict(decision, "write"), Verdict::Deny);
+        assert_eq!(PermissionMode::AlwaysAsk.verdict(decision, "write"), Verdict::Deny);
+        assert_eq!(PermissionMode::AskOnlyCommands.verdict(decision, "write"), Verdict::Deny);
+
+        // With nothing denied, the mode decides on its own.
+        assert_eq!(PermissionMode::AlwaysAsk.verdict(None, "write"), Verdict::Ask);
+        assert_eq!(PermissionMode::NeverAsk.verdict(None, "write"), Verdict::Run);
+        assert_eq!(PermissionMode::AskOnlyCommands.verdict(None, "shell"), Verdict::Ask);
+        assert_eq!(PermissionMode::AskOnlyCommands.verdict(None, "write"), Verdict::Run);
+        // An explicit `ask` rule keeps its own question.
+        assert_eq!(PermissionMode::NeverAsk.verdict(Some("ask"), "fetch"), Verdict::Ask);
+    }
 }

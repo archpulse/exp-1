@@ -753,8 +753,14 @@ impl App {
             format!("  ·  {}", thread.kind.label()),
             Style::default().fg(theme.dim),
         ));
-        // Only worth showing when it is not the default: plan mode changes what
-        // the agent is allowed to do.
+        // The permission mode is always drawn, in the same slot and colour as
+        // plan mode: a press of ctrl+shift+a is never invisible, and the
+        // default is distinguishable from a key that does nothing.
+        model_spans.push(Span::styled(
+            format!("  ·  {}", self.permissions.label()),
+            Style::default().fg(theme.warn),
+        ));
+        // Plan mode, being the other behavioural switch, sits beside it.
         if self.mode == "plan" {
             model_spans.push(Span::styled(
                 "  ·  plan mode",

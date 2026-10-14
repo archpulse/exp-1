@@ -1,6 +1,6 @@
 //! naming a session.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use crate::api::ApiEvent;
 use crate::catalog;
 use crate::proto::WireEvent;
@@ -44,12 +44,13 @@ pub(crate) fn regenerate_title(shared: Arc<Shared>, session: Arc<Session>) {
 /// The bundled T5, loaded at most once. Compiled in only with the `titler`
 /// feature; without it, titles come from the model or not at all.
 #[cfg(feature = "titler")]
-static TITLER: std::sync::OnceLock<Mutex<Option<titler::Titler>>> = std::sync::OnceLock::new();
+static TITLER: std::sync::OnceLock<std::sync::Mutex<Option<titler::Titler>>> =
+    std::sync::OnceLock::new();
 
 #[cfg(feature = "titler")]
 fn local_title(prompt: &str) -> Option<String> {
     let cell = TITLER
-        .get_or_init(|| Mutex::new(titler::Titler::from_hub("Cyronius/titler", None).ok()));
+        .get_or_init(|| std::sync::Mutex::new(titler::Titler::from_hub("Cyronius/titler", None).ok()));
     let mut guard = cell.lock().ok()?;
     let model = guard.as_mut()?;
     model

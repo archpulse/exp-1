@@ -5,6 +5,13 @@ use tokio::sync::mpsc;
 
 use super::*;
 
+/// Counts permission-mode presses from the keyboard. Every snapshot request
+/// records the epoch it started at; when the answer lands late — after a press
+/// — the epoch no longer matches and its older mode is ignored, so a stale
+/// snapshot can never put the previous mode back on screen.
+pub(crate) static PERMISSIONS_EPOCH: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
 #[derive(Clone)]
 pub(crate) enum AgentMsg {
     Phase(usize, Phase),
@@ -32,7 +39,9 @@ pub(crate) enum AgentMsg {
     /// The model catalogue arrived at startup, for the context meter.
     Catalog(Vec<proto::WireModel>),
     /// A saved conversation arrived, to fill a thread that just attached.
-    Loaded(usize, proto::WireSnapshot),
+    /// The third field is the permission press epoch the snapshot was
+    /// requested at, so a snapshot older than a press cannot undo it.
+    Loaded(usize, proto::WireSnapshot, u64),
     /// A user message was clicked: the conversation goes back to it.
     Rewound(String),
     /// A piece of dictated text arrived.
@@ -200,7 +209,7 @@ pub(crate) fn apply(app: &mut App, message: AgentMsg) {
         AgentMsg::Done(index, label) => (index, Box::new(move |app: &mut App| {
             app.threads[index].push(Role::System, label);
         })),
-        AgentMsg::Loaded(index, snapshot) => (index, Box::new(move |app: &mut App| {
+        AgentMsg::Loaded(index, snapshot, epoch) => (index, Box::new(move |app: &mut App| {
             let thread = &mut app.threads[index];
             thread.clear_transcript();
             thread.error = snapshot.error.clone();
@@ -231,6 +240,11 @@ pub(crate) fn apply(app: &mut App, message: AgentMsg) {
             }
             if !snapshot.mode.is_empty() {
                 app.mode = snapshot.mode.clone();
+            }
+            // Only if no ctrl+shift+a press happened since the snapshot was
+            // asked for: the press is the newer word on the mode.
+            if epoch == PERMISSIONS_EPOCH.load(std::sync::atomic::Ordering::SeqCst) {
+                app.permissions = snapshot.permissions;
             }
             if !snapshot.title.is_empty() {
                 app.session_title = snapshot.title.clone();

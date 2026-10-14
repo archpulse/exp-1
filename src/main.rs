@@ -233,6 +233,9 @@ async fn main() -> Result<()> {
     );
     app.catalog = catalog;
     app.theme = theme_index;
+    // The permission mode survives a restart; the server seeds new sessions
+    // from the same setting, so both sides start out agreeing.
+    app.permissions = settings.permissions;
     // A machine that has never saved a conversation gets the full command list
     // once; afterwards the empty screen stays out of the way.
     app.first_run = store::list_sessions().is_empty();

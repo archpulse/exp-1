@@ -2,7 +2,7 @@
 
 # exp-1 agent
 
-Minimální kódovací agent v Rustu s terminálovým UI. Přihlašuje se **přesně tak, jako to dělá Codex CLI** — ChatGPT OAuth proti `auth.openai.com`, přičemž požadavky na model jdou na `https://chatgpt.com/backend-api/codex/responses`. To je jediný poskytovatel autentizace, který podporuje.
+Minimální kódovací agent v Rustu s terminálovým UI, který mluví s **27 poskytovateli** a každému předává seznam modelů, které skutečně obsluhuje: katalog přichází živě z models.dev, zatímco tabulka v binárním souboru slouží jako offline záloha. Pět přenosových protokolů pokrývá je všechny — API **OpenAI chat-completions**, které sdílí tucet dodavatelů, **OpenAI Responses**, **Anthropic messages**, nativní **Gemini `generateContent`** od Vertex AI a backend Codex — a poskytovatel se přihlašuje API klíčem, stránkou s kódem zařízení, vlastním přihlášením dodavatele nebo přihlašovacími údaji, které stroj už má. Cesta Codexu přišla první a pořád je jednou z nich: ChatGPT OAuth proti `auth.openai.com`, s požadavky na `https://chatgpt.com/backend-api/codex/responses`.
 
 ## Co umí
 
@@ -114,6 +114,7 @@ exp1 --help
 | `↑` `↓` | Posouvá výběr v dokončení, nebo si vybavuje předchozí prompty |
 | `Tab` | Přijme zvýrazněné dokončení |
 | `Ctrl + /` | Přepíná mezi hlavním a vedlejším vláknem |
+| `Ctrl + Shift + A` | Přepne režim oprávnění: always ask → never ask → ask only commands |
 | `Esc` | Sám o sobě nic nedělá |
 | `Esc` `Esc` | Zruší běžící tah, nebo zavře seznam dokončení či výběr |
 | `Ctrl-C` | Ukončí aplikaci |
@@ -192,9 +193,14 @@ Vědomé rozdíly proti Codexu: Codex má `/permissions` a `/review`, které pot
 
 ## Autentizace
 
-Při prvním spuštění agent zkopíruje `$CODEX_HOME/auth.json` (výchozí `~/.codex/auth.json`) do `~/.exp1-agent/auth.json` a pracuje s touto kopií. **Vaše skutečné přihlašovací údaje k Codexu se nikdy nepřepisují.**
+`/login` vypíše poskytovatele a každý se přihlašuje tak, jak jeho dodavatel očekává:
 
-Když přístupovému tokenu zbývá do vypršení 5 minut, agent ho obnoví:
+- **API klíč** pro většinu z nich, odesílaný jako `Authorization: Bearer` (nebo `x-api-key` pro API Anthropic) a uložený po poskytovatelích v `~/.config/exp-1/credentials.json` s právy `0600`. Jeden klíč může pokrýt několik poskytovatelů — `opencode-go` a `opencode-zen` jsou jeden účet za dvěma základními URL a `providers::key_group` pojmenovává skupiny.
+- **Přihlášení kódem zařízení** pro `openai (auth)`, `github copilot` a `meta (auth)`: v prohlížeči se otevře přihlašovací stránka dodavatele a URL a kód se vypíšou jako záložní varianta.
+- **Token z vlastního přihlášení dodavatele** pro `anthropic (auth)`, odesílaný s identitními hlavičkami oficiálního klienta.
+- **Přihlašovací údaje, které stroj už má**, pro `google vertex`: to, co nastavil `gcloud auth application-default login`, přičemž `GOOGLE_CLOUD_PROJECT` a `GOOGLE_CLOUD_LOCATION` pojmenovávají projekt a region. Nic není třeba vkládat.
+
+Cesta Codexu si navíc drží vlastní soubor: při prvním spuštění agent zkopíruje `$CODEX_HOME/auth.json` (výchozí `~/.codex/auth.json`) do `~/.exp1-agent/auth.json` a pracuje s touto kopií. **Vaše skutečné přihlašovací údaje k Codexu se nikdy nepřepisují.** Když přístupovému tokenu zbývá do vypršení 5 minut, agent ho obnoví:
 
 ```
 POST https://auth.openai.com/oauth/token
@@ -384,6 +390,8 @@ Každá základní URL výše byla testována schválně neplatným klíčem: od
 ```
 
 `action` je název nástroje nebo `*`, `resource` je to, čeho se volání dotýká — cesta u souborových nástrojů, příkazový řádek u `shell`, URL nebo dotaz u síťových nástrojů — a `*`/`?` fungují jako zástupné znaky. `effect` je `allow`, `ask` nebo `deny`. `ask` vyvolá panel s otázkou a drží volání, dokud se neodpoví (dvě minuty, pak se volání odmítne). Pravidla platí i pro subagenty.
+
+`ctrl + shift + a` přepíná režim oprávnění: **always ask** (výchozí pro čistou instalaci) nechá `write`, `edit`, `delete` a `shell` položit otázku, **never ask** je spustí bez otázky a **ask only commands** se ptá jen u `shell`. Nástroje jen pro čtení se neptají nikdy a pravidlo s `effect: deny` odmítne v každém režimu — režim nikdy nezmírní zákaz.
 
 ## Pokyny projektu
 

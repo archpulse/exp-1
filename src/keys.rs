@@ -186,6 +186,36 @@ pub(crate) fn handle_key(app: &mut App, key: KeyEvent, ctx: &Ctx) {
         return;
     }
 
+    // ctrl+shift+a cycles the permission mode: which tools ask before they
+    // run. A terminal speaking the kitty keyboard protocol (kitty itself, foot,
+    // wezterm, ghostty) sends exactly one CSI-u event for the chord, which
+    // crossterm hands over as `a` carrying CONTROL+SHIFT; that is the single
+    // spelling matched here. A terminal without the protocol never sends the
+    // SHIFT, so plain ctrl+a arrives as `a` with CONTROL alone and keeps its
+    // own meaning (it clears a model scope in the picker). Handled this early
+    // so the chord works from anywhere, pickers and questions included.
+    let permissions_key = key.code == KeyCode::Char('a')
+        && key.modifiers.contains(KeyModifiers::CONTROL | KeyModifiers::SHIFT);
+    if permissions_key {
+        let next = app.permissions.cycle();
+        app.permissions = next;
+        // A snapshot fetched before this press may land after it; the epoch
+        // keeps that older mode from being put back on screen.
+        PERMISSIONS_EPOCH.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let conn = ctx.conn.clone();
+        let tx = ctx.events.clone();
+        let session = ctx.session(0);
+        tokio::spawn(async move {
+            // The server records the mode and writes its own note into the
+            // transcript. The footer already shows the choice, so success is
+            // not reported back through the turn-finished channel.
+            if let Err(err) = conn.permissions(&session, next).await {
+                let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+            }
+        });
+        return;
+    }
+
     if key.modifiers.contains(KeyModifiers::CONTROL) {
         match key.code {
             KeyCode::Char('c') | KeyCode::Char('C') => {
@@ -598,8 +628,9 @@ pub(crate) fn revert_to(app: &mut App, ctx: &Ctx, index: usize, text: String) {
         match conn.rewind(&session, index, &text).await {
             Ok(_) => {
                 // The transcript is the server's now, note and all.
+                let epoch = PERMISSIONS_EPOCH.load(std::sync::atomic::Ordering::SeqCst);
                 if let Ok(snapshot) = conn.snapshot(&session).await {
-                    let _ = tx.send(AgentMsg::Loaded(0, snapshot));
+                    let _ = tx.send(AgentMsg::Loaded(0, snapshot, epoch));
                 }
                 let _ = tx.send(AgentMsg::Rewound(text));
             }

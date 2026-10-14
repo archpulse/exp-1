@@ -63,6 +63,9 @@ pub struct WireSnapshot {
     /// `build` or `plan`; see the mode handler.
     #[serde(default)]
     pub mode: String,
+    /// Which tools ask before running; see `PermissionMode`.
+    #[serde(default)]
+    pub permissions: crate::tools::PermissionMode,
     pub error: Option<String>,
     pub question: Option<WireAnswerRequest>,
 }
@@ -123,6 +126,12 @@ pub struct PromptBody {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModeBody {
     pub mode: String,
+}
+
+/// `ctrl+shift+a`: which tools the session should ask about.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct PermissionsBody {
+    pub permissions: crate::tools::PermissionMode,
 }
 
 /// `/<skill>`: which installed skill to run.

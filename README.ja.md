@@ -2,7 +2,7 @@
 
 # exp-1 エージェント
 
-ターミナル UI を備えた、Rust 製の最小限のコーディングエージェントです。認証は**Codex CLI とまったく同じ方法**で行います — `auth.openai.com` に対する ChatGPT OAuth で、モデルへのリクエストは `https://chatgpt.com/backend-api/codex/responses` に送られます。対応している認証プロバイダーはこれだけです。
+ターミナル UI を備えた、Rust 製の最小限のコーディングエージェントです。**27 のプロバイダー**と対話し、各プロバイダーが実際に提供するモデル一覧を渡します。カタログは models.dev からライブで取得し、バイナリ内のテーブルをオフラインのフォールバックとします。5 つのワイヤプロトコルがそれらすべてを覆います — 十数のベンダーが共有する **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**、Vertex AI ネイティブの **Gemini `generateContent`**、そして Codex バックエンド — プロバイダーのサインインは、API キー、デバイスコードのサインイン、ベンダー自身のログイン、またはマシンがすでに持っている認証情報によって行います。Codex の経路は最初に登場し、今もその 1 つです: `auth.openai.com` に対する ChatGPT OAuth で、リクエストは `https://chatgpt.com/backend-api/codex/responses` に送られます。
 
 ## できること
 
@@ -114,6 +114,7 @@ exp1 --help
 | `↑` `↓` | 補完の選択を移動します。または以前のプロンプトを呼び出します |
 | `Tab` | ハイライト中の補完を確定します |
 | `Ctrl + /` | メインスレッドとサイドスレッドを切り替えます |
+| `Ctrl + Shift + A` | 権限モードを切り替えます: always ask → never ask → ask only commands |
 | `Esc` | 単独では何もしません |
 | `Esc` `Esc` | 実行中のターンを打ち切ります。または補完リストやピッカーを閉じます |
 | `Ctrl-C` | 終了します |
@@ -192,9 +193,14 @@ Codex との違いは意図的です。Codex には `/permissions` と `/review`
 
 ## 認証
 
-初回実行時、エージェントは `$CODEX_HOME/auth.json`（既定は `~/.codex/auth.json`）を `~/.exp1-agent/auth.json` にコピーし、そのコピーで動作します。**実際の Codex の認証情報が書き換えられることはありません。**
+`/login` はプロバイダーを一覧表示し、それぞれはベンダーが期待する方法でサインインします:
 
-アクセストークンの有効期限まで 5 分を切ると、エージェントはそれをリフレッシュします。
+- **API キー**: 大半のプロバイダー向け。`Authorization: Bearer`（Anthropic API では `x-api-key`）として送信され、プロバイダーごとに `~/.config/exp-1/credentials.json` へモード `0600` で保存されます。1 つのキーが複数のプロバイダーを覆えます — `opencode-go` と `opencode-zen` は 2 つのベース URL の背後の 1 アカウントで、`providers::key_group` がグループを名付けます。
+- **デバイスコードのサインイン**: `openai (auth)`、`github copilot`、`meta (auth)` 向け。ブラウザーでベンダーのサインインページが開き、URL とコードがフォールバックとして表示されます。
+- **ベンダー自身のログインによるトークン**: `anthropic (auth)` 用。公式クライアントのアイデンティティヘッダー付きで送信されます。
+- **マシンがすでに持っている認証情報**: `google vertex` 用。`gcloud auth application-default login` が設定したものを使い、`GOOGLE_CLOUD_PROJECT` と `GOOGLE_CLOUD_LOCATION` がプロジェクトとリージョンを名指しします。貼り付けるものはありません。
+
+Codex の経路はさらに自身のファイルを保ちます。初回実行時、エージェントは `$CODEX_HOME/auth.json`（既定は `~/.codex/auth.json`）を `~/.exp1-agent/auth.json` にコピーし、そのコピーで動作します。**実際の Codex の認証情報が書き換えられることはありません。** アクセストークンの有効期限まで 5 分を切ると、エージェントはそれをリフレッシュします:
 
 ```
 POST https://auth.openai.com/oauth/token
@@ -384,6 +390,8 @@ WHISTLE_SOURCE=…                  # default: the system's own input
 ```
 
 `action` はツール名か `*`、`resource` は呼び出しが触れるものです — ファイルツールならパス、`shell` ならコマンドライン、ネット系ツールなら URL かクエリ — そして `*` と `?` がワイルドカードとして働きます。`effect` は `allow`、`ask`、`deny` です。`ask` は質問パネルを出して、答えるまで呼び出しを保留します（2 分で、その後は呼び出しが拒否されます）。ルールはサブエージェントにも適用されます。
+
+`ctrl + shift + a` は権限モードを切り替えます。**always ask**（新規インストールの既定）は `write`、`edit`、`delete`、`shell` に確認を出し、**never ask** は確認なしで実行し、**ask only commands** は `shell` のときだけ確認します。読み取り専用のツールは決して確認せず、`effect: deny` のルールはどのモードでも拒否します — モードが deny を緩めることはありません。
 
 ## プロジェクトの指示
 

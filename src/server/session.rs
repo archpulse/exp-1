@@ -76,6 +76,9 @@ pub(crate) struct SessionState {
     /// `build` runs everything; `plan` refuses the tools that change files, so
     /// the model investigates and proposes instead of editing.
     pub(crate) mode: String,
+    /// Which tools ask before running, switched with ctrl+shift+a; see
+    /// `tools::PermissionMode`.
+    pub(crate) permissions: crate::tools::PermissionMode,
     pub(crate) name: String,
     pub(crate) phase: WirePhase,
     pub(crate) transcript: Vec<WireMsg>,
@@ -139,6 +142,14 @@ impl Session {
             .unwrap_or_else(|_| "build".to_string())
     }
 
+    /// How much this session's tools ask before they run.
+    pub(crate) fn permissions(&self) -> crate::tools::PermissionMode {
+        self.state
+            .lock()
+            .map(|state| state.permissions)
+            .unwrap_or_default()
+    }
+
     /// The directory the tools of this session work in.
     pub(crate) fn cwd(&self) -> PathBuf {
         self.cwd
@@ -176,6 +187,7 @@ impl Session {
             } else {
                 state.mode.clone()
             },
+            permissions: state.permissions,
             error: state.error.clone(),
             question: state.question.clone(),
         }
@@ -305,6 +317,7 @@ pub(crate) fn find(shared: &Shared, id: &str) -> Option<Arc<Session>> {
 /// Rebuilds the session map from what is on disk.
 pub(crate) fn restore_sessions() -> HashMap<String, Arc<Session>> {
     let mut sessions = HashMap::new();
+    let permissions = store::load_settings().permissions;
     for meta in store::list_sessions() {
         let Some(saved) = store::load_session(&meta.id) else {
             continue;
@@ -316,6 +329,7 @@ pub(crate) fn restore_sessions() -> HashMap<String, Arc<Session>> {
             };
             state.title = saved.title.clone();
             state.mode = "build".to_string();
+            state.permissions = permissions;
             state.name = saved.main.name.clone();
             state.transcript = saved
                 .main

@@ -2,10 +2,15 @@
 
 # exp-1 Agent
 
-Ein minimaler Coding-Agent in Rust mit Terminal-UI. Er authentifiziert sich **genau so wie die
-Codex CLI** — ChatGPT-OAuth gegen `auth.openai.com`, wobei die Modellanfragen an
-`https://chatgpt.com/backend-api/codex/responses` gehen. Das ist der einzige Anmelde-Anbieter,
-den er unterstützt.
+Ein minimaler Coding-Agent in Rust mit Terminal-UI, der mit **27 Anbietern** spricht und jedem die
+Modellliste übergibt, die er tatsächlich bedient: Der Katalog kommt live von models.dev, mit einer
+Tabelle in der Binärdatei als Offline-Rückfalllösung. Fünf Übertragungsprotokolle decken sie alle
+ab — die **OpenAI-Chat-Completions**-API, die sich ein Dutzend Anbieter teilen, **OpenAI
+Responses**, **Anthropic Messages**, Vertex AIs natives **Gemini `generateContent`** und das
+Codex-Backend — und ein Anbieter meldet sich mit einem API-Schlüssel, einer Gerätecode-Anmeldung,
+der eigenen Anmeldung des Herstellers oder Zugangsdaten an, die die Maschine bereits hat. Der
+Codex-Weg kam zuerst und ist noch einer davon: ChatGPT-OAuth gegen `auth.openai.com`, mit Anfragen
+an `https://chatgpt.com/backend-api/codex/responses`.
 
 ## Was er tut
 
@@ -147,6 +152,7 @@ exp1 --help
 | `↑` `↓` | Die Auswahl der Vervollständigung bewegen oder frühere Prompts zurückholen |
 | `Tab` | Die hervorgehobene Vervollständigung übernehmen |
 | `Ctrl + /` | Zwischen Haupt-Thread und Neben-Thread wechseln |
+| `Ctrl + Shift + A` | Den Berechtigungsmodus wechseln: always ask → never ask → ask only commands |
 | `Esc` | Für sich allein nichts |
 | `Esc` `Esc` | Die laufende Runde abbrechen oder die Vervollständigungsliste bzw. die Auswahl schließen |
 | `Ctrl-C` | Beenden |
@@ -291,11 +297,26 @@ hat.
 
 ## Authentifizierung
 
-Beim ersten Lauf kopiert der Agent `$CODEX_HOME/auth.json` (Standard `~/.codex/auth.json`) nach
-`~/.exp1-agent/auth.json` und arbeitet von dieser Kopie aus. **Deine echten Codex-Zugangsdaten
-werden nie überschrieben.**
+`/login` listet die Anbieter auf, und jeder meldet sich so an, wie es sein Hersteller erwartet:
 
-Wenn der Access-Token innerhalb von 5 Minuten abläuft, frischt der Agent ihn auf:
+- **Ein API-Schlüssel** für die meisten von ihnen, gesendet als `Authorization: Bearer` (oder
+  `x-api-key` für die Anthropic-API) und pro Anbieter in `~/.config/exp-1/credentials.json`
+  gespeichert, Modus `0600`. Ein Schlüssel kann mehrere Anbieter abdecken — `opencode-go` und
+  `opencode-zen` sind ein Konto hinter zwei Basis-URLs, und `providers::key_group` benennt die
+  Gruppen.
+- **Eine Gerätecode-Anmeldung** für `openai (auth)`, `github copilot` und `meta (auth)`: Die
+  Anmeldeseite des Herstellers öffnet sich im Browser, und URL und Code werden als Rückfalllösung
+  ausgegeben.
+- **Ein Token aus der eigenen Anmeldung des Herstellers** für `anthropic (auth)`, gesendet mit den
+  Identitäts-Headern des herstellereigenen Clients.
+- **Zugangsdaten, die die Maschine bereits hat**, für `google vertex`: was
+  `gcloud auth application-default login` bereits angemeldet hat, wobei `GOOGLE_CLOUD_PROJECT` und
+  `GOOGLE_CLOUD_LOCATION` Projekt und Region benennen. Nichts einzufügen.
+
+Der Codex-Weg hält außerdem eine eigene Datei vor: Beim ersten Lauf kopiert der Agent
+`$CODEX_HOME/auth.json` (Standard `~/.codex/auth.json`) nach `~/.exp1-agent/auth.json` und arbeitet
+von dieser Kopie aus. **Deine echten Codex-Zugangsdaten werden nie überschrieben.** Wenn der
+Access-Token innerhalb von 5 Minuten abläuft, frischt der Agent ihn auf:
 
 ```
 POST https://auth.openai.com/oauth/token
@@ -590,6 +611,12 @@ Dateiwerkzeuge, die Kommandozeile für `shell`, die URL oder Suchanfrage für di
 und `*`/`?` wirken als Platzhalter. `effect` ist `allow`, `ask` oder `deny`. Ein `ask` öffnet das
 Fragen-Panel und hält den Aufruf, bis er beantwortet ist (zwei Minuten, danach wird der Aufruf
 abgelehnt). Regeln gelten auch für Subagenten.
+
+`ctrl + shift + a` wechselt den Berechtigungsmodus: **always ask** (die Voreinstellung einer
+frischen Installation) lässt `write`, `edit`, `delete` und `shell` die Frage stellen, **never ask**
+führt sie ohne Frage aus, und **ask only commands** fragt nur für `shell`. Werkzeuge, die nur lesen,
+fragen nie, und eine Regel mit `effect: deny` lehnt in jedem Modus ab — der Modus lockert ein Verbot
+nie.
 
 ## Projektanweisungen
 

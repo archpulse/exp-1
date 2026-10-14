@@ -2,7 +2,7 @@
 
 # exp-1 代理
 
-一个用 Rust 编写的极简编码代理，带终端 UI。它的认证方式**与 Codex CLI 完全一致**——通过 ChatGPT OAuth 对接 `auth.openai.com`，模型请求发往 `https://chatgpt.com/backend-api/codex/responses`。这是它唯一支持的认证提供方。
+一个用 Rust 编写的极简编码代理，带终端 UI，与 **27 个提供方**对话，并向每个提供方传递它实际提供的模型列表：目录实时来自 models.dev，二进制中的一张表则是离线后备。五种线协议覆盖它们全部——由十几家厂商共享的 **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**、Vertex AI 原生的 **Gemini `generateContent`** 以及 Codex 后端——而提供方通过 API key、设备码登录、厂商自有登录或机器已经持有的凭据来登录。Codex 路径最先出现，至今仍是其中之一：对接 `auth.openai.com` 的 ChatGPT OAuth，请求发往 `https://chatgpt.com/backend-api/codex/responses`。
 
 ## 功能
 
@@ -114,6 +114,7 @@ exp1 --help
 | `↑` `↓` | 移动补全选项，或调取之前的提示词 |
 | `Tab` | 接受高亮的补全项 |
 | `Ctrl + /` | 在主线程和侧线程之间切换 |
+| `Ctrl + Shift + A` | 切换权限模式：always ask → never ask → ask only commands |
 | `Esc` | 单独按下没有作用 |
 | `Esc` `Esc` | 中止正在运行的回合，或关闭补全列表或选择器 |
 | `Ctrl-C` | 退出 |
@@ -192,9 +193,14 @@ exp1 --help
 
 ## 认证
 
-首次运行时，代理会把 `$CODEX_HOME/auth.json`（默认 `~/.codex/auth.json`）复制到 `~/.exp1-agent/auth.json`，并使用这份副本。**你真正的 Codex 凭据绝不会被改写。**
+`/login` 列出提供方，每个提供方按其厂商期望的方式登录：
 
-当访问 token 距过期不足 5 分钟时，代理会刷新它：
+- **一个 API key**，用于大多数提供方：以 `Authorization: Bearer` 发送（Anthropic API 则用 `x-api-key`），按提供方存储在 `~/.config/exp-1/credentials.json` 中，模式 `0600`。一个 key 可以覆盖多个提供方——`opencode-go` 和 `opencode-zen` 是两个 base URL 背后的同一个账户，`providers::key_group` 为这些分组命名。
+- **设备码登录**，用于 `openai (auth)`、`github copilot` 和 `meta (auth)`：浏览器中打开厂商的登录页面，URL 和代码作为后备打印出来。
+- **来自厂商自有登录的 token**，用于 `anthropic (auth)`，随官方客户端的身份头发送。
+- **机器已经持有的凭据**，用于 `google vertex`：`gcloud auth application-default login` 配置好的那些，由 `GOOGLE_CLOUD_PROJECT` 和 `GOOGLE_CLOUD_LOCATION` 指明项目和区域。无需粘贴任何内容。
+
+Codex 路径另外保有一个自己的文件：首次运行时，代理会把 `$CODEX_HOME/auth.json`（默认 `~/.codex/auth.json`）复制到 `~/.exp1-agent/auth.json`，并使用这份副本。**你真正的 Codex 凭据绝不会被改写。** 当访问 token 距过期不足 5 分钟时，代理会刷新它：
 
 ```
 POST https://auth.openai.com/oauth/token
@@ -384,6 +390,8 @@ key 按提供方存储在 `~/.config/exp-1/sessions/credentials.json` 中，模�
 ```
 
 `action` 是工具名或 `*`，`resource` 是调用触及的东西——文件工具是路径，`shell` 是命令行，网络工具是 URL 或查询——`*`/`?` 作为通配符生效。`effect` 是 `allow`、`ask` 或 `deny`。`ask` 会升起问题面板并扣住调用直到被回答（两分钟，之后调用被拒绝）。规则同样适用于子代理。
+
+`ctrl + shift + a` 在权限模式之间循环：**always ask**（全新安装的默认值）让 `write`、`edit`、`delete` 和 `shell` 都先提问，**never ask** 直接执行而不提问，**ask only commands** 只对 `shell` 提问。只读工具从不提问，而 `effect: deny` 规则在任何模式下都会拒绝——模式永远不会放宽 deny。
 
 ## 项目指令
 

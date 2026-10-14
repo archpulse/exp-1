@@ -57,4 +57,50 @@ mod tests {
         assert_eq!(link.end, 8, "the label is four characters");
         assert!(link.line < lines.len(), "the line it sits on exists");
     }
+
+    /// A snapshot asked for before a ctrl+shift+a press must not put the older
+    /// mode back when it lands; one asked for after the press still applies.
+    #[test]
+    fn a_late_snapshot_cannot_undo_a_permission_press() {
+        use crate::messages::{AgentMsg, PERMISSIONS_EPOCH};
+        use crate::proto::{WirePhase, WireSnapshot};
+        use crate::tools::PermissionMode;
+        use std::sync::atomic::Ordering;
+
+        let mut app = App::new(
+            "/tmp".to_string(),
+            Arc::new(Mutex::new(Vec::new())),
+            Arc::new(Mutex::new(Vec::new())),
+        );
+        let snapshot = |permissions| WireSnapshot {
+            id: "session-1".to_string(),
+            title: String::new(),
+            name: String::new(),
+            phase: WirePhase::Idle,
+            transcript: Vec::new(),
+            live: String::new(),
+            usage: None,
+            mode: "build".to_string(),
+            permissions,
+            error: None,
+            question: None,
+        };
+
+        // The press happens: the mode moves on and so does the epoch.
+        app.permissions = PermissionMode::NeverAsk;
+        let pressed = PERMISSIONS_EPOCH.fetch_add(1, Ordering::SeqCst) + 1;
+        // A snapshot requested before the press carries the predecessor.
+        crate::messages::apply(
+            &mut app,
+            AgentMsg::Loaded(0, snapshot(PermissionMode::AlwaysAsk), pressed - 1),
+        );
+        assert_eq!(app.permissions, PermissionMode::NeverAsk, "the press survived");
+
+        // A snapshot requested after it is authoritative again.
+        crate::messages::apply(
+            &mut app,
+            AgentMsg::Loaded(0, snapshot(PermissionMode::AskOnlyCommands), pressed),
+        );
+        assert_eq!(app.permissions, PermissionMode::AskOnlyCommands);
+    }
 }

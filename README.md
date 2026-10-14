@@ -147,6 +147,7 @@ exp1 --help
 | `↑` `↓` | Move the completion selection, or recall previous prompts |
 | `Tab` | Accept the highlighted completion |
 | `Ctrl + /` | Switch between the main thread and the side thread |
+| `Ctrl + Shift + A` | Cycle the permission mode: always ask → never ask → ask only commands |
 | `Esc` | Nothing on its own |
 | `Esc` `Esc` | Abort the running turn, or dismiss the completion list or picker |
 | `Ctrl-C` | Quit |
@@ -574,6 +575,11 @@ first match decides:
 command line for `shell`, the URL or query for the net tools — and `*`/`?` work as wildcards.
 `effect` is `allow`, `ask` or `deny`. An `ask` raises the question panel and holds the call until it
 is answered (two minutes, then the call is refused). Rules apply to subagents too.
+
+`ctrl + shift + a` cycles the permission mode: **always ask** (the default for a fresh install)
+makes `write`, `edit`, `delete` and `shell` raise the question, **never ask** runs them without one,
+and **ask only commands** asks for `shell` alone. Read-only tools never ask, and a rule with
+`effect: deny` refuses in every mode — the mode never loosens a deny.
 
 ## Project instructions
 

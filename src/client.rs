@@ -224,6 +224,32 @@ impl Connection {
             .to_string())
     }
 
+    /// Switches how much the session asks before running a tool. Returns the
+    /// server's note.
+    pub async fn permissions(
+        &self,
+        session: &str,
+        permissions: crate::tools::PermissionMode,
+    ) -> Result<String> {
+        let response = self
+            .auth(self.http.post(format!("{}/sessions/{session}/permissions", self.url)))
+            .json(&crate::proto::PermissionsBody { permissions })
+            .send()
+            .await
+            .context("switch the permission mode")?;
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        if !status.is_success() {
+            bail!("{body}");
+        }
+        let value: serde_json::Value = serde_json::from_str(&body).unwrap_or_default();
+        Ok(value
+            .get("note")
+            .and_then(|note| note.as_str())
+            .unwrap_or("permission mode switched")
+            .to_string())
+    }
+
     /// Continues this conversation as a new session, leaving the original as
     /// it is. Returns the new session's id.
     pub async fn fork(&self, session: &str) -> Result<String> {

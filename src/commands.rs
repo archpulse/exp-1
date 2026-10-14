@@ -17,7 +17,7 @@ pub(crate) fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
         "/help" => {
             app.thread_mut().push(
                 Role::System,
-                "enter send · ctrl-c quit · ctrl-o tool output · ctrl-v paste image · ctrl-backspace deletes a word · esc esc interrupts\nctrl-/ switches thread · ctrl-g jumps to the newest message · ctrl-t to the oldest · pgup/pgdn or the wheel scroll",
+                "enter send · ctrl-c quit · ctrl-o tool output · ctrl-v paste image · ctrl-backspace deletes a word · esc esc interrupts\nctrl-/ switches thread · ctrl-g jumps to the newest message · ctrl-t to the oldest · pgup/pgdn or the wheel scroll · ctrl-shift-a permission mode",
             );
         }
         "/cd" => {
@@ -87,8 +87,11 @@ pub(crate) fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
                         let _ = tx.send(AgentMsg::Attached(0, "fork".to_string()));
                         match conn.stream(&fresh).await {
                             Ok(events) => {
+                                // Read before the snapshot, so a press made
+                                // while it is in flight is not overwritten.
+                                let epoch = PERMISSIONS_EPOCH.load(std::sync::atomic::Ordering::SeqCst);
                                 if let Ok(snapshot) = conn.snapshot(&fresh).await {
-                                    let _ = tx.send(AgentMsg::Loaded(0, snapshot));
+                                    let _ = tx.send(AgentMsg::Loaded(0, snapshot, epoch));
                                 }
                                 pump_events(0, events, tx.clone());
                                 let _ = tx.send(AgentMsg::Done(
@@ -666,10 +669,13 @@ pub(crate) fn select_from_picker(app: &mut App, ctx: &Ctx) {
                     Ok(events) => {
                         let _ = tx.send(AgentMsg::Attached(0, meta.label()));
                         // The stream only carries what happens next, so the
-                        // conversation so far is fetched as a snapshot.
+                        // conversation so far is fetched as a snapshot. The
+                        // epoch is read first: a permission press made while
+                        // this is in flight must not be rolled back by it.
+                        let epoch = PERMISSIONS_EPOCH.load(std::sync::atomic::Ordering::SeqCst);
                         match conn.snapshot(&meta.id).await {
                             Ok(snapshot) => {
-                                let _ = tx.send(AgentMsg::Loaded(0, snapshot));
+                                let _ = tx.send(AgentMsg::Loaded(0, snapshot, epoch));
                             }
                             Err(err) => {
                                 let _ = tx.send(AgentMsg::Error(

@@ -2,10 +2,16 @@
 
 # exp-1 agent
 
-Un agente de programación mínimo en Rust con una interfaz de terminal. Se autentica **exactamente
-igual que la CLI de Codex**: OAuth de ChatGPT contra `auth.openai.com`, con las peticiones a los
-modelos yendo a `https://chatgpt.com/backend-api/codex/responses`. Ese es el único proveedor de
-autenticación que admite.
+Un agente de programación mínimo en Rust con una interfaz de terminal que habla con **27
+proveedores**, entregando a cada uno la lista de modelos que realmente sirve: el catálogo llega en
+vivo desde models.dev, con una tabla en el binario como alternativa sin conexión. Cinco protocolos
+de cable los cubren todos — la API **OpenAI chat-completions**, compartida por una docena de
+proveedores, **OpenAI Responses**, **Anthropic messages**, el **`generateContent` de Gemini**
+nativo de Vertex AI y el backend de Codex — y un proveedor inicia sesión con una clave de API, un
+inicio de sesión por código de dispositivo, el propio inicio de sesión del proveedor o credenciales
+que la máquina ya tiene. La ruta de Codex llegó primero y sigue siendo una de ellas: OAuth de
+ChatGPT contra `auth.openai.com`, con las peticiones a
+`https://chatgpt.com/backend-api/codex/responses`.
 
 ## Qué hace
 
@@ -150,6 +156,7 @@ exp1 --help
 | `↑` `↓` | Mueve la selección de autocompletado, o recupera prompts anteriores |
 | `Tab` | Acepta el autocompletado resaltado |
 | `Ctrl + /` | Cambia entre el hilo principal y el hilo lateral |
+| `Ctrl + Shift + A` | Cambia el modo de permisos: always ask → never ask → ask only commands |
 | `Esc` | Nada por sí solo |
 | `Esc` `Esc` | Aborta el turno en curso, o descarta la lista de autocompletado o el selector |
 | `Ctrl-C` | Salir |
@@ -292,11 +299,25 @@ pie de Codex anuncia superposiciones de agentes y atajos, que este MVP no tiene.
 
 ## Autenticación
 
-En la primera ejecución el agente copia `$CODEX_HOME/auth.json` (por defecto `~/.codex/auth.json`) a
-`~/.exp1-agent/auth.json` y trabaja desde esa copia. **Tus credenciales reales de Codex nunca se
-reescriben.**
+`/login` lista los proveedores, y cada uno inicia sesión de la forma que espera su proveedor:
 
-Cuando al token de acceso le quedan 5 minutos o menos para caducar, el agente lo renueva:
+- **Una clave de API** para la mayoría de ellos, enviada como `Authorization: Bearer` (o `x-api-key`
+  para la API de Anthropic) y guardada por proveedor en `~/.config/exp-1/credentials.json`, con modo
+  `0600`. Una clave puede cubrir varios proveedores — `opencode-go` y `opencode-zen` son una sola
+  cuenta detrás de dos URL base, y `providers::key_group` nombra los grupos.
+- **Un inicio de sesión por código de dispositivo** para `openai (auth)`, `github copilot` y
+  `meta (auth)`: la página de inicio de sesión del proveedor se abre en el navegador, y la URL y el
+  código se imprimen como alternativa.
+- **Un token del propio inicio de sesión del proveedor** para `anthropic (auth)`, enviado con las
+  cabeceras de identidad del cliente oficial.
+- **Credenciales que la máquina ya tiene** para `google vertex`: lo que ya haya iniciado sesión
+  `gcloud auth application-default login`, con `GOOGLE_CLOUD_PROJECT` y `GOOGLE_CLOUD_LOCATION`
+  nombrando el proyecto y la región. Nada que pegar.
+
+La ruta de Codex además mantiene un archivo propio: en la primera ejecución el agente copia
+`$CODEX_HOME/auth.json` (por defecto `~/.codex/auth.json`) a `~/.exp1-agent/auth.json` y trabaja desde
+esa copia. **Tus credenciales reales de Codex nunca se reescriben.** Cuando al token de acceso le
+quedan 5 minutos o menos para caducar, el agente lo renueva:
 
 ```
 POST https://auth.openai.com/oauth/token
@@ -587,6 +608,12 @@ herramientas de archivos, la línea de comandos para `shell`, la URL o la consul
 herramientas de red — y `*`/`?` funcionan como comodines. `effect` es `allow`, `ask` o `deny`. Un
 `ask` levanta el panel de pregunta y retiene la llamada hasta que se responde (dos minutos, y luego
 la llamada se rechaza). Las reglas se aplican también a los subagentes.
+
+`ctrl + shift + a` cambia el modo de permisos: **always ask** (el predeterminado de una instalación
+nueva) hace que `write`, `edit`, `delete` y `shell` levanten la pregunta, **never ask** los ejecuta
+sin preguntar, y **ask only commands** solo pregunta por `shell`. Las herramientas de solo lectura
+nunca preguntan, y una regla con `effect: deny` rechaza en todos los modos: el modo nunca suaviza un
+deny.
 
 ## Instrucciones del proyecto
 

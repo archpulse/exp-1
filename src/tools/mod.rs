@@ -256,6 +256,78 @@ impl Rules {
     }
 }
 
+/// How much the agent asks before it runs a tool: every tool that changes
+/// something (`always ask`, the fresh-install default), nothing (`never ask`),
+/// or only `shell` (`ask only commands`). Cycled with `ctrl + shift + a` in the
+/// TUI, kept per session, saved in `settings.json` and enforced by the server.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PermissionMode {
+    /// The default: `write`, `edit`, `delete` and `shell` raise the question.
+    #[default]
+    AlwaysAsk,
+    /// Nothing asks; the agent simply does the work.
+    NeverAsk,
+    /// Only `shell` asks; file writes and edits go through.
+    AskOnlyCommands,
+}
+
+/// What one call settles on, once `permissions.json` and the permission mode
+/// have both been read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Verdict {
+    /// Run it without asking.
+    Run,
+    /// Raise the permission question.
+    Ask,
+    /// Refuse it. No mode makes this go away.
+    Deny,
+}
+
+impl PermissionMode {
+    /// The exact wording shown in the footer and in the documentation.
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::AlwaysAsk => "always ask",
+            Self::NeverAsk => "never ask",
+            Self::AskOnlyCommands => "ask only commands",
+        }
+    }
+
+    /// The next mode in the order `ctrl + shift + a` walks them.
+    pub fn cycle(self) -> Self {
+        match self {
+            Self::AlwaysAsk => Self::NeverAsk,
+            Self::NeverAsk => Self::AskOnlyCommands,
+            Self::AskOnlyCommands => Self::AlwaysAsk,
+        }
+    }
+
+    /// Whether the mode asks for this tool on its own. Read-only tools
+    /// (`read`, `grep`, `count`, `ast`, `fetch`, `websearch`) never ask, so
+    /// only the tools that change files and the shell are ever named here.
+    pub fn asks(self, tool: &str) -> bool {
+        match self {
+            Self::AlwaysAsk => matches!(tool, "write" | "edit" | "delete" | "shell"),
+            Self::NeverAsk => false,
+            Self::AskOnlyCommands => tool == "shell",
+        }
+    }
+
+    /// What the mode and a matching rule effect settle on together. A `deny`
+    /// refuses in every mode — the mode never loosens it. An explicit `ask`
+    /// rule keeps its own question; otherwise the mode decides whether the
+    /// tool has to ask by itself.
+    pub fn verdict(self, rule_effect: Option<&str>, tool: &str) -> Verdict {
+        match rule_effect {
+            Some("deny") => Verdict::Deny,
+            Some("ask") => Verdict::Ask,
+            _ if self.asks(tool) => Verdict::Ask,
+            _ => Verdict::Run,
+        }
+    }
+}
+
 /// A small glob: `*` for any run, `?` for one character, everything else
 /// literal. Enough for paths and command prefixes without a crate.
 fn glob(pattern: &str, text: &str) -> bool {

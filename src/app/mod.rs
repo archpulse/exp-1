@@ -115,6 +115,9 @@ pub struct App {
     pub attention: bool,
     /// `build` or `plan`, switched with shift+tab.
     pub mode: String,
+    /// How much the agent asks before a tool runs, switched with
+    /// ctrl+shift+a; the server holds the authoritative copy per session.
+    pub permissions: crate::tools::PermissionMode,
     /// True when there is nothing saved yet, so the empty screen can teach the
     /// commands once instead of on every launch.
     pub first_run: bool,
@@ -218,6 +221,7 @@ impl App {
             skills: Vec::new(),
             attention: false,
             mode: "build".to_string(),
+            permissions: crate::tools::PermissionMode::AlwaysAsk,
             first_run: false,
             show_tool_output: false,
             clicks: std::cell::RefCell::new(Vec::new()),

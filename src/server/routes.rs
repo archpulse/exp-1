@@ -223,6 +223,48 @@ pub(crate) async fn set_mode(
     Json(serde_json::json!({ "mode": mode, "note": note })).into_response()
 }
 
+/// `ctrl+shift+a`: how much the session asks before running a tool. The mode
+/// is held per session; the choice is also written to `settings.json`, because
+/// it is what the next launch — and every session it creates — starts with.
+pub(crate) async fn set_permissions(
+    State(shared): State<Arc<Shared>>,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    Json(body): Json<crate::proto::PermissionsBody>,
+) -> Response {
+    if !authorized(&shared, &headers) {
+        return unauthorized();
+    }
+    let Some(session) = find(&shared, &id) else {
+        return (StatusCode::NOT_FOUND, "no such session").into_response();
+    };
+    let mode = body.permissions;
+    if let Ok(mut state) = session.state.lock() {
+        state.permissions = mode;
+    }
+    let mut settings = store::load_settings();
+    settings.permissions = mode;
+    store::save_settings(&settings);
+    let note = format!(
+        "permission mode: {} — {}",
+        mode.label(),
+        match mode {
+            tools::PermissionMode::AlwaysAsk =>
+                "write, edit, delete and shell ask before running",
+            tools::PermissionMode::NeverAsk => "tools run without asking",
+            tools::PermissionMode::AskOnlyCommands =>
+                "only shell asks; file writes and edits run",
+        }
+    );
+    session.push("system", note.clone());
+    Json(serde_json::json!({
+        "permissions": mode,
+        "label": mode.label(),
+        "note": note,
+    }))
+    .into_response()
+}
+
 /// `/clear`: start this session over. The transcript on screen is only half of
 /// a conversation — the other half is the history the model is sent — so both
 /// go, along with the undo log, and the title is taken again on the next prompt.
@@ -282,6 +324,7 @@ pub(crate) async fn fork_session(
             state.transcript = source_state.transcript.clone();
             state.name = source_state.name.clone();
             state.usage = source_state.usage.clone();
+            state.permissions = source_state.permissions;
             state.title = if source_state.title.is_empty() {
                 String::new()
             } else {
@@ -587,6 +630,10 @@ pub(crate) async fn create_session(State(shared): State<Arc<Shared>>, headers: H
         });
     let id = daemon::random_id();
     let session = Session::new(id.clone(), cwd, parent);
+    // A new session starts on the permission mode the user last chose.
+    if let Ok(mut state) = session.state.lock() {
+        state.permissions = store::load_settings().permissions;
+    }
     shared
         .sessions
         .lock()
@@ -632,6 +679,7 @@ pub(crate) async fn session_snapshot(
             live: String::new(),
             usage: None,
             mode: "build".to_string(),
+            permissions: store::load_settings().permissions,
             error: None,
             question: None,
         })

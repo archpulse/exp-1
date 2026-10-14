@@ -158,6 +158,8 @@ pub struct Settings {
     /// A model of the same provider to try when the current one keeps failing.
     /// Empty means no fallback.
     pub fallback_model: String,
+    /// How much the agent asks before running a tool; see `PermissionMode`.
+    pub permissions: crate::tools::PermissionMode,
 }
 
 impl Default for Settings {
@@ -171,6 +173,7 @@ impl Default for Settings {
             titler: String::new(),
             retry_attempts: 5,
             fallback_model: String::new(),
+            permissions: crate::tools::PermissionMode::AlwaysAsk,
         }
     }
 }
@@ -533,5 +536,26 @@ mod tests {
         assert_eq!(ids(sub), vec!["global", "legacy", "sub"]);
         // Unrelated directories stay out.
         assert_eq!(ids(elsewhere), vec!["global", "legacy", "elsewhere"]);
+    }
+
+    /// A `settings.json` written before permission modes existed still loads,
+    /// and the missing field means the fresh-install default.
+    #[test]
+    fn settings_without_permissions_default_to_always_ask() {
+        let settings: Settings = serde_json::from_str(r#"{"model": "gpt-6-luna"}"#).unwrap();
+        assert_eq!(settings.permissions, crate::tools::PermissionMode::AlwaysAsk);
+    }
+
+    /// The choice survives the round trip through `settings.json`.
+    #[test]
+    fn the_permission_mode_survives_a_settings_round_trip() {
+        let mut settings = Settings::default();
+        settings.permissions = crate::tools::PermissionMode::AskOnlyCommands;
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"ask_only_commands\""), "{json}");
+        let back: Settings = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.permissions, crate::tools::PermissionMode::AskOnlyCommands);
+        // The default itself must not change what a fresh install gets.
+        assert_eq!(Settings::default().permissions.label(), "always ask");
     }
 }
