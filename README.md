@@ -2,9 +2,14 @@
 
 # exp-1 agent
 
-A minimal coding agent in Rust with a terminal UI. It authenticates **exactly the way the
-Codex CLI does** — ChatGPT OAuth against `auth.openai.com`, with model requests going to
-`https://chatgpt.com/backend-api/codex/responses`. That is the only auth provider it supports.
+A minimal coding agent in Rust with a terminal UI that talks to **27 providers**, handing each one
+the model list it actually serves: the catalogue comes live from models.dev, with a table in the
+binary as the offline fallback. Five wire protocols cover them all — the OpenAI chat-completions API
+shared by a dozen vendors, OpenAI Responses, Anthropic messages, Vertex AI's Gemini
+`generateContent` and the Codex backend — and a provider signs in with an API key, a device-code
+page, the vendor's own login, or credentials the machine already holds. The Codex path came first
+and is still one of them: ChatGPT OAuth against `auth.openai.com`, with requests to
+`https://chatgpt.com/backend-api/codex/responses`.
 
 ## What it does
 
@@ -272,11 +277,24 @@ advertises agent and shortcut overlays, which this MVP does not have.
 
 ## Authentication
 
-On first run the agent copies `$CODEX_HOME/auth.json` (default `~/.codex/auth.json`) into
-`~/.exp1-agent/auth.json` and works from that copy. **Your real Codex credentials are never
-rewritten.**
+`/login` lists the providers, and each is signed in the way its vendor expects:
 
-When the access token is within 5 minutes of expiry the agent refreshes it:
+- **An API key** for most of them, sent as `Authorization: Bearer` (or `x-api-key` for the Anthropic
+  API) and stored per provider in `~/.config/exp-1/credentials.json`, mode `0600`. One key can cover
+  several providers — `opencode-go` and `opencode-zen` are one account behind two base URLs, and
+  `providers::key_group` names the groups.
+- **A device-code page** for `openai (auth)`, `github copilot` and `meta (auth)`: the vendor's
+  sign-in page opens in the browser, and the URL and code are printed as the fallback.
+- **A token from the vendor's own login** for `anthropic (auth)`, sent with the first-party client's
+  identity headers.
+- **Credentials the machine already holds** for `google vertex`: whatever
+  `gcloud auth application-default login` set up, with `GOOGLE_CLOUD_PROJECT` and
+  `GOOGLE_CLOUD_LOCATION` naming the project and region. Nothing to paste.
+
+The Codex path also keeps a file of its own: on first run the agent copies `$CODEX_HOME/auth.json`
+(default `~/.codex/auth.json`) into `~/.exp1-agent/auth.json` and works from that copy. **Your real
+Codex credentials are never rewritten.** When the access token is within 5 minutes of expiry the
+agent refreshes it:
 
 ```
 POST https://auth.openai.com/oauth/token
