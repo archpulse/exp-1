@@ -7,7 +7,6 @@
 
 use super::*;
 use serde_json::{Value, json};
-use std::io::Read;
 
 /// A foreground command still running after this long is promoted to a
 /// background task, so the agent is never blocked on something slow. A

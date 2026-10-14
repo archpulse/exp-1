@@ -5,7 +5,6 @@
 
 use serde_json::Value;
 use std::collections::HashMap;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex as StdMutex};
 use std::time::{Duration, Instant};
@@ -585,7 +584,7 @@ mod shell;
 mod specs;
 mod web;
 
-pub use self::{files::*, search::*, shell::*, specs::*, web::*};
+pub(crate) use self::{files::*, search::*, shell::*, specs::*, web::*};
 
 #[cfg(test)]
 mod tests;
