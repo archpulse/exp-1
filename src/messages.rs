@@ -37,6 +37,8 @@ pub(crate) enum AgentMsg {
     Rewound(String),
     /// A piece of dictated text arrived.
     Dictation(String),
+    /// Words the recognizer has heard but not committed yet: shown, not inserted.
+    Dictating(String),
     /// The recognizer ended: the button goes back to its idle look.
     DictationStopped,
     /// The recognizer complained on its way out.
@@ -257,14 +259,24 @@ pub(crate) fn apply(app: &mut App, message: AgentMsg) {
             }
             thread.input.extend(text.chars());
             thread.cursor = thread.input.len();
+            // What was in flight is now in the prompt.
+            thread.dictating = None;
+        })),
+        AgentMsg::Dictating(text) => (0, Box::new(move |app: &mut App| {
+            let thread = &mut app.threads[0];
+            thread.dictating = (!text.trim().is_empty()).then_some(text);
         })),
         AgentMsg::DictationStopped => (0, Box::new(move |app: &mut App| {
             app.dictation = None;
             app.dictating_since = None;
+            if let Some(thread) = app.threads.first_mut() {
+                thread.dictating = None;
+            }
         })),
         AgentMsg::DictationFailed(complaint) => (0, Box::new(move |app: &mut App| {
             // Its own words: a build without the recording mode says so here.
             let first = complaint.lines().next().unwrap_or_default().trim();
+            app.threads[0].dictating = None;
             app.threads[0].error = Some(format!("dictation: {first}"));
         })),
         AgentMsg::Catalog(list) => (0, Box::new(move |app: &mut App| {

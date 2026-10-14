@@ -19,12 +19,15 @@ pub struct Dictation {
 
 impl Dictation {
     /// Starts the recognizer. `on_text` gets every piece of committed text as it
-    /// arrives, `on_stop` runs once when the recognizer ends.
-    pub fn start<F, G, H>(on_text: F, on_failure: G, on_stop: H) -> Result<Self>
+    /// arrives, `on_partial` the words still in flight (the recognizer prints
+    /// both every second, so the interface can show speech while it happens),
+    /// and `on_stop` runs once when the recognizer ends.
+    pub fn start<F, G, H, P>(on_text: F, on_failure: G, on_stop: H, on_partial: P) -> Result<Self>
     where
         F: FnMut(String) + Send + 'static,
         G: FnMut(String) + Send + 'static,
         H: FnOnce() + Send + 'static,
+        P: FnMut(String) + Send + 'static,
     {
         let program = program();
         let mut command = Command::new(&program);
@@ -67,14 +70,18 @@ impl Dictation {
         std::thread::spawn(move || {
             let mut on_text = on_text;
             let mut on_failure = on_failure;
+            let mut on_partial = on_partial;
             let mut heard = false;
             for line in BufReader::new(stdout).lines() {
                 let Ok(line) = line else {
                     break;
                 };
-                if let Some(text) = text_of(&line) {
-                    heard = true;
-                    on_text(text);
+                if let Some((text, pending)) = parts_of(&line) {
+                    if !text.is_empty() {
+                        heard = true;
+                        on_text(text);
+                    }
+                    on_partial(pending);
                 }
             }
             // A recognizer that ends without a word may simply have heard
@@ -136,28 +143,38 @@ impl Drop for Dictation {
 }
 
 /// The committed text of one update line, trimmed; `None` when there is none.
-fn text_of(line: &str) -> Option<String> {
+/// The two halves of one update: what is committed, and what is still in
+/// flight. Both are printed every second while the microphone is open.
+fn parts_of(line: &str) -> Option<(String, String)> {
     let value: serde_json::Value = serde_json::from_str(line).ok()?;
-    let text = value.get("text")?.as_str()?.trim();
-    (!text.is_empty()).then(|| text.to_string())
+    let field = |name: &str| {
+        value
+            .get(name)
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default()
+            .trim()
+            .to_string()
+    };
+    (value.get("text").is_some() || value.get("pending").is_some())
+        .then(|| (field("text"), field("pending")))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// The recognizer reports both the committed text and the words still in
-    /// flight; only the committed part belongs in the prompt.
+    /// The recognizer reports the committed text and the words still in
+    /// flight; the prompt takes the first, the preview the second.
     #[test]
-    fn only_committed_text_is_taken() {
-        assert_eq!(
-            text_of(r#"{"text":"hello there","pending":"and","language":"en"}"#).as_deref(),
-            Some("hello there")
-        );
-        assert_eq!(text_of(r#"{"text":"  ","pending":"and"}"#), None);
-        assert_eq!(text_of(r#"{"pending":"and"}"#), None);
+    fn both_halves_of_an_update_are_read() {
+        let line = r#"{"text":"hello there","pending":"and","language":"en"}"#;
+        assert_eq!(parts_of(line), Some(("hello there".into(), "and".into())));
+        // Blank means nothing: an empty preview, or nothing to insert.
+        assert_eq!(parts_of(r#"{"text":"  ","pending":"and"}"#), Some((String::new(), "and".into())));
+        assert_eq!(parts_of(r#"{"pending":"and"}"#), Some((String::new(), "and".into())));
         // Anything that is not one of our lines is not a transcript.
-        assert_eq!(text_of("whistle: recording with pw-record"), None);
-        assert_eq!(text_of(""), None);
+        assert_eq!(parts_of(r#"{"language":"en"}"#), None);
+        assert_eq!(parts_of("whistle: recording with pw-record"), None);
+        assert_eq!(parts_of(""), None);
     }
 }

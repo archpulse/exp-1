@@ -685,16 +685,25 @@ impl App {
             if show_caret {
                 spans.push(Span::styled(CARET, caret));
             }
-            spans.push(Span::styled(
-                if self.entering_key.is_some() {
-                    "paste the API key"
-                } else if self.asking.is_some() {
-                    "your answer"
-                } else {
-                    thread.placeholder()
-                },
-                Style::default().fg(theme.dim),
-            ));
+            // While the microphone is open the band shows what has been heard
+            // so far, in place of the placeholder: speech appears as it happens.
+            if let Some(heard) = &thread.dictating {
+                spans.push(Span::styled(
+                    format!("{heard} "),
+                    Style::default().fg(theme.dim),
+                ));
+            } else {
+                spans.push(Span::styled(
+                    if self.entering_key.is_some() {
+                        "paste the API key"
+                    } else if self.asking.is_some() {
+                        "your answer"
+                    } else {
+                        thread.placeholder()
+                    },
+                    Style::default().fg(theme.dim),
+                ));
+            }
             lines.push(Line::from(spans));
         } else {
             let mut spans = vec![Span::styled("› ", Style::default().fg(theme.dim))];

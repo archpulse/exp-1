@@ -623,6 +623,7 @@ fn toggle_dictation(app: &mut App, ctx: &Ctx) {
     let tx = ctx.events.clone();
     let ready = tx.clone();
     let failed = tx.clone();
+    let partial = tx.clone();
     match crate::dictate::Dictation::start(
         move |text| {
             let _ = tx.send(AgentMsg::Dictation(text));
@@ -632,6 +633,9 @@ fn toggle_dictation(app: &mut App, ctx: &Ctx) {
         },
         move || {
             let _ = ready.send(AgentMsg::DictationStopped);
+        },
+        move |pending| {
+            let _ = partial.send(AgentMsg::Dictating(pending));
         },
     ) {
         Ok(dictation) => {

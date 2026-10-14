@@ -164,6 +164,8 @@ pub struct Thread {
     /// What the model is preparing right now (a tool call's arguments), shown
     /// in place of the "thinking" label.
     pub preparing: Option<String>,
+    /// The words being dictated right now, if any.
+    pub dictating: Option<String>,
     /// When the activity being shown now began: one model request, or one tool.
     /// The turn's own start is kept apart, so the live line counts the request
     /// rather than the whole turn, which made a working agent look stuck.
@@ -204,6 +206,7 @@ impl Thread {
             error: None,
             started_at: None,
             preparing: None,
+            dictating: None,
             activity_since: None,
             input: Vec::new(),
             cursor: 0,
