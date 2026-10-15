@@ -103,10 +103,10 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 ## 安装
 
-安装 GitHub 上的最新版本需要 Rust 1.85+ 和 Cargo：
+安装 crates.io 上的最新版本需要 Rust 1.85+ 和 Cargo：
 
 ```sh
-cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+cargo install exp1-agent
 exp1-agent --help
 ```
 

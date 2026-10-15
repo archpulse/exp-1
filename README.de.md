@@ -142,10 +142,10 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 ## Installation
 
-Für die Installation der neuesten Version von GitHub brauchst du Rust 1.85+ und Cargo:
+Für die Installation der neuesten Version von crates.io brauchst du Rust 1.85+ und Cargo:
 
 ```sh
-cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+cargo install exp1-agent
 exp1-agent --help
 ```
 

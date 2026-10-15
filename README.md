@@ -136,10 +136,10 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 ## Install
 
-With Rust 1.85+ and Cargo installed, run:
+Install the published crate with Rust 1.85+ and Cargo:
 
 ```sh
-cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+cargo install exp1-agent
 exp1-agent --help
 ```
 
