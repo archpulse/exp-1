@@ -140,8 +140,8 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - O bien un inicio de sesión existente de la CLI de Codex (se reutiliza su `auth.json`), o bien
   `/login`, que ejecuta él mismo el mismo flujo de dispositivo.
 - El titulador integrado, compilado en el agente desde `src/titler.rs` bajo la feature `titler`.
-  Arrastra Candle, y por eso la primera compilación tarda un rato y el binario ocupa ~16 MB en vez
-  de ~7 MB. Una vez que los pesos están en la caché de Hugging Face, titular es offline.
+  Arrastra Candle, y por eso la primera compilación tarda un rato y el binario ocupa ~21 MB en vez
+  de ~14 MB. Una vez que los pesos están en la caché de Hugging Face, titular es offline.
 
 ## Instalación
 

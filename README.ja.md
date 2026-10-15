@@ -99,7 +99,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85 以上（edition 2024）
 - 既存の Codex CLI のログイン（その `auth.json` を再利用します）か、同じデバイスフローを自身で実行する `/login` のいずれか。
-- 同梱の titler は `titler` フィーチャーの下で `src/titler.rs` からエージェントにコンパイルされます。Candle を引き込むため、初回ビルドに時間がかかり、バイナリは約 7 MB ではなく約 16 MB になります。重みが Hugging Face のキャッシュにあれば、タイトル生成はオフラインになります。
+- 同梱の titler は `titler` フィーチャーの下で `src/titler.rs` からエージェントにコンパイルされます。Candle を引き込むため、初回ビルドに時間がかかり、バイナリは約 14 MB ではなく約 21 MB になります。重みが Hugging Face のキャッシュにあれば、タイトル生成はオフラインになります。
 
 ## インストール
 

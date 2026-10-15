@@ -137,7 +137,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
   oder `/login`, das denselben Gerätecode-Ablauf selbst ausführt.
 - Der mitgelieferte Titler, aus `src/titler.rs` unter dem Feature `titler` in den Agenten
   kompiliert. Er zieht Candle herein, weshalb der erste Build eine Weile dauert und das Binary
-  ~16 MB statt ~7 MB groß ist. Sobald die Gewichte im Hugging-Face-Cache liegen, läuft die
+  ~21 MB statt ~14 MB groß ist. Sobald die Gewichte im Hugging-Face-Cache liegen, läuft die
   Titelvergabe offline.
 
 ## Installation

@@ -99,7 +99,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85+ (edice 2024)
 - Buď existující přihlášení v Codex CLI (jeho `auth.json` se znovu použije), nebo `/login`, které samo spustí stejný tok s kódem zařízení.
-- Přibalený titler, zkompilovaný do agenta ze `src/titler.rs` pod funkcí `titler`. Táhne Candle, a proto první sestavení chvíli trvá a binární soubor má ~16 MB místo ~7 MB. Jakmile jsou váhy v keši Hugging Face, pojmenovávání probíhá offline.
+- Přibalený titler, zkompilovaný do agenta ze `src/titler.rs` pod funkcí `titler`. Táhne Candle, a proto první sestavení chvíli trvá a binární soubor má ~21 MB místo ~14 MB. Jakmile jsou váhy v keši Hugging Face, pojmenovávání probíhá offline.
 
 ## Instalace
 

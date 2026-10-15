@@ -99,7 +99,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85+（edition 2024）
 - 一个已有的 Codex CLI 登录（会复用它的 `auth.json`），或者 `/login`，它会自己运行同样的设备码流程。
-- 内置的 titler 在 `titler` feature 下从 `src/titler.rs` 编译进代理。它会引入 Candle，因此首次构建要花些时间，二进制也约 16 MB 而不是约 7 MB。权重进入 Hugging Face 缓存后，起标题就是离线的。
+- 内置的 titler 在 `titler` feature 下从 `src/titler.rs` 编译进代理。它会引入 Candle，因此首次构建要花些时间，二进制也约 21 MB 而不是约 14 MB。权重进入 Hugging Face 缓存后，起标题就是离线的。
 
 ## 安装
 

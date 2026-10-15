@@ -131,8 +131,8 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Either an existing Codex CLI login (its `auth.json` is reused) or `/login`, which runs the same
   device flow itself.
 - The bundled titler, compiled into the agent from `src/titler.rs` under the `titler` feature. It
-  pulls in Candle, which is why the first build takes a while and the binary is ~16 MB rather than
-  ~7 MB. Once the weights are in the Hugging Face cache, titling is offline.
+  pulls in Candle, which is why the first build takes a while and the binary is ~21 MB rather than
+  ~14 MB. Once the weights are in the Hugging Face cache, titling is offline.
 
 ## Install
 
