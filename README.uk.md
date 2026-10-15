@@ -2,6 +2,8 @@
 
 # агент exp-1
 
+<img src="assets/exp-1-logo.png" alt="exp-1 logo" width="96" />
+
 Мінімальний агент для написання коду на Rust із термінальним інтерфейсом, який розмовляє з **27 провайдерами**, видаючи кожному список моделей, які той насправді обслуговує: каталог надходить наживо з models.dev, а таблиця в бінарнику слугує офлайн-запасним варіантом. П'ять протоколів передачі покривають їх усі — API **OpenAI chat-completions**, який використовує десяток постачальників, **OpenAI Responses**, **Anthropic messages**, рідний **Gemini `generateContent`** від Vertex AI та бекенд Codex, — а провайдер входить з API-ключем, сторінкою з кодом пристрою, власним входом постачальника або обліковими даними, які вже зберігає машина. Шлях Codex з'явився першим і досі лишається одним із них: ChatGPT OAuth на `auth.openai.com`, а запити йдуть на `https://chatgpt.com/backend-api/codex/responses`.
 
 ## Що він робить
@@ -99,13 +101,24 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Або наявний вхід у Codex CLI (його `auth.json` використовується повторно), або `/login`, який сам виконує той самий потік пристрою.
 - Вбудований крейт `titler` у `crates/titler`. Він тягне за собою Candle, тому перше збирання триває довго, а бінарник важить ~16 МБ, а не ~7 МБ. Коли ваги в кеші Hugging Face, генерування назв працює офлайн, і свіжому клону не потрібен сусідній чекаут.
 
+## Встановлення
+
+Для встановлення останньої версії з GitHub потрібні Rust 1.85+ і Cargo:
+
+```sh
+cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+exp1-agent --help
+```
+
+Cargo встановлює бінарник `exp1-agent` у `~/.cargo/bin`; за потреби додайте цей каталог до `PATH`. Стандартна збірка містить локальний титлер, тому перше встановлення триває довше, поки компілюється Candle.
+
 ## Використання
 
 ```sh
 cargo run --release                      # uses the current directory
-exp1 --model gpt-6-luna --effort high    # pick a model and reasoning effort
-exp1 --cwd ~/projects/my-app             # run the shell tool somewhere else
-exp1 --help
+exp1-agent --model gpt-6-luna --effort high # pick a model and reasoning effort
+exp1-agent --cwd ~/projects/my-app          # run the shell tool somewhere else
+exp1-agent --help
 ```
 
 | Клавіша | Дія |
@@ -437,7 +450,7 @@ exp-1 install https://example.com/skill.md
 
 ## Фоновий сервер
 
-Змодельовано на демоні opencode. **Звичайний запуск `exp1` піднімає сервер і приєднується до нього**, точно як типова команда opencode бере `daemon.transport()` і передає його UI.
+Змодельовано на демоні opencode. **Звичайний запуск `exp1-agent` піднімає сервер і приєднується до нього**, точно як типова команда opencode бере `daemon.transport()` і передає його UI.
 
 Наслідок і є суттю: закриття UI лишає сервер працювати, тож наступний запуск використовує теплий процес повторно. Сервер використовується повторно лише коли він **і** тієї самої версії, **і** тієї самої збірки: `server.json` записує розмір і час зміни виконуваного файлу, тож перезібраний після старту сервера клієнт замінює його, а не говорить протоколом, якого сервер уже не розуміє. Виміряно на цій машині:
 
@@ -459,17 +472,17 @@ exp-1 install https://example.com/skill.md
 Дорогий стан, спільний для всієї машини — реєстр інструментів і ~49 MB моделі titler — живе в одному сервері, а клієнт Codex будується тоді, коли його вперше потребує запит протоколу Codex, тож машина, підключена до будь-якого іншого провайдера, запускає сервер без облікових даних Codex. Кожен UI — тонкий клієнт, тож N паралельних сесій коштують `1 x 63 MB + N x 15 MB` замість `N x 61 MB`, і лише перший запуск платить за холодний старт.
 
 ```sh
-exp1 serve                 # run the server in the foreground
-exp1 service start         # spawn it detached (survives the launcher)
-exp1 service status        # pid, url, version, health
-exp1 service stop          # SIGTERM, then SIGKILL after a grace period
-exp1 service restart
-exp1 service password      # print, or set with an argument
+exp1-agent serve                 # run the server in the foreground
+exp1-agent service start         # spawn it detached (survives the launcher)
+exp1-agent service status        # pid, url, version, health
+exp1-agent service stop          # SIGTERM, then SIGKILL after a grace period
+exp1-agent service restart
+exp1-agent service password      # print, or set with an argument
 ```
 
 - **Реєстрація**: `~/.local/state/exp-1/server.json` містить `{id, version, url, pid}`. Клієнт читає його, перевіряє `/health` з таймаутом 2 с і використовує сервер повторно лише тоді, коли збігається і версія — застарілий або чужий сервер спершу зупиняється.
 - **Пароль**: `~/.local/state/exp-1/password`, 32 випадкові байти, права `0600`, зберігається між перезапусками, тож щойно запущений клієнт перепідключається без жодних вказівок.
-- **Відокремлений запуск**: `exp1 serve --register` у власній групі процесів із закритими стандартними потоками, тож він переживає того клієнта, який його запустив.
+- **Відокремлений запуск**: `exp1-agent serve --register` у власній групі процесів із закритими стандартними потоками, тож він переживає того клієнта, який його запустив.
 
 ### HTTP API
 
@@ -605,3 +618,8 @@ Conversation compacted; continuing from the summary
 - **Необов'язковий локальний титлер** збудовано на [Candle](https://github.com/huggingface/candle) від Hugging Face,
   під Apache-2.0 або MIT.
 - Усе інше — крейти з `Cargo.toml`, кожен під власною ліцензією.
+
+## Ліцензія
+
+Проєкт ліцензовано лише за GNU General Public License версії 3. Див. [LICENSE](LICENSE).
+Сторонні залежності та ресурси можуть мати власні ліцензії; див. їхні повідомлення та розділ «Подяки» вище.

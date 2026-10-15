@@ -3,6 +3,7 @@ name = "exp1-agent"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
+license = "GPL-3.0-only"
 description = "exp-1 agent — a minimal Rust TUI coding agent authenticated with Codex (ChatGPT OAuth)"
 
 [dependencies]

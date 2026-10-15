@@ -67,8 +67,8 @@ pub(crate) fn parse_args() -> Result<Args> {
 fn print_help() {
     println!(
         "exp-1 agent {}\n\n\
-         USAGE:\n    exp1 [OPTIONS]\n    exp1 install <skill>  install a skill, run it with /<name>\n\
-         \x20   exp1 service <start|stop|restart|status|password>\n\n\
+         USAGE:\n    exp1-agent [OPTIONS]\n    exp1-agent install <skill>  install a skill, run it with /<name>\n\
+         \x20   exp1-agent service <start|stop|restart|status|password>\n\n\
          OPTIONS:\n\
          \x20   -m, --model <NAME>   Model to use (default: the catalogue pick, env: EXP1_MODEL)\n\
          \x20       --effort <LEVEL>  Reasoning effort: low | medium | high (default: medium)\n\

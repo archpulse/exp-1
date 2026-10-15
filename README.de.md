@@ -2,6 +2,8 @@
 
 # exp-1 Agent
 
+<img src="assets/exp-1-logo.png" alt="exp-1 logo" width="96" />
+
 Ein minimaler Coding-Agent in Rust mit Terminal-UI, der mit **27 Anbietern** spricht und jedem die
 Modellliste übergibt, die er tatsächlich bedient: Der Katalog kommt live von models.dev, mit einer
 Tabelle in der Binärdatei als Offline-Rückfalllösung. Fünf Übertragungsprotokolle decken sie alle
@@ -138,13 +140,24 @@ xattr -cr ./exp1-agent                    # if it arrived by download
   Hugging-Face-Cache liegen, läuft die Titelvergabe offline, und ein frischer Klon braucht keinen
   benachbarten Checkout.
 
+## Installation
+
+Für die Installation der neuesten Version von GitHub brauchst du Rust 1.85+ und Cargo:
+
+```sh
+cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+exp1-agent --help
+```
+
+Cargo installiert das Binary `exp1-agent` nach `~/.cargo/bin`; füge dieses Verzeichnis bei Bedarf zu deinem `PATH` hinzu. Der Standard-Build enthält den lokalen Titler, deshalb dauert die erste Installation beim Kompilieren von Candle länger.
+
 ## Verwendung
 
 ```sh
 cargo run --release                      # uses the current directory
-exp1 --model gpt-6-luna --effort high    # pick a model and reasoning effort
-exp1 --cwd ~/projects/my-app             # run the shell tool somewhere else
-exp1 --help
+exp1-agent --model gpt-6-luna --effort high # pick a model and reasoning effort
+exp1-agent --cwd ~/projects/my-app          # run the shell tool somewhere else
+exp1-agent --help
 ```
 
 | Taste | Aktion |
@@ -683,7 +696,7 @@ opencode verwendet, ein Eintrag lässt sich also zwischen beiden kopieren:
 
 ## Hintergrundserver
 
-Nach dem Vorbild des Daemons von opencode. **Ein normaler Start von `exp1` bringt den Server hoch
+Nach dem Vorbild des Daemons von opencode. **Ein normaler Start von `exp1-agent` bringt den Server hoch
 und hängt sich an ihn**, genau wie der Standardbefehl von opencode `daemon.transport()` nimmt und an
 die UI übergibt.
 
@@ -719,12 +732,12 @@ parallele Sitzungen kosten also `1 x 63 MB + N x 15 MB` statt `N x 61 MB`, und n
 zahlt einen Kaltstart.
 
 ```sh
-exp1 serve                 # run the server in the foreground
-exp1 service start         # spawn it detached (survives the launcher)
-exp1 service status        # pid, url, version, health
-exp1 service stop          # SIGTERM, then SIGKILL after a grace period
-exp1 service restart
-exp1 service password      # print, or set with an argument
+exp1-agent serve                 # run the server in the foreground
+exp1-agent service start         # spawn it detached (survives the launcher)
+exp1-agent service status        # pid, url, version, health
+exp1-agent service stop          # SIGTERM, then SIGKILL after a grace period
+exp1-agent service restart
+exp1-agent service password      # print, or set with an argument
 ```
 
 - **Registrierung**: `~/.local/state/exp-1/server.json` hält `{id, version, url, pid}`. Ein Client
@@ -732,7 +745,7 @@ exp1 service password      # print, or set with an argument
   Version passt — ein veralteter oder fremder Server wird zuerst gestoppt.
 - **Passwort**: `~/.local/state/exp-1/password`, 32 zufällige Bytes, Modus `0600`, über Neustarts
   hinweg erhalten, damit ein neu gestarteter Client sich ohne weitere Angaben wieder verbindet.
-- **Abgekoppelter Start**: `exp1 serve --register` in eigener Prozessgruppe mit geschlossenen
+- **Abgekoppelter Start**: `exp1-agent serve --register` in eigener Prozessgruppe mit geschlossenen
   Standardströmen, sodass er den Client überlebt, der ihn gestartet hat.
 
 ### HTTP-API
@@ -939,3 +952,8 @@ und eine Werkzeugschleife mit mehreren Iterationen, die eine Datei geschrieben h
 - **Der optionale lokale Titler** baut auf [Candle](https://github.com/huggingface/candle) von Hugging Face,
   unter Apache-2.0 oder MIT.
 - Alles Übrige sind die Crates aus `Cargo.toml`, jede unter ihrer eigenen Lizenz.
+
+## Lizenz
+
+Dieses Projekt steht ausschließlich unter der GNU General Public License Version 3. Siehe [LICENSE](LICENSE).
+Drittanbieter-Abhängigkeiten und -Assets können eigenen Lizenzen unterliegen; siehe ihre Hinweise und den Abschnitt Danksagung oben.

@@ -2,6 +2,8 @@
 
 # exp-1 agent
 
+<img src="assets/exp-1-logo.png" alt="exp-1 logo" width="96" />
+
 A minimal coding agent in Rust with a terminal UI that talks to **27 providers**, handing each one
 the model list it actually serves: the catalogue comes live from models.dev, with a table in the
 binary as the offline fallback. Five wire protocols cover them all — the OpenAI chat-completions API
@@ -132,13 +134,26 @@ xattr -cr ./exp1-agent                    # if it arrived by download
   takes a while and the binary is ~16 MB rather than ~7 MB. Once the weights are in the Hugging Face
   cache, titling is offline, and a fresh clone needs no sibling checkout.
 
+## Install
+
+With Rust 1.85+ and Cargo installed, run:
+
+```sh
+cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+exp1-agent --help
+```
+
+Cargo installs the `exp1-agent` binary into `~/.cargo/bin`; make sure that directory is on your `PATH`.
+The default build includes the local titler, so its first build takes longer. The titler's model
+weights download from Hugging Face on first use.
+
 ## Usage
 
 ```sh
 cargo run --release                      # uses the current directory
-exp1 --model gpt-6-luna --effort high    # pick a model and reasoning effort
-exp1 --cwd ~/projects/my-app             # run the shell tool somewhere else
-exp1 --help
+exp1-agent --model gpt-6-luna --effort high # pick a model and reasoning effort
+exp1-agent --cwd ~/projects/my-app          # run the shell tool somewhere else
+exp1-agent --help
 ```
 
 | Key | Action |
@@ -641,7 +656,7 @@ an entry can be copied between the two:
 
 ## Background server
 
-Modelled on opencode's daemon. **A normal `exp1` launch brings the server up and attaches to it**,
+Modelled on opencode's daemon. **A normal `exp1-agent` launch brings the server up and attaches to it**,
 exactly like opencode's default command taking `daemon.transport()` and handing it to the UI.
 
 The consequence is the point: closing the UI leaves the server running, so the next launch reuses
@@ -675,12 +690,12 @@ thin client, so N parallel sessions cost `1 x 63 MB + N x 15 MB` instead of `N x
 the first launch pays for a cold start.
 
 ```sh
-exp1 serve                 # run the server in the foreground
-exp1 service start         # spawn it detached (survives the launcher)
-exp1 service status        # pid, url, version, health
-exp1 service stop          # SIGTERM, then SIGKILL after a grace period
-exp1 service restart
-exp1 service password      # print, or set with an argument
+exp1-agent serve                 # run the server in the foreground
+exp1-agent service start         # spawn it detached (survives the launcher)
+exp1-agent service status        # pid, url, version, health
+exp1-agent service stop          # SIGTERM, then SIGKILL after a grace period
+exp1-agent service restart
+exp1-agent service password      # print, or set with an argument
 ```
 
 - **Registration**: `~/.local/state/exp-1/server.json` holds `{id, version, url, pid}`. A client
@@ -688,7 +703,7 @@ exp1 service password      # print, or set with an argument
   matches — a stale or foreign server is stopped first.
 - **Password**: `~/.local/state/exp-1/password`, 32 random bytes, mode `0600`, kept across restarts
   so a newly launched client reconnects without being told anything.
-- **Detached spawn**: `exp1 serve --register` in its own process group with closed standard
+- **Detached spawn**: `exp1-agent serve --register` in its own process group with closed standard
   streams, so it outlives whichever client started it.
 
 ### HTTP API
@@ -884,3 +899,9 @@ trip, and a multi-iteration tool loop that wrote a file.
 - **The optional local titler** is built on [Candle](https://github.com/huggingface/candle) by Hugging Face,
   under Apache-2.0 or MIT.
 - Everything else is the crates listed in `Cargo.toml`, each under its own licence.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 only. See [LICENSE](LICENSE).
+Third-party dependencies and assets may have their own licenses; see their notices and the Credits
+section above.

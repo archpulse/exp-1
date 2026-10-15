@@ -2,6 +2,8 @@
 
 # exp-1 エージェント
 
+<img src="assets/exp-1-logo.png" alt="exp-1 logo" width="96" />
+
 ターミナル UI を備えた、Rust 製の最小限のコーディングエージェントです。**27 のプロバイダー**と対話し、各プロバイダーが実際に提供するモデル一覧を渡します。カタログは models.dev からライブで取得し、バイナリ内のテーブルをオフラインのフォールバックとします。5 つのワイヤプロトコルがそれらすべてを覆います — 十数のベンダーが共有する **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**、Vertex AI ネイティブの **Gemini `generateContent`**、そして Codex バックエンド — プロバイダーのサインインは、API キー、デバイスコードのサインイン、ベンダー自身のログイン、またはマシンがすでに持っている認証情報によって行います。Codex の経路は最初に登場し、今もその 1 つです: `auth.openai.com` に対する ChatGPT OAuth で、リクエストは `https://chatgpt.com/backend-api/codex/responses` に送られます。
 
 ## できること
@@ -99,13 +101,24 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - 既存の Codex CLI のログイン（その `auth.json` を再利用します）か、同じデバイスフローを自身で実行する `/login` のいずれか。
 - `crates/titler` にある同梱の `titler` クレート。Candle を引き込むため、初回ビルドに時間がかかり、バイナリは約 7 MB ではなく約 16 MB になります。重みが Hugging Face のキャッシュにあれば、タイトル生成はオフラインになり、新規クローンに隣のチェックアウトは不要です。
 
+## インストール
+
+GitHub から最新版をインストールするには Rust 1.85+ と Cargo が必要です。
+
+```sh
+cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+exp1-agent --help
+```
+
+Cargo は `exp1-agent` を `~/.cargo/bin` にインストールします。必要に応じて、このディレクトリを `PATH` に追加してください。標準ビルドにはローカル titler が含まれるため、初回インストールは Candle のコンパイルに時間がかかります。
+
 ## 使い方
 
 ```sh
 cargo run --release                      # uses the current directory
-exp1 --model gpt-6-luna --effort high    # pick a model and reasoning effort
-exp1 --cwd ~/projects/my-app             # run the shell tool somewhere else
-exp1 --help
+exp1-agent --model gpt-6-luna --effort high # pick a model and reasoning effort
+exp1-agent --cwd ~/projects/my-app          # run the shell tool somewhere else
+exp1-agent --help
 ```
 
 | キー | 動作 |
@@ -437,7 +450,7 @@ exp-1 install https://example.com/skill.md
 
 ## バックグラウンドサーバー
 
-opencode のデーモンに倣っています。**通常の `exp1` の起動はサーバーを立ち上げてそこに接続します**。opencode の既定コマンドが `daemon.transport()` を取って UI に渡すのとまったく同じです。
+opencode のデーモンに倣っています。**通常の `exp1-agent` の起動はサーバーを立ち上げてそこに接続します**。opencode の既定コマンドが `daemon.transport()` を取って UI に渡すのとまったく同じです。
 
 その帰結こそが要点です。UI を閉じてもサーバーは動いたままなので、次の起動は温かいプロセスを再利用します。サーバーが再利用されるのは、**バージョンとビルドの両方**が同じときだけです。`server.json` は実行ファイルのサイズと更新時刻を記録するので、サーバー起動後に再ビルドされたクライアントは、サーバーがもはや話さないプロトコルで会話するのではなく、それを置き換えます。このマシンでの実測:
 
@@ -459,17 +472,17 @@ opencode のデーモンに倣っています。**通常の `exp1` の起動は�
 高価でマシンごとに一度の状態 — ツールレジストリと約 49 MB の titler モデル — は 1 つのサーバーに住み、Codex クライアントは Codex プロトコルのリクエストが初めてそれを必要としたときに構築されるので、ほかのプロバイダーにサインインしたマシンは Codex の認証情報なしでサーバーを起動します。各 UI は薄いクライアントなので、N 個の並行セッションのコストは `N x 61 MB` ではなく `1 x 63 MB + N x 15 MB` で、コールドスタートを払うのは最初の起動だけです。
 
 ```sh
-exp1 serve                 # run the server in the foreground
-exp1 service start         # spawn it detached (survives the launcher)
-exp1 service status        # pid, url, version, health
-exp1 service stop          # SIGTERM, then SIGKILL after a grace period
-exp1 service restart
-exp1 service password      # print, or set with an argument
+exp1-agent serve                 # run the server in the foreground
+exp1-agent service start         # spawn it detached (survives the launcher)
+exp1-agent service status        # pid, url, version, health
+exp1-agent service stop          # SIGTERM, then SIGKILL after a grace period
+exp1-agent service restart
+exp1-agent service password      # print, or set with an argument
 ```
 
 - **登録**: `~/.local/state/exp-1/server.json` が `{id, version, url, pid}` を保持します。クライアントはそれを読み、2 秒のタイムアウトで `/health` を確認し、バージョンも一致するときだけサーバーを再利用します — 古いものやよそのサーバーは先に停止されます。
 - **パスワード**: `~/.local/state/exp-1/password`、32 の乱数バイト、モード `0600`。再起動をまたいで保たれるので、新しく起動したクライアントは何も教えられずに再接続します。
-- **切り離した起動**: 標準ストリームを閉じた自前のプロセスグループで `exp1 serve --register` を実行するので、どのクライアントが起動したよりも長く生き残ります。
+- **切り離した起動**: 標準ストリームを閉じた自前のプロセスグループで `exp1-agent serve --register` を実行するので、どのクライアントが起動したよりも長く生き残ります。
 
 ### HTTP API
 
@@ -605,3 +618,8 @@ Conversation compacted; continuing from the summary
 - **任意のローカルタイトラー**は Hugging Face の [Candle](https://github.com/huggingface/candle) を使っています
   （Apache-2.0 または MIT）。
 - それ以外は `Cargo.toml` にある crate で、それぞれ自らのライセンスに従います。
+
+## ライセンス
+
+本プロジェクトは GNU General Public License バージョン 3 のみでライセンスされています。[LICENSE](LICENSE) を参照してください。
+サードパーティの依存関係やアセットには独自のライセンスが適用される場合があります。各ライセンス表示と上記のクレジットを参照してください。

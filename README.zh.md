@@ -2,6 +2,8 @@
 
 # exp-1 代理
 
+<img src="assets/exp-1-logo.png" alt="exp-1 logo" width="96" />
+
 一个用 Rust 编写的极简编码代理，带终端 UI，与 **27 个提供方**对话，并向每个提供方传递它实际提供的模型列表：目录实时来自 models.dev，二进制中的一张表则是离线后备。五种线协议覆盖它们全部——由十几家厂商共享的 **OpenAI chat-completions** API、**OpenAI Responses**、**Anthropic messages**、Vertex AI 原生的 **Gemini `generateContent`** 以及 Codex 后端——而提供方通过 API key、设备码登录、厂商自有登录或机器已经持有的凭据来登录。Codex 路径最先出现，至今仍是其中之一：对接 `auth.openai.com` 的 ChatGPT OAuth，请求发往 `https://chatgpt.com/backend-api/codex/responses`。
 
 ## 功能
@@ -99,13 +101,24 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - 一个已有的 Codex CLI 登录（会复用它的 `auth.json`），或者 `/login`，它会自己运行同样的设备码流程。
 - 位于 `crates/titler` 的内置 crate `titler`。它会引入 Candle，因此首次构建要花些时间，二进制也约 16 MB 而不是约 7 MB。权重进入 Hugging Face 缓存后，起标题就是离线的，全新克隆也无需兄弟 checkout。
 
+## 安装
+
+安装 GitHub 上的最新版本需要 Rust 1.85+ 和 Cargo：
+
+```sh
+cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+exp1-agent --help
+```
+
+Cargo 会将 `exp1-agent` 安装到 `~/.cargo/bin`；如有需要，请将该目录加入 `PATH`。默认构建包含本地 titler，因此首次安装会因编译 Candle 而耗时更久。
+
 ## 用法
 
 ```sh
 cargo run --release                      # uses the current directory
-exp1 --model gpt-6-luna --effort high    # pick a model and reasoning effort
-exp1 --cwd ~/projects/my-app             # run the shell tool somewhere else
-exp1 --help
+exp1-agent --model gpt-6-luna --effort high # pick a model and reasoning effort
+exp1-agent --cwd ~/projects/my-app          # run the shell tool somewhere else
+exp1-agent --help
 ```
 
 | 按键 | 操作 |
@@ -437,7 +450,7 @@ exp-1 install https://example.com/skill.md
 
 ## 后台服务器
 
-参照 opencode 的守护进程建模。**一次普通的 `exp1` 启动会拉起服务器并附着到它**，完全像 opencode 的默认命令那样取 `daemon.transport()` 并交给 UI。
+参照 opencode 的守护进程建模。**一次普通的 `exp1-agent` 启动会拉起服务器并附着到它**，完全像 opencode 的默认命令那样取 `daemon.transport()` 并交给 UI。
 
 结果本身就是意义：关闭 UI 后服务器仍在运行，所以下一次启动会复用一个已经热起来的进程。只有当服务器**同时**是同一版本和同一构建时才会被复用：`server.json` 记录了可执行文件的大小和修改时间，因此自服务器启动以来重新构建过的客户端会替换掉它，而不是跟它讲一种它已经不再说的协议。在这台机器上实测：
 
@@ -459,17 +472,17 @@ exp-1 install https://example.com/skill.md
 昂贵、每台机器只需一份的状态——工具注册表和约 49 MB 的 titler 模型——存在于那一个服务器中，而 Codex 客户端在第一次有 Codex 协议请求需要它时才构建，因此只登录了其他提供方的机器启动服务器时不需要 Codex 凭据。每个 UI 都是瘦客户端，所以 N 个并行会话的开销是 `1 x 63 MB + N x 15 MB` 而不是 `N x 61 MB`，并且只有第一次启动需要付出冷启动的代价。
 
 ```sh
-exp1 serve                 # run the server in the foreground
-exp1 service start         # spawn it detached (survives the launcher)
-exp1 service status        # pid, url, version, health
-exp1 service stop          # SIGTERM, then SIGKILL after a grace period
-exp1 service restart
-exp1 service password      # print, or set with an argument
+exp1-agent serve                 # run the server in the foreground
+exp1-agent service start         # spawn it detached (survives the launcher)
+exp1-agent service status        # pid, url, version, health
+exp1-agent service stop          # SIGTERM, then SIGKILL after a grace period
+exp1-agent service restart
+exp1-agent service password      # print, or set with an argument
 ```
 
 - **注册**：`~/.local/state/exp-1/server.json` 保存 `{id, version, url, pid}`。客户端读取它，用 2 秒超时检查 `/health`，只有在版本也匹配时才复用服务器——陈旧或外来服务器会先被停止。
 - **密码**：`~/.local/state/exp-1/password`，32 个随机字节，模式 `0600`，跨重启保留，因此新启动的客户端无需被告知任何东西就能重连。
-- **分离启动**：`exp1 serve --register` 在自己的进程组中运行，标准流关闭，因此它比启动它的任何客户端都活得久。
+- **分离启动**：`exp1-agent serve --register` 在自己的进程组中运行，标准流关闭，因此它比启动它的任何客户端都活得久。
 
 ### HTTP API
 
@@ -605,3 +618,8 @@ Conversation compacted; continuing from the summary
 - **可选的本地标题生成器**基于 Hugging Face 的 [Candle](https://github.com/huggingface/candle)，
   采用 Apache-2.0 或 MIT。
 - 其余都是 `Cargo.toml` 中的 crate，各自遵循自己的许可证。
+
+## 许可证
+
+本项目仅依据 GNU 通用公共许可证第 3 版授权。请参阅 [LICENSE](LICENSE)。
+第三方依赖和资源可能有各自的许可证；请参阅其许可声明和上方的致谢部分。

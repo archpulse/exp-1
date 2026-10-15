@@ -2,6 +2,8 @@
 
 # exp-1 agent
 
+<img src="assets/exp-1-logo.png" alt="exp-1 logo" width="96" />
+
 Un agente de programación mínimo en Rust con una interfaz de terminal que habla con **27
 proveedores**, entregando a cada uno la lista de modelos que realmente sirve: el catálogo llega en
 vivo desde models.dev, con una tabla en el binario como alternativa sin conexión. Cinco protocolos
@@ -141,13 +143,24 @@ xattr -cr ./exp1-agent                    # if it arrived by download
   tarda un rato y el binario ocupa ~16 MB en vez de ~7 MB. Una vez que los pesos están en la caché
   de Hugging Face, titular es offline, y un clon recién hecho no necesita un checkout hermano.
 
+## Instalación
+
+Para instalar la versión más reciente desde GitHub necesitas Rust 1.85+ y Cargo:
+
+```sh
+cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+exp1-agent --help
+```
+
+Cargo instala el binario `exp1-agent` en `~/.cargo/bin`; añade ese directorio a `PATH` si hace falta. La compilación predeterminada incluye el titulador local, así que la primera instalación tarda más mientras se compila Candle.
+
 ## Uso
 
 ```sh
 cargo run --release                      # uses the current directory
-exp1 --model gpt-6-luna --effort high    # pick a model and reasoning effort
-exp1 --cwd ~/projects/my-app             # run the shell tool somewhere else
-exp1 --help
+exp1-agent --model gpt-6-luna --effort high # pick a model and reasoning effort
+exp1-agent --cwd ~/projects/my-app          # run the shell tool somewhere else
+exp1-agent --help
 ```
 
 | Tecla | Acción |
@@ -678,7 +691,7 @@ opencode, así que una entrada puede copiarse entre los dos:
 
 ## Servidor en segundo plano
 
-Modelado a partir del daemon de opencode. **Un arranque normal de `exp1` levanta el servidor y se
+Modelado a partir del daemon de opencode. **Un arranque normal de `exp1-agent` levanta el servidor y se
 conecta a él**, exactamente como el comando por defecto de opencode toma `daemon.transport()` y se lo
 entrega a la interfaz.
 
@@ -714,12 +727,12 @@ en paralelo cuestan `1 x 63 MB + N x 15 MB` en vez de `N x 61 MB`, y solo el pri
 arranque en frío.
 
 ```sh
-exp1 serve                 # run the server in the foreground
-exp1 service start         # spawn it detached (survives the launcher)
-exp1 service status        # pid, url, version, health
-exp1 service stop          # SIGTERM, then SIGKILL after a grace period
-exp1 service restart
-exp1 service password      # print, or set with an argument
+exp1-agent serve                 # run the server in the foreground
+exp1-agent service start         # spawn it detached (survives the launcher)
+exp1-agent service status        # pid, url, version, health
+exp1-agent service stop          # SIGTERM, then SIGKILL after a grace period
+exp1-agent service restart
+exp1-agent service password      # print, or set with an argument
 ```
 
 - **Registro**: `~/.local/state/exp-1/server.json` contiene `{id, version, url, pid}`. Un cliente lo
@@ -727,7 +740,7 @@ exp1 service password      # print, or set with an argument
   también coincide; un servidor obsoleto o ajeno se detiene primero.
 - **Contraseña**: `~/.local/state/exp-1/password`, 32 bytes aleatorios, modo `0600`, se conserva
   entre reinicios para que un cliente recién lanzado se reconecte sin que se le diga nada.
-- **Lanzamiento desprendido**: `exp1 serve --register` en su propio grupo de procesos y con los
+- **Lanzamiento desprendido**: `exp1-agent serve --register` en su propio grupo de procesos y con los
   flujos estándar cerrados, para que sobreviva al cliente que lo inició.
 
 ### API HTTP
@@ -934,3 +947,8 @@ escribió un archivo.
 - **El titulador local opcional** se apoya en [Candle](https://github.com/huggingface/candle) de Hugging Face,
   bajo Apache-2.0 o MIT.
 - Todo lo demás son los crates de `Cargo.toml`, cada uno bajo su propia licencia.
+
+## Licencia
+
+Este proyecto se distribuye únicamente bajo la GNU General Public License versión 3. Consulta [LICENSE](LICENSE).
+Las dependencias y los recursos de terceros pueden tener sus propias licencias; consulta sus avisos y la sección Créditos anterior.

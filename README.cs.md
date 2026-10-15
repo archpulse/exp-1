@@ -2,6 +2,8 @@
 
 # exp-1 agent
 
+<img src="assets/exp-1-logo.png" alt="exp-1 logo" width="96" />
+
 Minimální kódovací agent v Rustu s terminálovým UI, který mluví s **27 poskytovateli** a každému předává seznam modelů, které skutečně obsluhuje: katalog přichází živě z models.dev, zatímco tabulka v binárním souboru slouží jako offline záloha. Pět přenosových protokolů pokrývá je všechny — API **OpenAI chat-completions**, které sdílí tucet dodavatelů, **OpenAI Responses**, **Anthropic messages**, nativní **Gemini `generateContent`** od Vertex AI a backend Codex — a poskytovatel se přihlašuje API klíčem, stránkou s kódem zařízení, vlastním přihlášením dodavatele nebo přihlašovacími údaji, které stroj už má. Cesta Codexu přišla první a pořád je jednou z nich: ChatGPT OAuth proti `auth.openai.com`, s požadavky na `https://chatgpt.com/backend-api/codex/responses`.
 
 ## Co umí
@@ -99,13 +101,24 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Buď existující přihlášení v Codex CLI (jeho `auth.json` se znovu použije), nebo `/login`, které samo spustí stejný tok s kódem zařízení.
 - Přibalený crate `titler` v `crates/titler`. Táhne Candle, a proto první sestavení chvíli trvá a binární soubor má ~16 MB místo ~7 MB. Jakmile jsou váhy v keši Hugging Face, pojmenovávání probíhá offline, a čerstvý klon nepotřebuje sourozenecký checkout.
 
+## Instalace
+
+K instalaci nejnovější verze z GitHubu potřebujete Rust 1.85+ a Cargo:
+
+```sh
+cargo install --git https://github.com/archpulse/exp-1.git --locked exp1-agent
+exp1-agent --help
+```
+
+Cargo nainstaluje binární soubor `exp1-agent` do `~/.cargo/bin`; v případě potřeby přidejte tento adresář do `PATH`. Výchozí sestavení obsahuje lokální titler, takže první instalace trvá déle kvůli kompilaci Candle.
+
 ## Použití
 
 ```sh
 cargo run --release                      # uses the current directory
-exp1 --model gpt-6-luna --effort high    # pick a model and reasoning effort
-exp1 --cwd ~/projects/my-app             # run the shell tool somewhere else
-exp1 --help
+exp1-agent --model gpt-6-luna --effort high # pick a model and reasoning effort
+exp1-agent --cwd ~/projects/my-app          # run the shell tool somewhere else
+exp1-agent --help
 ```
 
 | Klávesa | Akce |
@@ -437,7 +450,7 @@ Nástroje z [MCP](https://modelcontextprotocol.io) serverů se modeli nabízejí
 
 ## Server na pozadí
 
-Vzorované na démonu opencode. **Běžné spuštění `exp1` server nastartuje a připojí se k němu**, přesně jako výchozí příkaz opencode vezme `daemon.transport()` a předá ho UI.
+Vzorované na démonu opencode. **Běžné spuštění `exp1-agent` server nastartuje a připojí se k němu**, přesně jako výchozí příkaz opencode vezme `daemon.transport()` a předá ho UI.
 
 Právě o důsledek tu jde: zavření UI nechá server běžet, takže další spuštění znovu použije zahřátý proces. Server se znovu použije jen tehdy, když má **jak** stejnou verzi, **tak** stejné sestavení: `server.json` zaznamenává velikost a čas změny spustitelného souboru, takže klient znovu sestavený od spuštění serveru ho nahradí, místo aby mluvil protokolem, kterým server už nemluví. Změřeno na tomto stroji:
 
@@ -459,17 +472,17 @@ Server je líný v tom, co načítá: klient Codex se objeví při prvním tahu 
 Drahý stav placený jednou na stroj — registr nástrojů a ~49 MB modelu titleru — žije v jediném serveru a klient Codex se sestaví, když ho poprvé potřebuje požadavek protokolu Codex, takže stroj přihlášený k jakémukoli jinému poskytovateli spustí server bez přihlašovacích údajů Codexu. Každé UI je tenký klient, takže N paralelních relací stojí `1 x 63 MB + N x 15 MB` místo `N x 61 MB`, a jen první spuštění platí za studený start.
 
 ```sh
-exp1 serve                 # run the server in the foreground
-exp1 service start         # spawn it detached (survives the launcher)
-exp1 service status        # pid, url, version, health
-exp1 service stop          # SIGTERM, then SIGKILL after a grace period
-exp1 service restart
-exp1 service password      # print, or set with an argument
+exp1-agent serve                 # run the server in the foreground
+exp1-agent service start         # spawn it detached (survives the launcher)
+exp1-agent service status        # pid, url, version, health
+exp1-agent service stop          # SIGTERM, then SIGKILL after a grace period
+exp1-agent service restart
+exp1-agent service password      # print, or set with an argument
 ```
 
 - **Registrace**: `~/.local/state/exp-1/server.json` drží `{id, version, url, pid}`. Klient ho přečte, zkontroluje `/health` s dvousekundovým limitem a server znovu použije jen když sedí i verze — zastaralý nebo cizí server nejdřív zastaví.
 - **Heslo**: `~/.local/state/exp-1/password`, 32 náhodných bajtů, práva `0600`, přežívá restarty, takže se nově spuštěný klient připojí znovu, aniž by se mu cokoli říkalo.
-- **Odpoutané spuštění**: `exp1 serve --register` ve vlastní procesní skupině s uzavřenými standardními proudy, takže přežije klienta, který ho spustil.
+- **Odpoutané spuštění**: `exp1-agent serve --register` ve vlastní procesní skupině s uzavřenými standardními proudy, takže přežije klienta, který ho spustil.
 
 ### HTTP API
 
@@ -605,3 +618,8 @@ Podrobnosti protokolu byly zkontrolovány proti zdrojům `openai/codex` a potvrz
 - **Volitelný lokální titler** staví na [Candle](https://github.com/huggingface/candle) od Hugging Face,
   pod Apache-2.0 nebo MIT.
 - Vše ostatní jsou crates z `Cargo.toml`, každý pod vlastní licencí.
+
+## Licence
+
+Tento projekt je licencován výhradně pod GNU General Public License verze 3. Viz [LICENSE](LICENSE).
+Licence třetích stran a jejich oznámení se mohou lišit; viz příslušná oznámení a výše uvedené poděkování.
