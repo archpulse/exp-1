@@ -128,9 +128,9 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Rust 1.85+ (edition 2024)
 - Either an existing Codex CLI login (its `auth.json` is reused) or `/login`, which runs the same
   device flow itself.
-- The sibling `titler` crate at `../mygame/titler`. It pulls in Candle, which is why the first
-  build takes a while and the binary is ~16 MB rather than ~7 MB. Once the weights are in the
-  Hugging Face cache, titling is offline.
+- The vendored `titler` crate in `crates/titler`. It pulls in Candle, which is why the first build
+  takes a while and the binary is ~16 MB rather than ~7 MB. Once the weights are in the Hugging Face
+  cache, titling is offline, and a fresh clone needs no sibling checkout.
 
 ## Usage
 
@@ -774,7 +774,8 @@ crash costs at most the turn in flight.
 
 The bundled titler is an optional feature: `cargo build --release --no-default-features` leaves it
 out and takes the whole Candle dependency with it, and session titles then come from the model
-alone. CI builds that way, because the titler is a sibling path dependency.
+alone. CI builds that way because the titler drags in Candle: the crate sits in the tree, but a
+release does not have to pay for it.
 
 The prompts are files, not constants: `~/.config/exp-1/prompts/system.md` (the agent's own
 instructions), `subagent.md`, `compaction.md` and `title.md` are written out on first launch and
