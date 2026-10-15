@@ -99,7 +99,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85+（edition 2024）
 - 一个已有的 Codex CLI 登录（会复用它的 `auth.json`），或者 `/login`，它会自己运行同样的设备码流程。
-- 位于 `crates/titler` 的内置 crate `titler`。它会引入 Candle，因此首次构建要花些时间，二进制也约 16 MB 而不是约 7 MB。权重进入 Hugging Face 缓存后，起标题就是离线的，全新克隆也无需兄弟 checkout。
+- 内置的 titler 在 `titler` feature 下从 `src/titler.rs` 编译进代理。它会引入 Candle，因此首次构建要花些时间，二进制也约 16 MB 而不是约 7 MB。权重进入 Hugging Face 缓存后，起标题就是离线的。
 
 ## 安装
 
@@ -556,7 +556,7 @@ Conversation compacted; continuing from the summary
 
 ### 会话标题
 
-标题来自内置的 **titler**——一个本地 T5（760 万参数，3 层编码器和 3 层解码器），在本进程中通过 Candle 运行，作为路径依赖从 `crates/titler` 引入。权重（`Cyronius/titler`）从 Hugging Face 缓存读取，每个进程最多加载一次，所以一旦它们落到磁盘上，标题生成就是本地的、即时的、免费的。
+标题来自内置的 **titler**——一个本地 T5（760 万参数，3 层编码器和 3 层解码器），在本进程中通过 Candle 运行，从 `src/titler.rs` 编译进代理。权重（`Cyronius/titler`）从 Hugging Face 缓存读取，每个进程最多加载一次，所以一旦它们落到磁盘上，标题生成就是本地的、即时的、免费的。
 
 生成会在第一个回合结束的瞬间在阻塞线程上运行，绝不在 UI 线程上。有父会话的会话——侧边对话——根本不会被命名，因为它们属于它们所跟随的对话。使用的是库的多语言路径（不是原始路径），所以会检测语言，非英语提示词会先翻译成英语。会话只命名一次，在标题到达之前，选择器显示的是取自提示词的预览。
 
@@ -581,7 +581,7 @@ Conversation compacted; continuing from the summary
 | `src/auth.rs` | 凭据加载、JWT 过期检查、刷新、原子持久化 |
 | `src/store.rs` | `~/.config/exp-1/sessions/` 下的设置和会话文件 |
 | `src/catalog.rs` | 来自 Codex 缓存的模型和推理强度目录 |
-| `crates/titler` | 路径依赖：为会话命名的本地 T5 |
+| `src/titler.rs` | 为会话命名的本地 T5，随 `titler` feature 编译进代理 |
 | `src/protocol.rs` | 请求/响应线类型 |
 | `src/md.rs` | Markdown 和管道表格到带样式的片段 |
 | `src/latex.rs` | LaTeX 数学到 Unicode |

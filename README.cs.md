@@ -99,7 +99,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85+ (edice 2024)
 - Buď existující přihlášení v Codex CLI (jeho `auth.json` se znovu použije), nebo `/login`, které samo spustí stejný tok s kódem zařízení.
-- Přibalený crate `titler` v `crates/titler`. Táhne Candle, a proto první sestavení chvíli trvá a binární soubor má ~16 MB místo ~7 MB. Jakmile jsou váhy v keši Hugging Face, pojmenovávání probíhá offline, a čerstvý klon nepotřebuje sourozenecký checkout.
+- Přibalený titler, zkompilovaný do agenta ze `src/titler.rs` pod funkcí `titler`. Táhne Candle, a proto první sestavení chvíli trvá a binární soubor má ~16 MB místo ~7 MB. Jakmile jsou váhy v keši Hugging Face, pojmenovávání probíhá offline.
 
 ## Instalace
 
@@ -556,7 +556,7 @@ Prompty jsou soubory, ne konstanty: `~/.config/exp-1/prompts/system.md` (vlastn�
 
 ### Názvy relací
 
-Názvy pocházejí z přibaleného **titleru** — místní T5 (7,6M parametrů, 3 vrstvy kodéru a 3 dekodéru), která běží přes Candle v tomto procesu a je přitažena jako závislost na cestě z `crates/titler`. Váhy (`Cyronius/titler`) se čtou z keše Hugging Face a načítají se nejvýše jednou na proces, takže jakmile jsou na disku, generování názvů je místní, okamžité a zdarma.
+Názvy pocházejí z přibaleného **titleru** — místní T5 (7,6M parametrů, 3 vrstvy kodéru a 3 dekodéru), která běží přes Candle v tomto procesu a je zkompilována do agenta ze `src/titler.rs`. Váhy (`Cyronius/titler`) se čtou z keše Hugging Face a načítají se nejvýše jednou na proces, takže jakmile jsou na disku, generování názvů je místní, okamžité a zdarma.
 
 Generování běží na blokujícím vlákně ve chvíli, kdy skončí první tah, nikdy na vlákně UI. Relace s rodičem — vedlejší chat — se nepojmenovávají vůbec, protože patří ke konverzaci, kterou následují. Používá se vícejazyčná cesta knihovny (ne ta surová), takže se rozpozná jazyk a neanglický prompt se nejdřív přeloží do angličtiny. Relace se pojmenuje jednou a náhled vzatý z promptu je to, co výběr ukazuje, dokud název nedorazí.
 
@@ -581,7 +581,7 @@ Názvy se žádají od levné řady `luna` v katalogu, a ne od modelu samotné r
 | `src/auth.rs` | Načtení přihlašovacích údajů, kontrola vypršení JWT, obnovení, atomické uložení |
 | `src/store.rs` | Soubory nastavení a relací pod `~/.config/exp-1/sessions/` |
 | `src/catalog.rs` | Katalog modelů a úsilí uvažování z keše Codexu |
-| `crates/titler` | Závislost na cestě: místní T5, která pojmenovává relace |
+| `src/titler.rs` | Místní T5, která pojmenovává relace; kompiluje se do agenta s funkcí `titler` |
 | `src/protocol.rs` | Přenosové typy požadavků a odpovědí |
 | `src/md.rs` | Markdown a trubkové tabulky na stylované běhy |
 | `src/latex.rs` | Matematika LaTeX na Unicode |

@@ -1,3 +1,12 @@
+//! The bundled titler: a local T5 (7.6M parameters, three encoder and three
+//! decoder layers) that names a session from its first prompt, in this process.
+//!
+//! It lives here as a module rather than as its own crate so that a fresh clone
+//! and a package published to crates.io both build with no sibling checkout.
+//! The module carries the whole library API while the agent calls part of it,
+//! which is why dead-code lints are allowed for the module as a whole.
+#![allow(dead_code, unused_imports)]
+
 use std::path::Path;
 use anyhow::{anyhow, Result};
 use candle_core::{DType, Device, Tensor};
@@ -333,3 +342,6 @@ fn clean_title(title: &str) -> String {
     s = s.replace("Can Not ", "Cannot ");
     s
 }
+
+#[cfg(test)]
+mod tests;

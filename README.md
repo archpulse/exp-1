@@ -130,9 +130,9 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Rust 1.85+ (edition 2024)
 - Either an existing Codex CLI login (its `auth.json` is reused) or `/login`, which runs the same
   device flow itself.
-- The vendored `titler` crate in `crates/titler`. It pulls in Candle, which is why the first build
-  takes a while and the binary is ~16 MB rather than ~7 MB. Once the weights are in the Hugging Face
-  cache, titling is offline, and a fresh clone needs no sibling checkout.
+- The bundled titler, compiled into the agent from `src/titler.rs` under the `titler` feature. It
+  pulls in Candle, which is why the first build takes a while and the binary is ~16 MB rather than
+  ~7 MB. Once the weights are in the Hugging Face cache, titling is offline.
 
 ## Install
 
@@ -807,8 +807,8 @@ abandons the current conversation and starts a fresh one, keeping your settings.
 ### Session titles
 
 Titles come from the bundled **titler** — a local T5 (7.6M parameters, 3 encoder and 3 decoder
-layers) that runs through Candle in this process, pulled in as a path dependency from
-`crates/titler`. The weights (`Cyronius/titler`) are read from the Hugging Face cache and
+layers) that runs through Candle in this process, compiled in from `src/titler.rs`. The weights
+(`Cyronius/titler`) are read from the Hugging Face cache and
 loaded at most once per process, so once they are on disk title generation is local, instant and
 free.
 
@@ -851,7 +851,7 @@ file entirely.
 | `src/auth.rs` | Credential load, JWT expiry check, refresh, atomic persist |
 | `src/store.rs` | Settings and session files under `~/.config/exp-1/sessions/` |
 | `src/catalog.rs` | Model and reasoning-effort catalogue from the Codex cache |
-| `crates/titler` | Path dependency: the local T5 that names sessions |
+| `src/titler.rs` | The local T5 that names sessions, compiled in with the `titler` feature |
 | `src/protocol.rs` | Request/response wire types |
 | `src/md.rs` | Markdown and pipe tables to styled runs |
 | `src/latex.rs` | LaTeX math to Unicode |

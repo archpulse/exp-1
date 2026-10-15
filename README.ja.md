@@ -99,7 +99,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85 以上（edition 2024）
 - 既存の Codex CLI のログイン（その `auth.json` を再利用します）か、同じデバイスフローを自身で実行する `/login` のいずれか。
-- `crates/titler` にある同梱の `titler` クレート。Candle を引き込むため、初回ビルドに時間がかかり、バイナリは約 7 MB ではなく約 16 MB になります。重みが Hugging Face のキャッシュにあれば、タイトル生成はオフラインになり、新規クローンに隣のチェックアウトは不要です。
+- 同梱の titler は `titler` フィーチャーの下で `src/titler.rs` からエージェントにコンパイルされます。Candle を引き込むため、初回ビルドに時間がかかり、バイナリは約 7 MB ではなく約 16 MB になります。重みが Hugging Face のキャッシュにあれば、タイトル生成はオフラインになります。
 
 ## インストール
 
@@ -556,7 +556,7 @@ Conversation compacted; continuing from the summary
 
 ### セッションのタイトル
 
-タイトルは同梱の **titler** から来ます — ローカルの T5（7.6M パラメーター、エンコーダー 3 層とデコーダー 3 層）で、このプロセス内で Candle を通して動き、`crates/titler` からパス依存として取り込まれます。重み（`Cyronius/titler`）は Hugging Face のキャッシュから読まれ、プロセスごとに最大 1 回読み込まれるので、ディスクにあればタイトル生成はローカルで、即時で、無料です。
+タイトルは同梱の **titler** から来ます — ローカルの T5（7.6M パラメーター、エンコーダー 3 層とデコーダー 3 層）で、このプロセス内で Candle を通して動き、`src/titler.rs` からエージェントにコンパイルされます。重み（`Cyronius/titler`）は Hugging Face のキャッシュから読まれ、プロセスごとに最大 1 回読み込まれるので、ディスクにあればタイトル生成はローカルで、即時で、無料です。
 
 生成は最初のターンが終わった瞬間に、UI スレッドではなくブロッキングスレッドで走ります。親を持つセッション — サイドチャット — は、それが従う会話に属するため、まったく名前を付けられません。ライブラリの多言語経路（生の経路ではなく）を使うので、言語が検出され、英語以外のプロンプトはまず英語へ翻訳されます。セッションは一度だけ名付けられ、タイトルが届くまではピッカーがプロンプトから取ったプレビューを表示します。
 
@@ -581,7 +581,7 @@ Conversation compacted; continuing from the summary
 | `src/auth.rs` | 認証情報の読み込み、JWT 有効期限の確認、リフレッシュ、アトミックな保存 |
 | `src/store.rs` | `~/.config/exp-1/sessions/` 下の設定とセッションファイル |
 | `src/catalog.rs` | Codex キャッシュからのモデルと推論エフォートのカタログ |
-| `crates/titler` | パス依存: セッションに名前を付けるローカル T5 |
+| `src/titler.rs` | セッションに名前を付けるローカル T5（`titler` フィーチャーでコンパイル） |
 | `src/protocol.rs` | リクエスト/レスポンスのワイヤ型 |
 | `src/md.rs` | Markdown とパイプテーブルからスタイル付きランへ |
 | `src/latex.rs` | LaTeX 数式から Unicode へ |

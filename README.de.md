@@ -135,10 +135,10 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Rust 1.85+ (Edition 2024)
 - Entweder eine vorhandene Anmeldung in der Codex CLI (deren `auth.json` wiederverwendet wird)
   oder `/login`, das denselben Gerätecode-Ablauf selbst ausführt.
-- Die mitgelieferte Crate `titler` unter `crates/titler`. Sie zieht Candle herein, weshalb der
-  erste Build eine Weile dauert und das Binary ~16 MB statt ~7 MB groß ist. Sobald die Gewichte im
-  Hugging-Face-Cache liegen, läuft die Titelvergabe offline, und ein frischer Klon braucht keinen
-  benachbarten Checkout.
+- Der mitgelieferte Titler, aus `src/titler.rs` unter dem Feature `titler` in den Agenten
+  kompiliert. Er zieht Candle herein, weshalb der erste Build eine Weile dauert und das Binary
+  ~16 MB statt ~7 MB groß ist. Sobald die Gewichte im Hugging-Face-Cache liegen, läuft die
+  Titelvergabe offline.
 
 ## Installation
 
@@ -855,8 +855,8 @@ Einstellungen erhalten bleiben.
 ### Sitzungstitel
 
 Titel kommen vom mitgelieferten **Titler** — einem lokalen T5 (7,6 Mio. Parameter, 3 Encoder- und
-3 Decoder-Schichten), der über Candle in diesem Prozess läuft und als Pfad-Abhängigkeit aus
-`crates/titler` hereingezogen wird. Die Gewichte (`Cyronius/titler`) werden aus dem
+3 Decoder-Schichten), der über Candle in diesem Prozess läuft und aus
+`src/titler.rs` in den Agenten kompiliert wird. Die Gewichte (`Cyronius/titler`) werden aus dem
 Hugging-Face-Cache gelesen und höchstens einmal pro Prozess geladen, sobald sie auf der Platte
 sind, ist die Titelerzeugung also lokal, sofort und kostenlos.
 
@@ -901,7 +901,7 @@ und `Формула корней квадратного уравнения в La
 | `src/auth.rs` | Laden der Zugangsdaten, JWT-Ablaufprüfung, Auffrischen, atomares Speichern |
 | `src/store.rs` | Einstellungs- und Sitzungsdateien unter `~/.config/exp-1/sessions/` |
 | `src/catalog.rs` | Katalog von Modellen und Denkaufwand aus dem Codex-Cache |
-| `crates/titler` | Pfad-Abhängigkeit: der lokale T5, der Sitzungen benennt |
+| `src/titler.rs` | Der lokale T5, der Sitzungen benennt, mit dem Feature `titler` einkompiliert |
 | `src/protocol.rs` | Übertragungstypen für Anfrage und Antwort |
 | `src/md.rs` | Markdown und Pipe-Tabellen zu gestalteten Textläufen |
 | `src/latex.rs` | LaTeX-Mathematik zu Unicode |

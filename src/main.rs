@@ -22,6 +22,8 @@ mod server;
 mod skills;
 mod store;
 mod tools;
+#[cfg(feature = "titler")]
+pub(crate) mod titler;
 
 use anyhow::{ Result };
 use crossterm::event::{

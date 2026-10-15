@@ -4,12 +4,28 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 license = "GPL-3.0-only"
-description = "exp-1 agent — a minimal Rust TUI coding agent authenticated with Codex (ChatGPT OAuth)"
+description = "A minimal Rust TUI coding agent for 27 providers, with tool use, MCP, skills, two threads and streaming dictation"
+repository = "https://github.com/archpulse/exp-1"
+homepage = "https://exp1-agent.web.app"
+keywords = ["coding-agent", "tui", "cli", "llm", "mcp"]
+categories = ["command-line-utilities", "development-tools"]
+include = [
+  "/Cargo.toml",
+  "/Cargo.lock",
+  "/LICENSE",
+  "/README.md",
+  "/assets/exp-1-logo.png",
+  "/src/**",
+]
+exclude = ["/web/**", "/icon-option-5.png", "/Вставленное изображение.png"]
 
 [dependencies]
 anyhow = "1"
 axum = { version = "0.8", features = ["json", "http1", "tokio"] }
 base64 = "0.23"
+candle-core = { version = "0.11.0", optional = true }
+candle-nn = { version = "0.11.0", optional = true }
+candle-transformers = { version = "0.11.0", optional = true }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 crossterm = "0.29"
 futures-util = "0.3"
@@ -19,16 +35,28 @@ reqwest = { version = "0.13", default-features = false, features = ["json", "str
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 regex = "1"
-# The titler is vendored in this repository and pulls in Candle. It is optional
-# so a build without it — CI, or a cross-build for a platform where its TLS stack
-# does not link — still produces a working agent, minus local titles.
-titler = { path = "crates/titler", optional = true }
+hf-hub = { version = "0.4", optional = true }
+rand = { version = "0.9", optional = true }
+tokenizers = { version = "0.23.2", optional = true }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "process"] }
+ureq = { version = "2.12", optional = true }
+urlencoding = { version = "2.1", optional = true }
 uuid = { version = "1", features = ["v4"] }
+whatlang = { version = "0.18.0", optional = true }
 
 [features]
 default = ["titler"]
-titler = ["dep:titler"]
+titler = [
+  "dep:candle-core",
+  "dep:candle-nn",
+  "dep:candle-transformers",
+  "dep:hf-hub",
+  "dep:rand",
+  "dep:tokenizers",
+  "dep:ureq",
+  "dep:urlencoding",
+  "dep:whatlang",
+]
 
 [profile.release]
 opt-level = 2

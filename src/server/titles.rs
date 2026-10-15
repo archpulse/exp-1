@@ -6,6 +6,8 @@ use crate::catalog;
 use crate::proto::WireEvent;
 use crate::protocol::{ContentPart, InputItem, Reasoning, ResponsesRequest, Usage};
 use crate::store;
+#[cfg(feature = "titler")]
+use crate::titler;
 
 use super::*;
 

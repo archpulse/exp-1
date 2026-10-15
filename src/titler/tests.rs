@@ -1,6 +1,7 @@
-use titler::Titler;
+use super::Titler;
 
 #[test]
+#[ignore = "downloads the titler model weights from Hugging Face"]
 fn test_titler_generation() {
     let mut model = Titler::from_hub("Cyronius/titler", None).expect("failed to load model");
     

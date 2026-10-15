@@ -29,9 +29,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      # `--no-default-features` drops the bundled titler: it is a sibling path
-      # dependency, so a checkout of this repository alone cannot see it. The
-      # agent is complete without it — session titles then come from the model.
+      # `--no-default-features` drops the bundled titler and the Candle build
+      # with it; the source is embedded, so this is a size choice for the
+      # release binary. The agent is complete without it — titles then come
+      # from the model.
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features
       # A macOS binary from CI is unsigned; the ad-hoc signature is what lets
       # it start on Apple Silicon.

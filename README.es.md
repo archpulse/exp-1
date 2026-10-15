@@ -139,9 +139,9 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Rust 1.85+ (edición 2024)
 - O bien un inicio de sesión existente de la CLI de Codex (se reutiliza su `auth.json`), o bien
   `/login`, que ejecuta él mismo el mismo flujo de dispositivo.
-- El crate `titler` integrado en `crates/titler`. Arrastra Candle, y por eso la primera compilación
-  tarda un rato y el binario ocupa ~16 MB en vez de ~7 MB. Una vez que los pesos están en la caché
-  de Hugging Face, titular es offline, y un clon recién hecho no necesita un checkout hermano.
+- El titulador integrado, compilado en el agente desde `src/titler.rs` bajo la feature `titler`.
+  Arrastra Candle, y por eso la primera compilación tarda un rato y el binario ocupa ~16 MB en vez
+  de ~7 MB. Una vez que los pesos están en la caché de Hugging Face, titular es offline.
 
 ## Instalación
 
@@ -850,8 +850,8 @@ conversación actual y empieza una nueva, conservando tus ajustes.
 ### Títulos de sesión
 
 Los títulos vienen del **titler** integrado, un T5 local (7,6 M de parámetros, 3 capas de codificador
-y 3 de decodificador) que se ejecuta con Candle en este proceso, incorporado como dependencia de ruta
-desde `crates/titler`. Los pesos (`Cyronius/titler`) se leen de la caché de Hugging Face y se
+y 3 de decodificador) que se ejecuta con Candle en este proceso, compilado en el agente
+desde `src/titler.rs`. Los pesos (`Cyronius/titler`) se leen de la caché de Hugging Face y se
 cargan como mucho una vez por proceso, así que una vez están en disco la generación de títulos es
 local, instantánea y gratuita.
 
@@ -895,7 +895,7 @@ mensaje tal cual e ignora el archivo por completo.
 | `src/auth.rs` | Carga de credenciales, comprobación de caducidad del JWT, renovación, persistencia atómica |
 | `src/store.rs` | Ajustes y archivos de sesión en `~/.config/exp-1/sessions/` |
 | `src/catalog.rs` | Catálogo de modelos y esfuerzos de razonamiento desde la caché de Codex |
-| `crates/titler` | Dependencia de ruta: el T5 local que nombra las sesiones |
+| `src/titler.rs` | El T5 local que nombra las sesiones, compilado con la feature `titler` |
 | `src/protocol.rs` | Tipos de cable de petición/respuesta |
 | `src/md.rs` | Markdown y tablas de barras a fragmentos con estilo |
 | `src/latex.rs` | Matemáticas LaTeX a Unicode |
