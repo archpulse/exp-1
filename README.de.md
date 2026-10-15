@@ -133,9 +133,10 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Rust 1.85+ (Edition 2024)
 - Entweder eine vorhandene Anmeldung in der Codex CLI (deren `auth.json` wiederverwendet wird)
   oder `/login`, das denselben Gerätecode-Ablauf selbst ausführt.
-- Die benachbarte Crate `titler` unter `../mygame/titler`. Sie zieht Candle herein, weshalb der
+- Die mitgelieferte Crate `titler` unter `crates/titler`. Sie zieht Candle herein, weshalb der
   erste Build eine Weile dauert und das Binary ~16 MB statt ~7 MB groß ist. Sobald die Gewichte im
-  Hugging-Face-Cache liegen, läuft die Titelvergabe offline.
+  Hugging-Face-Cache liegen, läuft die Titelvergabe offline, und ein frischer Klon braucht keinen
+  benachbarten Checkout.
 
 ## Verwendung
 
@@ -482,7 +483,7 @@ Der Mikrofonknopf in der unteren Ecke (`ctrl-r` tut dasselbe) diktiert in den Pr
 sprechen, erneut drücken. Text trifft ein, während du sprichst, weil der Erkenner streamt, und der
 Knopf trägt einen Zeitgeber, solange er zuhört.
 
-Der Erkenner ist **whistle** — die lokal laufende Sprach-Engine in `../mygame/whistle_rs` —,
+Der Erkenner ist **whistle** — die lokal laufende Sprach-Engine von Cactus —,
 gestartet als `whistle --mic`. Dieser Modus lässt ihn streamen: Er nimmt rohes 16-kHz-Mono von
 pipewires `pw-record` sekundenweise auf, schickt jede Sekunde durch den Streaming-Decoder und gibt
 pro Aktualisierung eine JSON-Zeile aus (`text` ist das Bestätigte, `pending` das noch Laufende).
@@ -820,7 +821,8 @@ Runde geschrieben, ein Absturz kostet also höchstens die laufende Runde.
 
 Der mitgelieferte Titler ist ein optionales Feature: `cargo build --release --no-default-features`
 lässt ihn weg und nimmt die ganze Candle-Abhängigkeit mit, und Sitzungstitel kommen dann allein vom
-Modell. Die CI baut so, weil der Titler eine benachbarte Pfad-Abhängigkeit ist.
+Modell. Die CI baut so, weil der Titler Candle hereinzieht: die Crate sitzt im Baum, aber ein
+Release muss dafür nicht bezahlen.
 
 Die Prompts sind Dateien, keine Konstanten: `~/.config/exp-1/prompts/system.md` (die eigenen
 Anweisungen des Agenten), `subagent.md`, `compaction.md` und `title.md` werden beim ersten Start
@@ -841,7 +843,7 @@ Einstellungen erhalten bleiben.
 
 Titel kommen vom mitgelieferten **Titler** — einem lokalen T5 (7,6 Mio. Parameter, 3 Encoder- und
 3 Decoder-Schichten), der über Candle in diesem Prozess läuft und als Pfad-Abhängigkeit aus
-`../mygame/titler` hereingezogen wird. Die Gewichte (`Cyronius/titler`) werden aus dem
+`crates/titler` hereingezogen wird. Die Gewichte (`Cyronius/titler`) werden aus dem
 Hugging-Face-Cache gelesen und höchstens einmal pro Prozess geladen, sobald sie auf der Platte
 sind, ist die Titelerzeugung also lokal, sofort und kostenlos.
 
@@ -886,7 +888,7 @@ und `Формула корней квадратного уравнения в La
 | `src/auth.rs` | Laden der Zugangsdaten, JWT-Ablaufprüfung, Auffrischen, atomares Speichern |
 | `src/store.rs` | Einstellungs- und Sitzungsdateien unter `~/.config/exp-1/sessions/` |
 | `src/catalog.rs` | Katalog von Modellen und Denkaufwand aus dem Codex-Cache |
-| `../mygame/titler` | Pfad-Abhängigkeit: der lokale T5, der Sitzungen benennt |
+| `crates/titler` | Pfad-Abhängigkeit: der lokale T5, der Sitzungen benennt |
 | `src/protocol.rs` | Übertragungstypen für Anfrage und Antwort |
 | `src/md.rs` | Markdown und Pipe-Tabellen zu gestalteten Textläufen |
 | `src/latex.rs` | LaTeX-Mathematik zu Unicode |

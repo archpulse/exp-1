@@ -97,7 +97,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85 以上（edition 2024）
 - 既存の Codex CLI のログイン（その `auth.json` を再利用します）か、同じデバイスフローを自身で実行する `/login` のいずれか。
-- 隣の `titler` クレート（`../mygame/titler`）。Candle を引き込むため、初回ビルドに時間がかかり、バイナリは約 7 MB ではなく約 16 MB になります。重みが Hugging Face のキャッシュにあれば、タイトル生成はオフラインです。
+- `crates/titler` にある同梱の `titler` クレート。Candle を引き込むため、初回ビルドに時間がかかり、バイナリは約 7 MB ではなく約 16 MB になります。重みが Hugging Face のキャッシュにあれば、タイトル生成はオフラインになり、新規クローンに隣のチェックアウトは不要です。
 
 ## 使い方
 
@@ -309,7 +309,7 @@ Carry on; you will be told when it finishes, or poll it with {"output_id": "bg-1
 
 右下隅のマイクボタン（`ctrl-r` も同じです）はプロンプトへ音声入力します。押して、話して、もう一度押します。認識器がストリーミングするため、話している間にもテキストが届きます。ボタンは聞いている間タイマーを表示します。
 
-認識器は **whistle** です — `../mygame/whistle_rs` にあるオンデバイスの音声エンジンで、`whistle --mic` として起動します。このモードがストリーミングを可能にします。pipewire の `pw-record` から生の 16 kHz モノラルを 1 秒ずつ録音し、毎秒をストリーミングデコーダーに通し、更新ごとに 1 行の JSON を出力します（`text` が確定したもの、`pending` がまだ処理中のものです）。stdin への改行でストリームが終わり、残りがフラッシュされます。コマンド、言語、バイアス語、音声の入力元は環境から来ます。
+認識器は **whistle** です — Cactus のオンデバイスの音声エンジンで、`whistle --mic` として起動します。このモードがストリーミングを可能にします。pipewire の `pw-record` から生の 16 kHz モノラルを 1 秒ずつ録音し、毎秒をストリーミングデコーダーに通し、更新ごとに 1 行の JSON を出力します（`text` が確定したもの、`pending` がまだ処理中のものです）。stdin への改行でストリームが終わり、残りがフラッシュされます。コマンド、言語、バイアス語、音声の入力元は環境から来ます。
 
 レコーダーは各プラットフォーム自身のものです。Linux では `pw-record`（pipewire）、macOS では avfoundation 付きの `ffmpeg`、Windows では dshow 付きの `ffmpeg` です（`WHISTLE_SOURCE` が入力デバイスを選び、`WHISTLE_RECORDER` はコマンドごと置き換えます）。アプリ自身は `EXP1_DICTATE --mic` を起動してその JSON 行を読むだけなので、同じようにストリーミングする認識器ならどれでも動きます。認識器がなければ、マイクボタンを押すとフッターでその旨が告げられ、ほかには何も起きません。
 
@@ -535,7 +535,7 @@ Conversation compacted; continuing from the summary
 
 設定はアプリの終了時に書かれ、セッションは完了したターンごとに書かれるので、クラッシュで失われるのはせいぜい実行中のターンだけです。
 
-同梱の titler はオプションのフィーチャーです。`cargo build --release --no-default-features` はそれを外し、Candle 依存全体も一緒に外します。その場合セッションのタイトルはモデルからのみ来ます。titler が隣のパス依存なので、CI はそのようにビルドします。
+同梱の titler はオプションのフィーチャーです。`cargo build --release --no-default-features` はそれを外し、Candle 依存全体も一緒に外します。その場合セッションのタイトルはモデルからのみ来ます。titler が Candle を引き込むため、CI はそのようにビルドします。crate はツリー内にありますが、リリースビルドがその分を負担する必要はありません。
 
 プロンプトは定数ではなくファイルです。`~/.config/exp-1/prompts/system.md`（エージェント自身の指示）、`subagent.md`、`compaction.md`、`title.md` は初回起動時に書き出され、リクエストごとに読まれるので、編集は再ビルドなしで次のターンに効きます。起動時のモデルとエフォートの解決順は **コマンドライン → 保存された設定 → カタログで最初に載っているモデル** です。
 
@@ -543,7 +543,7 @@ Conversation compacted; continuing from the summary
 
 ### セッションのタイトル
 
-タイトルは同梱の **titler** から来ます — ローカルの T5（7.6M パラメーター、エンコーダー 3 層とデコーダー 3 層）で、このプロセス内で Candle を通して動き、`../mygame/titler` からパス依存として取り込まれます。重み（`Cyronius/titler`）は Hugging Face のキャッシュから読まれ、プロセスごとに最大 1 回読み込まれるので、ディスクにあればタイトル生成はローカルで、即時で、無料です。
+タイトルは同梱の **titler** から来ます — ローカルの T5（7.6M パラメーター、エンコーダー 3 層とデコーダー 3 層）で、このプロセス内で Candle を通して動き、`crates/titler` からパス依存として取り込まれます。重み（`Cyronius/titler`）は Hugging Face のキャッシュから読まれ、プロセスごとに最大 1 回読み込まれるので、ディスクにあればタイトル生成はローカルで、即時で、無料です。
 
 生成は最初のターンが終わった瞬間に、UI スレッドではなくブロッキングスレッドで走ります。親を持つセッション — サイドチャット — は、それが従う会話に属するため、まったく名前を付けられません。ライブラリの多言語経路（生の経路ではなく）を使うので、言語が検出され、英語以外のプロンプトはまず英語へ翻訳されます。セッションは一度だけ名付けられ、タイトルが届くまではピッカーがプロンプトから取ったプレビューを表示します。
 
@@ -568,7 +568,7 @@ Conversation compacted; continuing from the summary
 | `src/auth.rs` | 認証情報の読み込み、JWT 有効期限の確認、リフレッシュ、アトミックな保存 |
 | `src/store.rs` | `~/.config/exp-1/sessions/` 下の設定とセッションファイル |
 | `src/catalog.rs` | Codex キャッシュからのモデルと推論エフォートのカタログ |
-| `../mygame/titler` | パス依存: セッションに名前を付けるローカル T5 |
+| `crates/titler` | パス依存: セッションに名前を付けるローカル T5 |
 | `src/protocol.rs` | リクエスト/レスポンスのワイヤ型 |
 | `src/md.rs` | Markdown とパイプテーブルからスタイル付きランへ |
 | `src/latex.rs` | LaTeX 数式から Unicode へ |

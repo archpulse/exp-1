@@ -454,7 +454,7 @@ The microphone button in the bottom corner (`ctrl-r` does the same) dictates int
 it, speak, press it again. Text arrives while you speak, because the recognizer streams, and the
 button carries a timer while it listens.
 
-The recognizer is **whistle** — the on-device speech engine in `../mygame/whistle_rs` — started as
+The recognizer is **whistle** — the on-device speech engine by Cactus — started as
 `whistle --mic`. That mode is what makes it stream: it records
 raw 16 kHz mono from pipewire's `pw-record` a second at a time, runs each second through the
 streaming decoder, and prints one JSON line per update (`text` is what is committed, `pending` what
@@ -793,7 +793,7 @@ abandons the current conversation and starts a fresh one, keeping your settings.
 
 Titles come from the bundled **titler** — a local T5 (7.6M parameters, 3 encoder and 3 decoder
 layers) that runs through Candle in this process, pulled in as a path dependency from
-`../mygame/titler`. The weights (`Cyronius/titler`) are read from the Hugging Face cache and
+`crates/titler`. The weights (`Cyronius/titler`) are read from the Hugging Face cache and
 loaded at most once per process, so once they are on disk title generation is local, instant and
 free.
 
@@ -836,7 +836,7 @@ file entirely.
 | `src/auth.rs` | Credential load, JWT expiry check, refresh, atomic persist |
 | `src/store.rs` | Settings and session files under `~/.config/exp-1/sessions/` |
 | `src/catalog.rs` | Model and reasoning-effort catalogue from the Codex cache |
-| `../mygame/titler` | Path dependency: the local T5 that names sessions |
+| `crates/titler` | Path dependency: the local T5 that names sessions |
 | `src/protocol.rs` | Request/response wire types |
 | `src/md.rs` | Markdown and pipe tables to styled runs |
 | `src/latex.rs` | LaTeX math to Unicode |

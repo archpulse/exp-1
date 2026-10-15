@@ -97,7 +97,7 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 
 - Rust 1.85+（edition 2024）
 - 一个已有的 Codex CLI 登录（会复用它的 `auth.json`），或者 `/login`，它会自己运行同样的设备码流程。
-- 位于 `../mygame/titler` 的兄弟 crate `titler`。它会引入 Candle，因此首次构建要花些时间，二进制也约 16 MB 而不是约 7 MB。权重进入 Hugging Face 缓存后，起标题就是离线的。
+- 位于 `crates/titler` 的内置 crate `titler`。它会引入 Candle，因此首次构建要花些时间，二进制也约 16 MB 而不是约 7 MB。权重进入 Hugging Face 缓存后，起标题就是离线的，全新克隆也无需兄弟 checkout。
 
 ## 用法
 
@@ -309,7 +309,7 @@ Carry on; you will be told when it finishes, or poll it with {"output_id": "bg-1
 
 底部角落的麦克风按钮（`ctrl-r` 作用相同）向输入框听写：按下它，说话，再按一次。文字会在你说话时到达，因为识别器是流式的，按钮在聆听期间带有一个计时器。
 
-识别器是 **whistle**——`../mygame/whistle_rs` 中的设备端语音引擎——以 `whistle --mic` 启动。正是这个模式让它流式工作：它通过 pipewire 的 `pw-record` 每次记录一秒原始的 16 kHz 单声道音频，每秒送入流式解码器，每次更新打印一行 JSON（`text` 是已确定的内容，`pending` 是仍在处理中的内容）。其 stdin 上的换行会结束流并冲刷尾部。命令、语言、偏置词和音频来源都来自环境：
+识别器是 **whistle**——Cactus 的设备端语音引擎——以 `whistle --mic` 启动。正是这个模式让它流式工作：它通过 pipewire 的 `pw-record` 每次记录一秒原始的 16 kHz 单声道音频，每秒送入流式解码器，每次更新打印一行 JSON（`text` 是已确定的内容，`pending` 是仍在处理中的内容）。其 stdin 上的换行会结束流并冲刷尾部。命令、语言、偏置词和音频来源都来自环境：
 
 录音器是平台自己的：Linux 上是 `pw-record`（pipewire），macOS 上是带 avfoundation 的 `ffmpeg`，Windows 上是带 dshow 的 `ffmpeg`（`WHISTLE_SOURCE` 选择输入设备，`WHISTLE_RECORDER` 直接替换命令）。应用本身只启动 `EXP1_DICTATE --mic` 并读取它的 JSON 行，所以任何以同样方式流式工作的识别器都可以用；没有的话，按下麦克风按钮只会在页脚说明这一点，别的什么都不会发生。
 
@@ -535,7 +535,7 @@ Conversation compacted; continuing from the summary
 
 设置会在应用退出时写入；会话在每个完成的回合后写入，所以崩溃最多只损失进行中的那个回合。
 
-内置的 titler 是一个可选特性：`cargo build --release --no-default-features` 会把它排除在外，并连带去掉整个 Candle 依赖，会话标题便只来自模型。CI 就是这样构建的，因为 titler 是一个兄弟路径依赖。
+内置的 titler 是一个可选特性：`cargo build --release --no-default-features` 会把它排除在外，并连带去掉整个 Candle 依赖，会话标题便只来自模型。CI 就是这样构建的，因为 titler 会引入 Candle：crate 就在代码树中，但 release 不必为它付出代价。
 
 提示词是文件，不是常量：`~/.config/exp-1/prompts/system.md`（代理自己的指令）、`subagent.md`、`compaction.md` 和 `title.md` 会在首次启动时写出，并在每个请求时读取，所以一次编辑无需重新构建就会应用到下一个回合。启动时模型和强度的解析顺序是**命令行 → 已保存的设置 → 目录中列出的第一个模型**。
 
@@ -543,7 +543,7 @@ Conversation compacted; continuing from the summary
 
 ### 会话标题
 
-标题来自内置的 **titler**——一个本地 T5（760 万参数，3 层编码器和 3 层解码器），在本进程中通过 Candle 运行，作为路径依赖从 `../mygame/titler` 引入。权重（`Cyronius/titler`）从 Hugging Face 缓存读取，每个进程最多加载一次，所以一旦它们落到磁盘上，标题生成就是本地的、即时的、免费的。
+标题来自内置的 **titler**——一个本地 T5（760 万参数，3 层编码器和 3 层解码器），在本进程中通过 Candle 运行，作为路径依赖从 `crates/titler` 引入。权重（`Cyronius/titler`）从 Hugging Face 缓存读取，每个进程最多加载一次，所以一旦它们落到磁盘上，标题生成就是本地的、即时的、免费的。
 
 生成会在第一个回合结束的瞬间在阻塞线程上运行，绝不在 UI 线程上。有父会话的会话——侧边对话——根本不会被命名，因为它们属于它们所跟随的对话。使用的是库的多语言路径（不是原始路径），所以会检测语言，非英语提示词会先翻译成英语。会话只命名一次，在标题到达之前，选择器显示的是取自提示词的预览。
 
@@ -568,7 +568,7 @@ Conversation compacted; continuing from the summary
 | `src/auth.rs` | 凭据加载、JWT 过期检查、刷新、原子持久化 |
 | `src/store.rs` | `~/.config/exp-1/sessions/` 下的设置和会话文件 |
 | `src/catalog.rs` | 来自 Codex 缓存的模型和推理强度目录 |
-| `../mygame/titler` | 路径依赖：为会话命名的本地 T5 |
+| `crates/titler` | 路径依赖：为会话命名的本地 T5 |
 | `src/protocol.rs` | 请求/响应线类型 |
 | `src/md.rs` | Markdown 和管道表格到带样式的片段 |
 | `src/latex.rs` | LaTeX 数学到 Unicode |

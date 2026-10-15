@@ -137,9 +137,9 @@ xattr -cr ./exp1-agent                    # if it arrived by download
 - Rust 1.85+ (edición 2024)
 - O bien un inicio de sesión existente de la CLI de Codex (se reutiliza su `auth.json`), o bien
   `/login`, que ejecuta él mismo el mismo flujo de dispositivo.
-- El crate hermano `titler` en `../mygame/titler`. Arrastra Candle, y por eso la primera compilación
+- El crate `titler` integrado en `crates/titler`. Arrastra Candle, y por eso la primera compilación
   tarda un rato y el binario ocupa ~16 MB en vez de ~7 MB. Una vez que los pesos están en la caché
-  de Hugging Face, titular es offline.
+  de Hugging Face, titular es offline, y un clon recién hecho no necesita un checkout hermano.
 
 ## Uso
 
@@ -481,8 +481,8 @@ El botón de micrófono de la esquina inferior (`ctrl-r` hace lo mismo) dicta en
 habla, púlsalo otra vez. El texto llega mientras hablas, porque el reconocedor transmite en flujo, y
 el botón lleva un temporizador mientras escucha.
 
-El reconocedor es **whistle** — el motor de voz en el dispositivo que está en `../mygame/whistle_rs`
-—, iniciado como `whistle --mic`. Ese modo es lo que le hace transmitir en flujo: graba 16 kHz mono
+El reconocedor es **whistle** — el motor de voz en el dispositivo de Cactus — iniciado como
+`whistle --mic`. Ese modo es lo que le hace transmitir en flujo: graba 16 kHz mono
 en bruto desde el `pw-record` de pipewire un segundo cada vez, pasa cada segundo por el decodificador
 en flujo e imprime una línea JSON por actualización (`text` es lo confirmado, `pending` lo que aún
 está en vuelo). Un salto de línea en su stdin termina el flujo y vacía el final. El comando, el
@@ -817,7 +817,8 @@ así que un fallo cuesta como mucho el turno en curso.
 
 El titler integrado es una funcionalidad opcional: `cargo build --release --no-default-features` lo
 deja fuera y se lleva consigo toda la dependencia de Candle, y los títulos de sesión vienen entonces
-solo del modelo. La CI compila así, porque el titler es una dependencia de ruta hermana.
+solo del modelo. La CI compila así porque el titler arrastra Candle: el crate está en el árbol,
+pero un release no tiene que pagar por ello.
 
 Los prompts son archivos, no constantes: `~/.config/exp-1/prompts/system.md` (las instrucciones
 propias del agente), `subagent.md`, `compaction.md` y `title.md` se escriben en el primer arranque y
@@ -837,7 +838,7 @@ conversación actual y empieza una nueva, conservando tus ajustes.
 
 Los títulos vienen del **titler** integrado, un T5 local (7,6 M de parámetros, 3 capas de codificador
 y 3 de decodificador) que se ejecuta con Candle en este proceso, incorporado como dependencia de ruta
-desde `../mygame/titler`. Los pesos (`Cyronius/titler`) se leen de la caché de Hugging Face y se
+desde `crates/titler`. Los pesos (`Cyronius/titler`) se leen de la caché de Hugging Face y se
 cargan como mucho una vez por proceso, así que una vez están en disco la generación de títulos es
 local, instantánea y gratuita.
 
@@ -881,7 +882,7 @@ mensaje tal cual e ignora el archivo por completo.
 | `src/auth.rs` | Carga de credenciales, comprobación de caducidad del JWT, renovación, persistencia atómica |
 | `src/store.rs` | Ajustes y archivos de sesión en `~/.config/exp-1/sessions/` |
 | `src/catalog.rs` | Catálogo de modelos y esfuerzos de razonamiento desde la caché de Codex |
-| `../mygame/titler` | Dependencia de ruta: el T5 local que nombra las sesiones |
+| `crates/titler` | Dependencia de ruta: el T5 local que nombra las sesiones |
 | `src/protocol.rs` | Tipos de cable de petición/respuesta |
 | `src/md.rs` | Markdown y tablas de barras a fragmentos con estilo |
 | `src/latex.rs` | Matemáticas LaTeX a Unicode |
