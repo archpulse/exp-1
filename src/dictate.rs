@@ -43,8 +43,9 @@ impl Dictation {
             command.arg("-k").arg(keywords.trim());
         }
         // If the interface dies without stopping the dictation, the recognizer
-        // must not keep recording: the operating system takes it down with us.
-        #[cfg(unix)]
+        // must not keep recording: on Linux the kernel takes it down with us
+        // (`prctl` has no macOS equivalent).
+        #[cfg(target_os = "linux")]
         unsafe {
             use std::os::unix::process::CommandExt;
             command.pre_exec(|| {
