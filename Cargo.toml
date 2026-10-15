@@ -17,7 +17,6 @@ include = [
   "/assets/exp-1-logo.png",
   "/src/**",
 ]
-exclude = ["/web/**", "/icon-option-5.png", "/Вставленное изображение.png"]
 
 [dependencies]
 anyhow = "1"
