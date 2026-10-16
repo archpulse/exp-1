@@ -17,7 +17,9 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact: exp1-agent-macos-arm64
-          - os: macos-13
+          # macos-13 is retired, so the Intel binary is cross-compiled on the
+          # arm64 image: the SDK carries both slices and rustup has the target.
+          - os: macos-latest
             target: x86_64-apple-darwin
             artifact: exp1-agent-macos-x86_64
           - os: windows-latest
@@ -25,7 +27,7 @@ jobs:
             artifact: exp1-agent-windows-x86_64.exe
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -39,7 +41,7 @@ jobs:
       - name: Sign (macOS)
         if: startsWith(matrix.os, 'macos')
         run: codesign -s - --force target/${{ matrix.target }}/release/exp1-agent
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: target/${{ matrix.target }}/release/exp1-agent${{ contains(matrix.target, 'windows') && '.exe' || '' }}
