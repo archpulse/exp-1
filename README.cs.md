@@ -168,6 +168,7 @@ Zpracovávají se lokálně; nikdy se nedostanou k modelu.
 | `/undo` | Vrátí soubory, které změnil poslední tah (v paměti; restart je zapomene) |
 | `/diff` | Sjednocený diff změn posledního tahu |
 | `/fork` | Pokračuje touto konverzací jako novou relací, původní nechá být |
+| `/schedule` | Nechat požadavek běžet později samo: `/schedule <co udělat a kdy>` založí úlohu, samotné `/schedule` je vypíše, `rm` a `pause` s úlohou zacházejí |
 | `/sessions <text>` | Místo pouhého výpisu prohledá uložené konverzace |
 | `/retitle` | Pojmenuje relaci znovu podle původního zadání a nedávné konverzace |
 | `/effort` | Vybere úsilí uvažování pro aktuální model, aniž by změnil model |

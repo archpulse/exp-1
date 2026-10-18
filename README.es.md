@@ -219,6 +219,7 @@ Se gestionan localmente; nunca llegan al modelo.
 | `/undo` | Restaura los archivos que cambió el último turno (en memoria; un reinicio los olvida) |
 | `/diff` | Diff unificado de lo que cambió el último turno |
 | `/fork` | Continúa esta conversación como una sesión nueva, dejando intacta la original |
+| `/schedule` | Ejecutar una petición más tarde por su cuenta: `/schedule <qué hacer y cuándo>` crea una tarea, `/schedule` a secas las lista, `rm` y `pause` gestionan una |
 | `/sessions <text>` | Busca en las conversaciones guardadas en vez de solo listarlas |
 | `/retitle` | Vuelve a nombrar la sesión a partir de la petición original y la conversación reciente |
 | `/effort` | Elige el esfuerzo de razonamiento del modelo actual, sin cambiar de modelo |

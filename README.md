@@ -210,6 +210,7 @@ Handled locally; they never reach the model.
 | `/undo` | Put back the files the last turn changed (in memory; a restart forgets them) |
 | `/diff` | Unified diff of what the last turn changed |
 | `/fork` | Continue this conversation as a new session, leaving the original alone |
+| `/schedule` | Run a request later on its own: `/schedule <what to do, and when>` creates a job, bare `/schedule` lists them, `rm` and `pause` manage one |
 | `/sessions <text>` | Search the saved conversations instead of just listing them |
 | `/retitle` | Name the session again from the original request and the recent conversation |
 | `/effort` | Pick the reasoning effort for the current model, without changing the model |

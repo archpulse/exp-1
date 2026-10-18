@@ -216,6 +216,7 @@ Werden lokal behandelt; sie erreichen das Modell nie.
 | `/undo` | Die Dateien wiederherstellen, die die letzte Runde geändert hat (im Speicher; ein Neustart vergisst sie) |
 | `/diff` | Unified-Diff dessen, was die letzte Runde geändert hat |
 | `/fork` | Diese Unterhaltung als neue Sitzung fortsetzen und die ursprüngliche unberührt lassen |
+| `/schedule` | Eine Anfrage später von selbst laufen lassen: `/schedule <was zu tun ist und wann>` legt einen Auftrag an, nacktes `/schedule` listet sie, `rm` und `pause` verwalten einen |
 | `/sessions <text>` | Die gespeicherten Unterhaltungen durchsuchen, statt sie nur aufzulisten |
 | `/retitle` | Die Sitzung erneut benennen, aus der ursprünglichen Anfrage und der jüngsten Unterhaltung |
 | `/effort` | Den Denkaufwand für das aktuelle Modell wählen, ohne das Modell zu wechseln |
