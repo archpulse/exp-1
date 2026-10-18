@@ -157,7 +157,6 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
         .route("/", get(web_page))
         .route("/assets/{file}", get(web_asset))
         .route("/api/config", get(web_config).post(web_config_save))
-        .route("/api/sessions", get(web_sessions))
         .route("/api/schedules", get(web_schedules))
         .route("/api/schedules/{id}/{action}", post(web_schedule_action))
         .route("/api/schedules/{id}", delete(web_schedule_remove))
@@ -209,7 +208,7 @@ mod routes;
 mod scheduler;
 mod web;
 
-pub(crate) use self::{prompts::*, subagent::*, turn::*, history::*, session::*, shown::*, permissions::*, titles::*, gateway::*, routes::*, scheduler::{act, jobs_json, remove, schedule_tool, spawn_scheduler, Scheduler}, web::{asset as web_asset, config_get as web_config, config_post as web_config_save, page as web_page, plugins as web_plugins, schedule_action as web_schedule_action, schedule_remove as web_schedule_remove, schedules as web_schedules, sessions as web_sessions}};
+pub(crate) use self::{prompts::*, subagent::*, turn::*, history::*, session::*, shown::*, permissions::*, titles::*, gateway::*, routes::*, scheduler::{act, jobs_json, remove, schedule_tool, spawn_scheduler, Scheduler}, web::{asset as web_asset, config_get as web_config, config_post as web_config_save, page as web_page, plugins as web_plugins, schedule_action as web_schedule_action, schedule_remove as web_schedule_remove, schedules as web_schedules}};
 
 #[cfg(test)]
 mod tests;
