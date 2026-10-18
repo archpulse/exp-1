@@ -19,7 +19,10 @@
       pinned: "Закреплённые", projects: "Проекты", recent: "Недавние",
       emptyPinned: "Закреплённых чатов пока нет", emptyProjects: "Проектов пока нет",
       emptyRecent: "Пока пусто", hello: "Что у вас сегодня на повестке?",
-      ask: "Спросить exp-1", reasoning: "Быстрые ответы", reasoningOn: "Быстрые ответы включены",
+      helloNamed: "Чем могу помочь,", reasoningOff: "Быстрые ответы включены",
+      ask: "Спросить exp-1", reasoning: "Быстрые ответы", reasoningLabel: "Размышление",
+      reasoningHint: "Выключить размышление — это и есть быстрые ответы",
+      reasoningOn: "Быстрые ответы включены", reasoningFast: "Размышление выключено",
       voice: "Голос", mic: "Микрофон", nextStep: "Чат появится в следующем шаге.",
       suggestSchedule: "Запланировать задачу", suggestSettings: "Настроить внешний вид",
       suggestModels: "Выбрать модели страницы",
@@ -86,7 +89,10 @@
       pinned: "Pinned", projects: "Projects", recent: "Recent",
       emptyPinned: "No pinned chats yet", emptyProjects: "No projects yet",
       emptyRecent: "Nothing yet", hello: "What is on your mind today?",
-      ask: "Ask exp-1", reasoning: "Fast answers", reasoningOn: "Fast answers are on",
+      helloNamed: "How can I help,", reasoningOff: "Fast answers are on",
+      ask: "Ask exp-1", reasoning: "Fast answers", reasoningLabel: "Reasoning",
+      reasoningHint: "Switching reasoning off is what fast answers means",
+      reasoningOn: "Fast answers are on", reasoningFast: "Reasoning is off",
       voice: "Voice", mic: "Microphone", nextStep: "The chat lands in the next step.",
       suggestSchedule: "Schedule a task", suggestSettings: "Tune how this page looks",
       suggestModels: "Pick the page's models",
@@ -543,6 +549,9 @@
 
   const nextStep = () => toast(t("nextStep"));
 
+  /* The reference greets by name; the name is the one you are logged in as. */
+  const greeting = () => (boot.user ? `${t("helloNamed")} ${boot.user}?` : t("hello"));
+
   function chatView() {
     const input = el("input", {
       placeholder: t("ask"),
@@ -550,19 +559,21 @@
         if (event.key === "Enter") nextStep();
       },
     });
-    const fast = el("button", { class: "pill" + (web.fast_answers ? " on" : "") }, [
+    /* The pill is the reasoning switch, the way the reference has it: plain while
+       reasoning is on, filled when fast answers (no reasoning) is what is set. */
+    const fast = el("button", { class: "pill" + (web.fast_answers ? " on" : ""), title: t("reasoningHint") }, [
       el("span", { html: icons.sparkle }),
-      el("span", { text: t("reasoning") }),
+      el("span", { text: t("reasoningLabel") }),
     ]);
     fast.addEventListener("click", () => {
       web.fast_answers = !web.fast_answers;
       fast.classList.toggle("on", !!web.fast_answers);
-      toast(web.fast_answers ? t("reasoningOn") : t("reasoning"));
+      toast(web.fast_answers ? t("reasoningFast") : t("reasoningOn"));
       save();
     });
 
     const view = el("div", { class: "chat-view" }, [
-      el("div", { class: "chat-hello", text: t("hello") }),
+      el("div", { class: "chat-hello", text: greeting() }),
       el("div", { class: "composer" }, [
         el("button", { class: "plus", html: icons.plus, onclick: nextStep }),
         input,

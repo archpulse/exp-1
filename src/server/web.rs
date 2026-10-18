@@ -140,6 +140,14 @@ fn loopback_name(host: &str) -> bool {
     matches!(name, "127.0.0.1" | "localhost" | "::1")
 }
 
+/// Who is logged in, for the greeting: the reference greets by name.
+fn user_name() -> String {
+    std::env::var("USER")
+        .or_else(|_| std::env::var("USERNAME"))
+        .or_else(|_| std::env::var("LOGNAME"))
+        .unwrap_or_default()
+}
+
 /// The first tag of `Accept-Language`, for the page to fall back on when the
 /// browser tells it nothing better.
 fn accept_language(headers: &HeaderMap) -> String {
@@ -197,6 +205,7 @@ async fn boot_state(shared: &Arc<Shared>, language: &str) -> String {
         "provider": settings.provider,
         "model": settings.model,
         "theme": settings.theme,
+        "user": user_name(),
         "accent": accent_hex(&settings),
         "palette": ACCENTS.iter().map(|(name, hex)| serde_json::json!({ "name": name, "hex": hex })).collect::<Vec<_>>(),
         "plugins": plugins,

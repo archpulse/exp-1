@@ -161,9 +161,9 @@ svg { flex: none; }
 }
 .composer .plus {
   width: 40px; height: 40px; border-radius: 50%;
-  background: #ffffff14; display: grid; place-items: center; color: var(--text);
+  display: grid; place-items: center; color: var(--fg);
 }
-.composer .plus:hover { background: #ffffff26; }
+.composer .plus:hover { background: var(--hover); }
 .composer input {
   flex: 1; min-width: 0; background: none; border: 0; outline: 0;
   font-size: 17px; padding: 8px 2px; color: var(--text);
@@ -171,11 +171,11 @@ svg { flex: none; }
 .composer input::placeholder { color: var(--faint); }
 .composer .tools { display: flex; align-items: center; gap: 4px; }
 .pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: 999px; color: var(--muted); font-size: 14px;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 13px; border-radius: 999px; color: var(--muted); font-size: 16px;
 }
 .pill:hover { background: var(--hover); color: var(--text); }
-.pill.on { background: var(--accent-soft); color: #7cc0ff; }
+.pill.on { background: var(--accent-soft); color: var(--fg); }
 .mic { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
 .mic:hover { background: var(--hover); color: var(--text); }
 .voice {
@@ -194,8 +194,8 @@ svg { flex: none; }
 /* The suggestion rows under the composer: an icon, then the words. */
 .chat-suggestions { width: min(960px, 100%); margin-top: 30px; display: flex; flex-direction: column; }
 .suggestion {
-  display: flex; align-items: center; gap: 18px; text-align: left;
-  padding: 18px 14px; border-radius: 12px; color: var(--text); font-size: 17px;
+  display: flex; align-items: center; gap: 20px; text-align: left;
+  padding: 18px 14px 18px 46px; border-radius: 12px; color: var(--text); font-size: 17px;
 }
 .suggestion:hover { background: var(--hover); }
 .suggestion svg { color: var(--muted); }
