@@ -535,6 +535,42 @@ impl Connection {
         schedule_note(response).await
     }
 
+    /// Where the page lives, and the key that opens it: the TUI hands both to a
+    /// browser, which cannot send our bearer header.
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+
+    pub fn key(&self) -> &str {
+        &self.password
+    }
+
+    /// The page's settings as the server holds them.
+    pub async fn web_config(&self) -> Result<serde_json::Value> {
+        let response = self
+            .auth(self.http.get(format!("{}/api/config", self.url)))
+            .send()
+            .await
+            .context("fetch the web settings")?;
+        if !response.status().is_success() {
+            bail!("web settings failed: HTTP {}", response.status());
+        }
+        response.json().await.context("read the web settings")
+    }
+
+    /// Saves the page's settings whole.
+    pub async fn save_web(&self, web: &serde_json::Value) -> Result<()> {
+        let response = self
+            .auth(self.http.post(format!("{}/api/config", self.url)))
+            .json(web)
+            .send()
+            .await
+            .context("save the web settings")?;
+        if !response.status().is_success() {
+            bail!("web settings were not saved: HTTP {}", response.status());
+        }
+        Ok(())
+    }
 }
 
 /// Percent-encodes one path segment: a job can be named with spaces.

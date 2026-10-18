@@ -331,6 +331,51 @@ pub(crate) fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             }
             start_side_question(app, ctx, rest.to_string());
         }
+        "/web" => {
+            // The page is served on the same port as everything else; the key
+            // goes into the URL once, and the browser keeps it as a cookie.
+            let url = format!("{}/?key={}", ctx.conn.url(), ctx.conn.key());
+            app.thread_mut()
+                .push(Role::System, format!("web interface: {url}"));
+            crate::desktop::open_url(&url);
+        }
+        "/web-models" => {
+            // The three models the web page picks between. Bare, it opens the
+            // slots; `/web-models fast <model>` sets one directly.
+            let mut words = rest.split_whitespace();
+            let slot = words.next().unwrap_or("").to_string();
+            let model = words.next().unwrap_or("").to_string();
+            if slot.is_empty() {
+                let conn = ctx.conn.clone();
+                let tx = ctx.events.clone();
+                tokio::spawn(async move {
+                    match conn.web_config().await {
+                        Ok(config) => {
+                            let web: crate::store::WebSettings = config
+                                .get("web")
+                                .cloned()
+                                .and_then(|value| serde_json::from_value(value).ok())
+                                .unwrap_or_default();
+                            let rows = crate::store::TIER_SLOTS
+                                .iter()
+                                .map(|slot| ((*slot).to_string(), web.tiers.get(slot).to_string()))
+                                .collect();
+                            let _ = tx.send(AgentMsg::Tiers(rows));
+                        }
+                        Err(err) => {
+                            let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+                        }
+                    }
+                });
+            } else if !crate::store::TIER_SLOTS.contains(&slot.as_str()) || model.is_empty() {
+                app.thread_mut().push(
+                    Role::System,
+                    format!("usage: /web-models {slot} <model>  (slots: fast, medium, powerful)"),
+                );
+            } else {
+                set_web_tier(ctx, slot, model);
+            }
+        }
         "/schedule" => {
             // Bare verbs manage the list; anything else is the request itself,
             // which the model turns into a time and a job.
@@ -372,7 +417,7 @@ pub(crate) fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
                                 };
                             match result {
                                 Ok(note) => {
-                                    let _ = tx.send(AgentMsg::ScheduleNote(note));
+                                    let _ = tx.send(AgentMsg::Note(note));
                                 }
                                 Err(err) => {
                                     let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
@@ -548,6 +593,35 @@ pub(crate) fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
     true
 }
 
+/// Sets one of the web page's three model slots, on the server, and says so.
+fn set_web_tier(ctx: &Ctx, slot: String, model: String) {
+    let conn = ctx.conn.clone();
+    let tx = ctx.events.clone();
+    tokio::spawn(async move {
+        let saved = async {
+            let config = conn.web_config().await?;
+            let mut web: crate::store::WebSettings = config
+                .get("web")
+                .cloned()
+                .and_then(|value| serde_json::from_value(value).ok())
+                .unwrap_or_default();
+            if !web.tiers.set(&slot, &model) {
+                anyhow::bail!("unknown slot «{slot}» — use fast, medium or powerful");
+            }
+            conn.save_web(&serde_json::to_value(&web)?).await
+        }
+        .await;
+        match saved {
+            Ok(()) => {
+                let _ = tx.send(AgentMsg::Note(format!("web page model «{slot}»: {model}")));
+            }
+            Err(err) => {
+                let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+            }
+        }
+    });
+}
+
 /// Seeds the side thread with everything the main thread knows, once.
 /// `/btw` answers a question in the side thread, with the main context but no
 /// tools, while the main turn keeps running.
@@ -612,6 +686,17 @@ pub(crate) fn select_from_picker(app: &mut App, ctx: &Ctx) {
                 return;
             };
             let slug = row.slug.clone();
+            if let Some(slot) = app.tier_slot.take() {
+                // A slot of `/web-models` is the page's model, not this
+                // session's: save it and leave the session alone.
+                let name = crate::store::TIER_SLOTS
+                    .get(slot)
+                    .copied()
+                    .unwrap_or("fast")
+                    .to_string();
+                set_web_tier(ctx, name, slug);
+                return;
+            }
             // Choosing a model from another provider means switching to it.
             let switch = (!row.provider.is_empty()
                 && app
@@ -636,6 +721,16 @@ pub(crate) fn select_from_picker(app: &mut App, ctx: &Ctx) {
             // choose; an empty picker after picking a model is just noise.
             if !levels.is_empty() {
                 app.open_effort_picker("Select Model and Effort");
+            }
+        }
+        app::PickerKind::Tier => {
+            // Picking a slot opens the model list for it: the choice is saved
+            // for the page rather than switching this session's model.
+            app.open_model_picker();
+            app.tier_slot = Some(index);
+            if let Some(picker) = app.picker.as_mut() {
+                let slot = crate::store::TIER_SLOTS.get(index).copied().unwrap_or("fast");
+                picker.title = format!("Web model · {slot}");
             }
         }
         app::PickerKind::Effort => {

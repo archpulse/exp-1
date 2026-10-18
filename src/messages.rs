@@ -58,8 +58,10 @@ pub(crate) enum AgentMsg {
     Notice(String, String),
     /// The schedule list arrived, for `/schedule`.
     Schedules(Vec<crate::schedule::Job>),
-    /// The server's note about one schedule action.
-    ScheduleNote(String),
+    /// A line the server asked for: a note about one action.
+    Note(String),
+    /// The web page's three model slots arrived, for `/web-models`.
+    Tiers(Vec<(String, String)>),
     Ask(usize, proto::WireAnswerRequest),
     AskClosed(usize),
     Idle(usize),
@@ -400,8 +402,11 @@ pub(crate) fn apply(app: &mut App, message: AgentMsg) {
         AgentMsg::Schedules(jobs) => (0, Box::new(move |app: &mut App| {
             app.thread_mut().push(Role::System, render_schedules(&jobs));
         })),
-        AgentMsg::ScheduleNote(note) => (0, Box::new(move |app: &mut App| {
+        AgentMsg::Note(note) => (0, Box::new(move |app: &mut App| {
             app.thread_mut().push(Role::System, note);
+        })),
+        AgentMsg::Tiers(rows) => (0, Box::new(move |app: &mut App| {
+            app.open_tier_picker(rows);
         })),
     };
     if index < app.threads.len() {

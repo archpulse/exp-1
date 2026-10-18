@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>exp-1</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <style>
+    /* The accent follows the TUI's theme; the server fills these in. */
+    :root { --accent: __EXP1_ACCENT__; --accent-soft: __EXP1_ACCENT_SOFT__; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main" id="main"></main>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+  <script id="boot" type="application/json">__EXP1_BOOT__</script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

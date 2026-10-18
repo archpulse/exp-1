@@ -26,6 +26,34 @@ pub(crate) const fn rgb(r: u8, g: u8, b: u8) -> Color {
     Color::Rgb(r, g, b)
 }
 
+impl Theme {
+    /// The accent as a CSS colour. The web page on localhost uses the theme the
+    /// TUI is on, so the two surfaces agree about the accent.
+    pub fn accent_hex(&self) -> String {
+        match self.accent {
+            Color::Rgb(r, g, b) => format!("#{r:02x}{g:02x}{b:02x}"),
+            _ => "#3b82f6".to_string(),
+        }
+    }
+
+    /// The same colour at 15% alpha, for the page's soft fills.
+    pub fn accent_soft(&self) -> String {
+        match self.accent {
+            Color::Rgb(r, g, b) => format!("#{r:02x}{g:02x}{b:02x}26"),
+            _ => "#3b82f626".to_string(),
+        }
+    }
+}
+
+/// The theme a stored name means. An unknown name — one written by an older
+/// build, or a typo — falls back to the first, so nothing goes unpainted.
+pub fn by_name(name: &str) -> &'static Theme {
+    THEMES
+        .iter()
+        .find(|theme| theme.name.eq_ignore_ascii_case(name))
+        .unwrap_or(&THEMES[0])
+}
+
 pub const THEMES: [Theme; 4] = [
     Theme {
         name: "default",

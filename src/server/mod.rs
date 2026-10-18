@@ -154,6 +154,10 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
 
     let app = Router::new()
         .route("/health", get(health))
+        .route("/", get(web_page))
+        .route("/assets/{file}", get(web_asset))
+        .route("/api/config", get(web_config).post(web_config_save))
+        .route("/api/sessions", get(web_sessions))
         .route("/sessions", get(list_sessions).post(create_session))
         .route("/sessions/{id}", get(session_snapshot))
         .route("/sessions/{id}/prompt", post(prompt))
@@ -199,8 +203,9 @@ mod titles;
 mod gateway;
 mod routes;
 mod scheduler;
+mod web;
 
-pub(crate) use self::{prompts::*, subagent::*, turn::*, history::*, session::*, shown::*, permissions::*, titles::*, gateway::*, routes::*, scheduler::{fire_job, schedule_tool, spawn_scheduler, Scheduler}};
+pub(crate) use self::{prompts::*, subagent::*, turn::*, history::*, session::*, shown::*, permissions::*, titles::*, gateway::*, routes::*, scheduler::{fire_job, schedule_tool, spawn_scheduler, Scheduler}, web::{asset as web_asset, config_get as web_config, config_post as web_config_save, page as web_page, sessions as web_sessions}};
 
 #[cfg(test)]
 mod tests;

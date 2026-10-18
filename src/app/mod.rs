@@ -21,7 +21,7 @@ const POPUP_MAX: usize = 9;
 const NAME_COLUMN: usize = 14;
 const CARET: &str = "│";
 const BLINK: Duration = Duration::from_millis(500);
-pub const COMMANDS: [(&str, &str); 19] = [
+pub const COMMANDS: [(&str, &str); 21] = [
     (
         "/login",
         "choose a provider; one that is signed in just switches",
@@ -34,6 +34,8 @@ pub const COMMANDS: [(&str, &str); 19] = [
     ("/btw", "ask a side question without stopping the main task"),
     ("/sessions", "reopen an earlier conversation"),
     ("/schedule", "let a request run later, on its own"),
+    ("/web", "open the ChatGPT-like page on localhost"),
+    ("/web-models", "pick the page's three models: fast, medium, powerful"),
     ("/retitle", "name this session again from the conversation"),
     ("/effort", "choose the reasoning effort for the current model"),
     ("/mcp", "show the MCP servers and the tools they offer"),
@@ -102,6 +104,10 @@ pub struct App {
     pub all_models: Vec<crate::proto::WireModel>,
     /// Models ticked in `/scoped-models`; empty means no restriction.
     pub scoped: std::collections::BTreeSet<String>,
+    /// Which slot of `/web-models` an open model picker is choosing for. Set
+    /// after the picker opens, cleared when any picker opens, so a cancelled
+    /// pick can never leak into `/model`.
+    pub tier_slot: Option<usize>,
     /// Set while an API key is being typed: (provider id, label).
     pub entering_key: Option<(String, String)>,
     /// Images queued from the clipboard for the next prompt: (media type, base64).
@@ -219,6 +225,7 @@ impl App {
             providers: Vec::new(),
             all_models: Vec::new(),
             scoped: std::collections::BTreeSet::new(),
+            tier_slot: None,
             entering_key: None,
             pending_images: Vec::new(),
             title_started: false,
@@ -436,7 +443,33 @@ impl App {
     /// list.
     fn set_picker(&mut self, picker: Picker) {
         self.picker_filter.clear();
+        self.tier_slot = None;
         self.picker = Some(picker);
+    }
+
+    /// The three models the web page picks between, one row per slot. `rows` is
+    /// slot and current model, in the order `/web-models` lists them.
+    pub fn open_tier_picker(&mut self, rows: Vec<(String, String)>) {
+        let items = rows
+            .iter()
+            .map(|(slot, model)| PickerItem {
+                label: format!(
+                    "{slot} — {}",
+                    if model.is_empty() { "(not set)" } else { model }
+                ),
+                description: "the model the web page answers with in this slot".to_string(),
+            })
+            .collect();
+        let selected = rows
+            .iter()
+            .position(|(_, model)| model.is_empty())
+            .unwrap_or(0);
+        self.set_picker(Picker {
+            kind: PickerKind::Tier,
+            title: "Web models".to_string(),
+            items,
+            selected,
+        });
     }
 
     /// Puts the selection on the first row the filter leaves.

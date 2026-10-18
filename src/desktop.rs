@@ -62,6 +62,28 @@ fn applescript_text(text: &str) -> String {
         text.replace('\\', "\\\\").replace('"', "\\\"")
     )
 }
+/// Opens a URL in the desktop's browser, detached. Best effort: a machine
+/// without a browser just gets the address printed by the caller.
+pub(crate) fn open_url(url: &str) {
+    let mut command = if cfg!(target_os = "macos") {
+        let mut command = std::process::Command::new("open");
+        command.arg(url);
+        command
+    } else if cfg!(target_os = "windows") {
+        let mut command = std::process::Command::new("cmd");
+        command.args(["/C", "start", ""]).arg(url);
+        command
+    } else {
+        let mut command = std::process::Command::new("xdg-open");
+        command.arg(url);
+        command
+    };
+    let _ = command
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn();
+}
+
 /// Takes an image off the clipboard and holds it for the next prompt. Wayland
 /// first, then X11; a missing tool is simply "nothing to paste".
 pub(crate) fn attach_clipboard_image(app: &mut App) {

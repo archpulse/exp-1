@@ -25,6 +25,8 @@ pub enum PickerKind {
     Scoped,
     /// What to do with one of your own messages: copy it, or go back to it.
     Message,
+    /// The three models the web page picks between.
+    Tier,
 }
 
 impl Picker {

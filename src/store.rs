@@ -160,6 +160,120 @@ pub struct Settings {
     pub fallback_model: String,
     /// How much the agent asks before running a tool; see `PermissionMode`.
     pub permissions: crate::tools::PermissionMode,
+    /// What the ChatGPT-like page on localhost lets the user change.
+    pub web: WebSettings,
+}
+
+/// The web page's own settings: the two screens it has so far, general and
+/// personalization, plus the three models it will answer with.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WebSettings {
+    /// Interface language: `""` follows the browser, otherwise `ru`, `en`, …
+    pub language: String,
+    /// Let the model answer from what it remembers about the user.
+    pub memory: bool,
+    /// Base style and tone: `default`, `professional`, `friendly`, `candid`.
+    pub style: String,
+    /// `less`, `default` or `more`, for the traits below.
+    pub friendliness: String,
+    pub enthusiasm: String,
+    pub emoji: String,
+    /// `default` or `less`, for the traits below.
+    pub visual_replies: String,
+    /// `less`, `default` or `more`.
+    pub headings: String,
+    /// Instructions the user adds on top of the system prompt.
+    pub custom_instructions: String,
+    /// Answer fast: the lowest reasoning the provider offers, or none at all.
+    pub fast_answers: bool,
+    pub suggested_prompts: bool,
+    /// Let the model use earlier conversations when it answers.
+    pub record_history: bool,
+    /// Pinned conversations, most recently pinned first.
+    pub pinned: Vec<String>,
+    /// The models the page offers to pick between.
+    pub tiers: Tiers,
+}
+
+impl Default for WebSettings {
+    fn default() -> Self {
+        Self {
+            language: String::new(),
+            memory: true,
+            style: "default".to_string(),
+            friendliness: "default".to_string(),
+            enthusiasm: "default".to_string(),
+            emoji: "default".to_string(),
+            visual_replies: "default".to_string(),
+            headings: "more".to_string(),
+            custom_instructions: String::new(),
+            fast_answers: false,
+            suggested_prompts: true,
+            record_history: true,
+            pinned: Vec::new(),
+            tiers: Tiers::default(),
+        }
+    }
+}
+
+/// The three models the web chat picks between: fast, medium, powerful.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Tiers {
+    pub fast: String,
+    pub medium: String,
+    pub powerful: String,
+}
+
+/// The slots, in the order `/web-models` lists them.
+pub const TIER_SLOTS: [&str; 3] = ["fast", "medium", "powerful"];
+
+impl Tiers {
+    pub fn get(&self, slot: &str) -> &str {
+        match slot {
+            "fast" => &self.fast,
+            "medium" => &self.medium,
+            "powerful" => &self.powerful,
+            _ => "",
+        }
+    }
+
+    /// Sets one slot; `false` when the name is not one of the three.
+    pub fn set(&mut self, slot: &str, model: &str) -> bool {
+        match slot {
+            "fast" => self.fast = model.to_string(),
+            "medium" => self.medium = model.to_string(),
+            "powerful" => self.powerful = model.to_string(),
+            _ => return false,
+        }
+        true
+    }
+}
+
+impl WebSettings {
+    /// The reasoning effort the page should ask for. With fast answers on, the
+    /// model gets the lowest level it lists — `none` when it can turn reasoning
+    /// off entirely — and a model with no levels is left alone. Otherwise the
+    /// model's own setting stands. The chat calls this; nothing else does yet.
+    #[allow(dead_code)]
+    pub fn chat_effort(&self, levels: &[String], preferred: &str) -> String {
+        if !self.fast_answers {
+            return preferred.to_string();
+        }
+        if levels.is_empty() {
+            return String::new();
+        }
+        for wanted in ["none", "off", "minimal", "low"] {
+            if let Some(found) = levels
+                .iter()
+                .find(|level| level.eq_ignore_ascii_case(wanted))
+            {
+                return found.clone();
+            }
+        }
+        levels.first().cloned().unwrap_or_default()
+    }
 }
 
 impl Default for Settings {
@@ -174,6 +288,7 @@ impl Default for Settings {
             retry_attempts: 5,
             fallback_model: String::new(),
             permissions: crate::tools::PermissionMode::AlwaysAsk,
+            web: WebSettings::default(),
         }
     }
 }
@@ -544,6 +659,57 @@ mod tests {
     fn settings_without_permissions_default_to_always_ask() {
         let settings: Settings = serde_json::from_str(r#"{"model": "gpt-6-luna"}"#).unwrap();
         assert_eq!(settings.permissions, crate::tools::PermissionMode::AlwaysAsk);
+    }
+
+    /// A `settings.json` written before the web page existed still loads, and
+    /// the page starts on its defaults.
+    #[test]
+    fn settings_without_web_default_to_the_pages_own_defaults() {
+        let settings: Settings = serde_json::from_str(r#"{"model": "gpt-6-luna"}"#).unwrap();
+        assert!(settings.web.language.is_empty(), "auto by default");
+        assert!(settings.web.memory);
+        assert!(!settings.web.fast_answers);
+        assert_eq!(settings.web.headings, "more");
+        assert!(settings.web.tiers.fast.is_empty());
+    }
+
+    /// Fast answers drop the reasoning to the lowest level the model lists, or
+    /// off entirely when it can be turned off; a model with no levels is left
+    /// alone, and the setting off changes nothing.
+    #[test]
+    fn fast_answers_lower_the_reasoning_effort() {
+        let mut web = WebSettings::default();
+        let levels = ["low", "medium", "high"].map(str::to_string).to_vec();
+        // Off: whatever the model was set to.
+        assert_eq!(web.chat_effort(&levels, "medium"), "medium");
+        web.fast_answers = true;
+        assert_eq!(web.chat_effort(&levels, "medium"), "low");
+        let with_off = ["off", "medium", "high"].map(str::to_string).to_vec();
+        assert_eq!(web.chat_effort(&with_off, "high"), "off");
+        let minimal = ["minimal", "high"].map(str::to_string).to_vec();
+        assert_eq!(web.chat_effort(&minimal, "high"), "minimal");
+        // No levels at all: nothing to lower.
+        assert_eq!(web.chat_effort(&[], "high"), "");
+    }
+
+    /// The three slots of `/web-models` are set and read by name.
+    #[test]
+    fn the_model_tiers_are_set_by_slot_name() {
+        let mut tiers = Tiers::default();
+        assert!(tiers.set("fast", "gpt-6-luna"));
+        assert!(tiers.set("medium", "claude-haiku"));
+        assert!(tiers.set("powerful", "gpt-6-sol"));
+        assert!(!tiers.set("quickest", "nope"));
+        assert_eq!(tiers.get("fast"), "gpt-6-luna");
+        assert_eq!(tiers.get("medium"), "claude-haiku");
+        assert_eq!(tiers.get("powerful"), "gpt-6-sol");
+        assert_eq!(tiers.get("other"), "");
+        // And they survive the round trip through settings.json.
+        let mut settings = Settings::default();
+        settings.web.tiers = tiers;
+        let json = serde_json::to_string(&settings).unwrap();
+        let back: Settings = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.web.tiers.powerful, "gpt-6-sol");
     }
 
     /// The choice survives the round trip through `settings.json`.
