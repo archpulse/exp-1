@@ -535,14 +535,9 @@ impl Connection {
         schedule_note(response).await
     }
 
-    /// Where the page lives, and the key that opens it: the TUI hands both to a
-    /// browser, which cannot send our bearer header.
+    /// Where the page lives: the TUI hands this to a browser.
     pub fn url(&self) -> &str {
         &self.url
-    }
-
-    pub fn key(&self) -> &str {
-        &self.password
     }
 
     /// The page's settings as the server holds them.

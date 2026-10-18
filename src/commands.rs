@@ -332,9 +332,9 @@ pub(crate) fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             start_side_question(app, ctx, rest.to_string());
         }
         "/web" => {
-            // The page is served on the same port as everything else; the key
-            // goes into the URL once, and the browser keeps it as a cookie.
-            let url = format!("{}/?key={}", ctx.conn.url(), ctx.conn.key());
+            // The page needs no key on loopback: the server listens on
+            // 127.0.0.1 only, and the port is the settings' one.
+            let url = format!("{}/", ctx.conn.url());
             app.thread_mut()
                 .push(Role::System, format!("web interface: {url}"));
             crate::desktop::open_url(&url);

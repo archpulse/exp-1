@@ -160,6 +160,10 @@ pub struct Settings {
     pub fallback_model: String,
     /// How much the agent asks before running a tool; see `PermissionMode`.
     pub permissions: crate::tools::PermissionMode,
+    /// The loopback port the server binds. Every launch uses this one, so the
+    /// page keeps a single address; `0` asks the system for any free port. An
+    /// explicit `serve --port` wins over it.
+    pub port: u16,
     /// What the ChatGPT-like page on localhost lets the user change.
     pub web: WebSettings,
 }
@@ -288,10 +292,15 @@ impl Default for Settings {
             retry_attempts: 5,
             fallback_model: String::new(),
             permissions: crate::tools::PermissionMode::AlwaysAsk,
+            port: DEFAULT_PORT,
             web: WebSettings::default(),
         }
     }
 }
+
+/// Where the page lives unless the settings say otherwise. A fixed loopback
+/// port beats a random one for a bookmark, and 7878 is rarely taken.
+pub const DEFAULT_PORT: u16 = 7878;
 
 pub fn load_settings() -> Settings {
     std::fs::read_to_string(config_dir().join(SETTINGS))
@@ -690,6 +699,15 @@ mod tests {
         assert_eq!(web.chat_effort(&minimal, "high"), "minimal");
         // No levels at all: nothing to lower.
         assert_eq!(web.chat_effort(&[], "high"), "");
+    }
+
+    /// A `settings.json` written before the port had a home still loads, and
+    /// the page starts at the default address.
+    #[test]
+    fn settings_without_a_port_get_the_default_one() {
+        let settings: Settings = serde_json::from_str(r#"{"model": "gpt-6-luna"}"#).unwrap();
+        assert_eq!(settings.port, DEFAULT_PORT);
+        assert!(DEFAULT_PORT != 0, "the default is a real, fixed port");
     }
 
     /// The three slots of `/web-models` are set and read by name.

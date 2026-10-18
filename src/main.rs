@@ -93,7 +93,10 @@ async fn main() -> Result<()> {
                 .iter()
                 .position(|value| value == "--port")
                 .and_then(|index| argv.get(index + 1))
-                .and_then(|value| value.parse::<u16>().ok());
+                .and_then(|value| value.parse::<u16>().ok())
+                // An explicit `--port` wins; otherwise the server takes the
+                // one the settings name, so the page keeps its address.
+                .or_else(|| Some(store::load_settings().port).filter(|port| *port != 0));
             return daemon::run_foreground(register, port).await;
         }
         Some("service") => return service_command(&argv[2..]).await,

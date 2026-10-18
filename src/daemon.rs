@@ -226,16 +226,29 @@ pub fn stop(registration: &Registration) {
     clear_registration();
 }
 
+/// The port every launch should use: what the settings name, or 0 for whichever
+/// one the system hands out.
+pub fn preferred_port() -> u16 {
+    crate::store::load_settings().port
+}
+
+/// The port a registered server listens on, read back from its URL.
+fn port_of(url: &str) -> Option<u16> {
+    url.rsplit(':').next()?.trim_end_matches('/').parse().ok()
+}
+
 /// Returns the URL of a healthy server, reusing or spawning one as needed.
 pub async fn ensure_running() -> Result<String> {
+    let wanted = preferred_port();
     if let Some(existing) = read_registration() {
         let build = build_id();
         // Reuse only a server that is the same version *and* the same build;
         // anything else may speak a different wire than this client.
         let same_build = build.is_some() && existing.build == build;
-        if existing.version == env!("CARGO_PKG_VERSION")
-            && same_build
-            && is_healthy(&existing).await
+        // And one on the port the settings ask for: a server left over from an
+        // earlier launch would otherwise keep the page at yesterday's address.
+        let same_port = wanted == 0 || port_of(&existing.url) == Some(wanted);
+        if existing.version == env!("CARGO_PKG_VERSION") && same_build && same_port && is_healthy(&existing).await
         {
             return Ok(existing.url);
         }
@@ -263,6 +276,7 @@ pub async fn ensure_running() -> Result<String> {
 /// Launches `exp1 serve` as a detached child that outlives this process.
 fn spawn_detached() -> Result<()> {
     let exe = std::env::current_exe().context("locate the exp1 binary")?;
+    let port = preferred_port();
     let mut command = Command::new(exe);
     command
         .arg("serve")
@@ -270,6 +284,9 @@ fn spawn_detached() -> Result<()> {
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
+    if port != 0 {
+        command.arg("--port").arg(port.to_string());
+    }
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
@@ -313,6 +330,15 @@ mod tests {
     fn the_build_id_is_stable_within_one_binary() {
         let first = build_id().expect("the test binary has a path");
         assert_eq!(Some(first), build_id());
+    }
+
+    /// A registration is compared by the port its URL names, so a server left
+    /// on another port is replaced rather than reused.
+    #[test]
+    fn a_registration_reports_the_port_it_listens_on() {
+        assert_eq!(port_of("http://127.0.0.1:7878"), Some(7878));
+        assert_eq!(port_of("http://127.0.0.1:41075/"), Some(41075));
+        assert_eq!(port_of("http://127.0.0.1"), None);
     }
 
     /// A registration written before the build was recorded has no `build`

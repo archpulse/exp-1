@@ -44,9 +44,31 @@ pub(crate) fn web_authorized(shared: &Shared, headers: &HeaderMap) -> bool {
 fn locked() -> Response {
     (
         StatusCode::UNAUTHORIZED,
-        "missing key — open the URL the TUI prints with /web",
+        "no access — the page answers to 127.0.0.1, and to the server password",
     )
         .into_response()
+}
+
+/// Whether the request asked for a loopback name. The server listens only on
+/// 127.0.0.1, so the page does not need the password; this check is what keeps a
+/// website that points its own name at 127.0.0.1 (DNS rebinding) from reading
+/// answers meant for the machine's owner.
+fn host_is_loopback(headers: &HeaderMap) -> bool {
+    loopback_name(
+        headers
+            .get(header::HOST)
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default(),
+    )
+}
+
+fn loopback_name(host: &str) -> bool {
+    let name = if let Some(rest) = host.strip_prefix('[') {
+        rest.split(']').next().unwrap_or(rest)
+    } else {
+        host.rsplit_once(':').map_or(host, |(name, _)| name)
+    };
+    matches!(name, "127.0.0.1" | "localhost" | "::1")
 }
 
 /// The first tag of `Accept-Language`, for the page to fall back on when the
@@ -70,7 +92,7 @@ pub(crate) async fn page(
     headers: HeaderMap,
 ) -> Response {
     let handed_over = params.get("key").is_some_and(|key| key == &shared.password);
-    if !handed_over && !web_authorized(&shared, &headers) {
+    if !handed_over && !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
         return locked();
     }
     let boot = boot_state(&shared, &accept_language(&headers)).await;
@@ -154,7 +176,7 @@ pub(crate) async fn asset(Path(file): Path<String>) -> Response {
 
 /// `GET /api/config`: what the settings screens read.
 pub(crate) async fn config_get(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Response {
-    if !web_authorized(&shared, &headers) {
+    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
         return locked();
     }
     let settings = store::load_settings();
@@ -176,7 +198,7 @@ pub(crate) async fn config_post(
     headers: HeaderMap,
     Json(web): Json<store::WebSettings>,
 ) -> Response {
-    if !web_authorized(&shared, &headers) {
+    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
         return locked();
     }
     let mut settings = store::load_settings();
@@ -187,8 +209,25 @@ pub(crate) async fn config_post(
 
 /// `GET /api/sessions`: every conversation, newest first.
 pub(crate) async fn sessions(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Response {
-    if !web_authorized(&shared, &headers) {
+    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
         return locked();
     }
     Json(session_rows(200)).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The page needs no key on loopback, and the Host check is what makes that
+    /// safe: a name that is not loopback is refused even though it resolves here.
+    #[test]
+    fn only_loopback_names_skip_the_key() {
+        for host in ["127.0.0.1", "127.0.0.1:7878", "localhost:7878", "[::1]:7878", "[::1]"] {
+            assert!(loopback_name(host), "{host} is loopback");
+        }
+        for host in ["", "example.com", "example.com:7878", "evil.test", "127.0.0.1.evil.test", "0.0.0.0:7878"] {
+            assert!(!loopback_name(host), "{host} is not loopback");
+        }
+    }
 }
