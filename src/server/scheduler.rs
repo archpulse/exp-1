@@ -338,6 +338,89 @@ pub(crate) fn flush_notices(shared: &Arc<Shared>) {
     }
 }
 
+// ------------------------------------------------------------ the page's view
+
+/// One job as the page shows it.
+pub(crate) fn job_json(job: &schedule::Job) -> serde_json::Value {
+    serde_json::json!({
+        "id": job.id,
+        "name": job.name,
+        "request": job.request,
+        "state": job.line(),
+        "when": schedule::when_text(&job.at),
+        "every": job.every.map(schedule::humanize),
+        "paused": job.paused,
+        "done": job.done,
+        "runs": job.runs,
+        "last": job.last_status,
+    })
+}
+
+/// The scheduled jobs, newest first, for the page and the TUI's list.
+pub(crate) fn jobs_json(shared: &Arc<Shared>) -> Vec<serde_json::Value> {
+    let mut jobs = shared.scheduler.jobs();
+    jobs.reverse();
+    jobs.iter().map(job_json).collect()
+}
+
+/// Applies `run`, `pause` or `resume` to one job and says what happened. Both
+/// the TUI's routes and the page's call this, so they cannot drift apart.
+pub(crate) fn act(shared: &Arc<Shared>, id: &str, action: &str) -> Result<String, String> {
+    let mut start: Option<String> = None;
+    let note = {
+        let mut state = shared
+            .scheduler
+            .state
+            .lock()
+            .map_err(|_| "the schedule lock is poisoned".to_string())?;
+        let index = state
+            .position(id)
+            .ok_or_else(|| "no such schedule".to_string())?;
+        match action {
+            "pause" | "resume" => {
+                let job = &mut state.jobs[index];
+                job.paused = action == "pause";
+                let (name, id, paused) = (job.name.clone(), job.id.clone(), job.paused);
+                let _ = schedule::save(&state);
+                format!(
+                    "«{name}» #{id} is now {}",
+                    if paused { "paused" } else { "running again" }
+                )
+            }
+            "run" => {
+                let job = &mut state.jobs[index];
+                job.at = Local::now().to_rfc3339();
+                job.paused = false;
+                job.done = false;
+                let (name, id) = (job.name.clone(), job.id.clone());
+                let _ = schedule::save(&state);
+                start = Some(id.clone());
+                format!("«{name}» #{id}: starting now")
+            }
+            other => return Err(format!("unknown schedule action '{other}'")),
+        }
+    };
+    if let Some(id) = start {
+        fire_job(shared, &id, None);
+    }
+    Ok(note)
+}
+
+/// Drops one job for good.
+pub(crate) fn remove(shared: &Arc<Shared>, id: &str) -> Result<String, String> {
+    let mut state = shared
+        .scheduler
+        .state
+        .lock()
+        .map_err(|_| "the schedule lock is poisoned".to_string())?;
+    let index = state
+        .position(id)
+        .ok_or_else(|| "no such schedule".to_string())?;
+    let job = state.jobs.remove(index);
+    let _ = schedule::save(&state);
+    Ok(format!("removed «{}» #{}", job.name, job.id))
+}
+
 // ------------------------------------------------------------------ the tool
 
 /// The `schedule` tool: how a natural-language request becomes a job. `/schedule

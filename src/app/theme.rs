@@ -35,14 +35,6 @@ impl Theme {
             _ => "#3b82f6".to_string(),
         }
     }
-
-    /// The same colour at 15% alpha, for the page's soft fills.
-    pub fn accent_soft(&self) -> String {
-        match self.accent {
-            Color::Rgb(r, g, b) => format!("#{r:02x}{g:02x}{b:02x}26"),
-            _ => "#3b82f626".to_string(),
-        }
-    }
 }
 
 /// The theme a stored name means. An unknown name — one written by an older

@@ -928,47 +928,13 @@ pub(crate) async fn schedule_action(
     if !authorized(&shared, &headers) {
         return unauthorized();
     }
-    let mut start: Option<String> = None;
-    let note = {
-        let Ok(mut state) = shared.scheduler.state.lock() else {
-            return (StatusCode::INTERNAL_SERVER_ERROR, "the schedule lock is poisoned")
-                .into_response();
-        };
-        let Some(index) = state.position(&id) else {
-            return (StatusCode::NOT_FOUND, "no such schedule").into_response();
-        };
-        match action.as_str() {
-            "pause" | "resume" => {
-                let job = &mut state.jobs[index];
-                job.paused = action == "pause";
-                let (name, id, paused) = (job.name.clone(), job.id.clone(), job.paused);
-                let _ = crate::schedule::save(&state);
-                format!(
-                    "«{name}» #{id} is now {}",
-                    if paused { "paused" } else { "running again" }
-                )
-            }
-            "run" => {
-                let job = &mut state.jobs[index];
-                job.at = chrono::Local::now().to_rfc3339();
-                job.paused = false;
-                job.done = false;
-                let (name, id) = (job.name.clone(), job.id.clone());
-                let _ = crate::schedule::save(&state);
-                start = Some(id.clone());
-                format!("«{name}» #{id}: starting now")
-            }
-            other => {
-                return (StatusCode::BAD_REQUEST, format!("unknown schedule action '{other}'"))
-                    .into_response()
-            }
+    match act(&shared, &id, &action) {
+        Ok(note) => Json(serde_json::json!({ "note": note })).into_response(),
+        Err(message) if message == "no such schedule" => {
+            (StatusCode::NOT_FOUND, message).into_response()
         }
-    };
-    if let Some(id) = start {
-        // Outside the lock: `fire_job` takes it again.
-        fire_job(&shared, &id, None);
+        Err(message) => (StatusCode::BAD_REQUEST, message).into_response(),
     }
-    Json(serde_json::json!({ "note": note })).into_response()
 }
 
 /// `/schedule rm <id>`: drop a job for good.
@@ -980,17 +946,8 @@ pub(crate) async fn delete_schedule(
     if !authorized(&shared, &headers) {
         return unauthorized();
     }
-    let note = {
-        let Ok(mut state) = shared.scheduler.state.lock() else {
-            return (StatusCode::INTERNAL_SERVER_ERROR, "the schedule lock is poisoned")
-                .into_response();
-        };
-        let Some(index) = state.position(&id) else {
-            return (StatusCode::NOT_FOUND, "no such schedule").into_response();
-        };
-        let job = state.jobs.remove(index);
-        let _ = crate::schedule::save(&state);
-        format!("removed «{}» #{}", job.name, job.id)
-    };
-    Json(serde_json::json!({ "note": note })).into_response()
+    match remove(&shared, &id) {
+        Ok(note) => Json(serde_json::json!({ "note": note })).into_response(),
+        Err(message) => (StatusCode::NOT_FOUND, message).into_response(),
+    }
 }

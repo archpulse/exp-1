@@ -1,19 +1,25 @@
 /* The shell: a chat-like page in the dark, the way the reference looks. */
 
 :root {
+  /* The base two come from the settings, and everything else is derived, so a
+     chosen background and foreground repaint the whole page. */
   --bg: #212121;
-  --bg-side: #171717;
-  --surface: #2a2a2a;
-  --surface-2: #303030;
-  --line: #ffffff1a;
-  --line-soft: #ffffff0f;
-  --text: #ececec;
-  --muted: #b4b4b4;
-  --faint: #8f8f8f;
-  --accent: #0285ff;
-  --accent-soft: #0285ff26;
-  --hover: #ffffff12;
-  --active: #ffffff1f;
+  --fg: #ececec;
+  --bg-side: color-mix(in srgb, var(--bg) 88%, #000);
+  --surface: color-mix(in srgb, var(--bg) 90%, #fff);
+  --surface-2: color-mix(in srgb, var(--bg) 84%, #fff);
+  --line: color-mix(in srgb, var(--fg) 14%, transparent);
+  --line-soft: color-mix(in srgb, var(--fg) 8%, transparent);
+  --text: var(--fg);
+  --muted: color-mix(in srgb, var(--fg) 74%, var(--bg));
+  --faint: color-mix(in srgb, var(--fg) 56%, var(--bg));
+  --accent: #3b82f6;
+  --accent-soft: #3b82f626;
+  --hover: color-mix(in srgb, var(--fg) 9%, transparent);
+  --active: color-mix(in srgb, var(--fg) 16%, transparent);
+  --ui-font: 15px;
+  --code-font: 12px;
+  --contrast: 1.2;
   --radius: 12px;
   --radius-lg: 16px;
   --sidebar: 268px;
@@ -29,10 +35,20 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 15px;
+  font-size: var(--ui-font);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Motion: the system's choice, or the one made in Appearance. */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+html[data-motion="off"] * { transition: none !important; animation: none !important; }
+
+#app { height: 100%; filter: contrast(var(--contrast)); }
+
+code, pre, .mono { font-size: var(--code-font); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 button, input, select, textarea { font: inherit; color: inherit; }
 button { background: none; border: 0; cursor: pointer; }
@@ -279,6 +295,71 @@ svg { flex: none; }
 .set-section.spacer-line { border-top: 1px solid var(--line-soft); margin: 24px 0 0; }
 .soon-row { cursor: pointer; }
 .soon-row:hover { color: var(--text); }
+
+/* ------------------------------------------------- the colours and the rest */
+
+.menu .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; vertical-align: -1px; border: 1px solid var(--line); }
+
+.picker {
+  position: absolute; z-index: 30; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 14px; padding: 12px;
+  box-shadow: 0 18px 50px #0009;
+}
+.picker .field {
+  position: relative; width: 220px; height: 150px; border-radius: 10px;
+  cursor: crosshair; background-image: linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, transparent);
+}
+.picker .field .knob {
+  position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #fff; box-shadow: 0 0 0 1px #0006; transform: translate(-50%, -50%);
+}
+.picker .hue {
+  width: 220px; height: 12px; margin-top: 12px; border-radius: 6px;
+  -webkit-appearance: none; appearance: none;
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+.picker .hue::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; border: 2px solid #0006; cursor: pointer;
+}
+.picker .hex {
+  flex: 1; background: color-mix(in srgb, var(--fg) 8%, transparent);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; outline: 0;
+}
+.picker .line { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+
+.number {
+  width: 68px; background: color-mix(in srgb, var(--fg) 8%, transparent);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+  text-align: right; outline: 0;
+}
+.unit { color: var(--faint); margin-left: 8px; }
+.slider { width: 220px; accent-color: var(--accent); }
+.segment.small button { padding: 6px 12px; font-size: 13px; }
+
+.job { display: flex; align-items: center; gap: 20px; padding: 16px 20px; }
+.job + .job { border-top: 1px solid var(--line-soft); }
+.job .text { flex: 1; min-width: 0; }
+.job .name { font-size: 15px; }
+.job .desc { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.job .acts { display: flex; gap: 6px; }
+.job .acts button {
+  padding: 6px 12px; border-radius: 999px; font-size: 13px; color: var(--muted);
+  border: 1px solid var(--line);
+}
+.job .acts button:hover { background: var(--hover); color: var(--text); }
+.job .acts button.danger:hover { color: #ff8a8a; border-color: #ff8a8a55; }
+
+.card .hint, .set-page .hint { padding: 0 4px; }
+
+.advanced-head {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 10px 4px; color: var(--muted);
+}
+.advanced-head:hover { color: var(--text); }
+.advanced-head .chevron { transition: transform .15s; }
+.advanced-head.open .chevron { transform: rotate(180deg); }
 
 .soon-page { flex: 1; display: grid; place-items: center; text-align: center; padding: 40px; }
 .soon-page h2 { font-size: 22px; margin: 0 0 8px; }

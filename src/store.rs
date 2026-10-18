@@ -189,6 +189,23 @@ pub struct WebSettings {
     pub headings: String,
     /// Instructions the user adds on top of the system prompt.
     pub custom_instructions: String,
+    /// The page's accent: empty follows the TUI theme, otherwise a palette name
+    /// like `pink` or a `#rrggbb` the user picked.
+    pub accent: String,
+    /// Page colours; empty means the built-in dark ones.
+    pub background: String,
+    pub foreground: String,
+    /// Appearance, the advanced shelf: text sizes in pixels.
+    pub ui_font: u8,
+    pub code_font: u8,
+    /// `system`, `on` or `off`: whether the page animates.
+    pub motion: String,
+    /// Light and dark keep their own colours and fonts.
+    pub separate_themes: bool,
+    /// How hard the page pushes its own contrast, 0 to 140.
+    pub contrast: u8,
+    /// `color` or `signs`: how changes are marked in a diff.
+    pub diff_markers: String,
     /// Answer fast: the lowest reasoning the provider offers, or none at all.
     pub fast_answers: bool,
     pub suggested_prompts: bool,
@@ -212,6 +229,15 @@ impl Default for WebSettings {
             visual_replies: "default".to_string(),
             headings: "more".to_string(),
             custom_instructions: String::new(),
+            accent: String::new(),
+            background: String::new(),
+            foreground: String::new(),
+            ui_font: 15,
+            code_font: 12,
+            motion: "system".to_string(),
+            separate_themes: false,
+            contrast: 60,
+            diff_markers: "color".to_string(),
             fast_answers: false,
             suggested_prompts: true,
             record_history: true,
@@ -710,8 +736,7 @@ mod tests {
         assert!(DEFAULT_PORT != 0, "the default is a real, fixed port");
     }
 
-    /// The three slots of `/web-models` are set and read by name.
-    #[test]
+    /// The three slots of `/web-models` are set and read by name.    #[test]
     fn the_model_tiers_are_set_by_slot_name() {
         let mut tiers = Tiers::default();
         assert!(tiers.set("fast", "gpt-6-luna"));

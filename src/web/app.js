@@ -1,117 +1,142 @@
-/* The page's behaviour: a shell in the shape of a chat app, with the settings
-   screens it supports so far. No framework, no build step, no network — this
-   file ships inside the binary, the same as the styles. */
+/* The page's behaviour: a shell in the shape of a chat app, with its settings.
+   No framework, no build step, no network — this file ships inside the binary,
+   the same as the styles. */
 (() => {
   "use strict";
 
   const boot = JSON.parse(document.getElementById("boot")?.textContent || "{}");
   let web = Object.assign({}, boot.web || {});
   let sessions = boot.sessions || [];
-  let accent = boot.accent || "#3b82f6";
+  let chips = [];
   let saving = false;
+  let advancedOpen = false;
 
   /* ------------------------------------------------------------------ words */
 
   const STRINGS = {
     ru: {
-      newChat: "Новый чат", scheduled: "Запланировано", library: "Библиотека",
-      plugins: "Плагины", explore: "Обзор", pinned: "Закреплённые", projects: "Проекты",
-      recent: "Недавние", emptyPinned: "Закреплённых чатов пока нет",
-      emptyProjects: "Проектов пока нет", emptyRecent: "Пока пусто",
-      hello: "Что у вас сегодня на повестке?", ask: "Спросить exp-1",
-      reasoning: "Быстрые ответы", reasoningOn: "Быстрые ответы включены",
-      voice: "Голос", mic: "Микрофон",
-      soonToast: "Эта часть появится в следующем шаге — пока работают настройки.",
+      newChat: "Новый чат", scheduled: "Запланировано", plugins: "Плагины",
+      pinned: "Закреплённые", projects: "Проекты", recent: "Недавние",
+      emptyPinned: "Закреплённых чатов пока нет", emptyProjects: "Проектов пока нет",
+      emptyRecent: "Пока пусто", hello: "Что у вас сегодня на повестке?",
+      ask: "Спросить exp-1", reasoning: "Быстрые ответы", reasoningOn: "Быстрые ответы включены",
+      voice: "Голос", mic: "Микрофон", nextStep: "Чат появится в следующем шаге.",
       disclaimer: "exp-1 может ошибаться. Проверяйте важную информацию.",
       settings: "Настройки", back: "Вернуться в приложение", search: "Поиск",
       personalGroup: "Персональные настройки", general: "Общие",
-      personalization: "Персонализация", appearance: "Внешний вид",
+      appearance: "Внешний вид", personalization: "Персонализация",
       notifications: "Уведомления", profile: "Профиль", security: "Безопасность и вход",
       account: "Учётная запись", archived: "Архивные чаты", parental: "Родительский контроль",
       trusted: "Доверенный контакт", voiceSection: "Голос", storage: "Хранилище",
       pets: "Питомцы", keyboard: "Клавиатура", usage: "Использование", payment: "Оплата",
-      data: "Управление данными", integrations: "Интеграции", soon: "скоро",
+      data: "Управление данными", integrations: "Интеграции",
       langName: "Язык", langDesc: "Язык пользовательского интерфейса приложения",
       langAuto: "Автоматически определять",
       memorySection: "Память", memoryName: "Включить память",
       memoryDesc: "Разрешить exp-1 учитывать ваши чаты и файлы, чтобы отвечать точнее",
       memorySummary: "Сводка памяти",
-      memorySummaryDesc: "Посмотрите, что exp-1 о вас знает, в пользовательских инструкциях",
-      manage: "Управление",
-      styleSection: "Базовый стиль и тон", styleName: "Стиль и тон",
-      styleDesc: "Как модель разговаривает во всех чатах",
-      styleDefault: "По умолчанию", stylePro: "Профессиональный",
-      styleFriendly: "Дружелюбный", styleCandid: "Прямой",
+      memorySummaryDesc: "Что exp-1 о вас знает, лежит в пользовательских инструкциях",
+      manage: "Управление", styleSection: "Базовый стиль и тон", styleName: "Стиль и тон",
+      styleDesc: "Как модель разговаривает во всех чатах", styleDefault: "По умолчанию",
+      stylePro: "Профессиональный", styleFriendly: "Дружелюбный", styleCandid: "Прямой",
       friendliness: "Дружелюбие", enthusiasm: "Энтузиазм", emoji: "Эмодзи",
       visualReplies: "Визуальные ответы", headings: "Заголовки и списки",
       less: "Менее", def: "По умолчанию", more: "Более",
-      customSection: "Пользовательские инструкции", customName: "exp-1",
-      customDesc: "Добавьте дополнительные инструкции и контекст для всех чатов",
+      customSection: "Пользовательские инструкции", customDesc: "Добавьте дополнительные инструкции и контекст для всех чатов",
       customHint: "Сохраняется автоматически и попадает в системный промпт каждого чата.",
+      modelsSection: "Модели", modelsDesc: "Три модели выбираются командой /web-models в TUI",
+      tierFast: "Быстрая", tierMedium: "Средняя", tierPowerful: "Мощная", tierUnset: "не задана",
       extraSection: "Дополнительные настройки", fast: "Быстрые ответы",
       fastDesc: "Отвечать с минимальным ризонингом или без него, если провайдер это поддерживает",
       suggested: "Предлагаемые промпты", suggestedDesc: "Показывать примеры запросов на пустом экране",
       history: "Использовать историю записей", historyDesc: "Учитывать прошлые разговоры при ответе",
-      modelsSection: "Модели", modelsDesc: "Три модели выбираются командой /web-models в TUI",
-      tierFast: "Быстрая", tierMedium: "Средняя", tierPowerful: "Мощная",
-      tierUnset: "не задана", saved: "Сохранено", saveFailed: "Не сохранилось — попробуйте ещё раз",
-      noKey: "Нет доступа: откройте страницу заново через /web в TUI",
-      soonTitle: "Скоро", soonBody: "Этот раздел ещё не подключён. Сейчас работают «Общие», «Внешний вид» и «Персонализация».",
-      modeSection: "Визуальный стиль", modeName: "Режим",
-      modeLight: "Светлый", modeDark: "Тёмный", modeAuto: "Как в системе",
-      themeName: "Тема", themeDesc: "Тема TUI задаёт акцентный цвет этой страницы",
-      accentName: "Акцентный цвет", bgName: "Фон", fgName: "Цвет переднего плана",
-      fromTui: "меняется командой /themes в TUI", advanced: "Расширенные",
+      modeSection: "Визуальный стиль", modeName: "Режим", modeLight: "Светлый",
+      modeDark: "Тёмный", modeAuto: "Как в системе", themeName: "Тема",
+      themeDesc: "Тема TUI задаёт акцент, пока свой не выбран",
+      accentName: "Акцентный цвет", accentDefault: "По умолчанию", accentBlue: "Синий",
+      accentGreen: "Зелёный", accentYellow: "Жёлтый", accentPink: "Розовый",
+      accentOrange: "Оранжевый", accentPurple: "Фиолетовый", accentWhite: "Белый",
+      accentCustom: "Свой цвет", bgName: "Фон", fgName: "Цвет переднего плана",
+      advanced: "Расширенные", uiFont: "Размер шрифта интерфейса",
+      uiFontDesc: "Базовый размер текста страницы", codeFont: "Размер шрифта кода",
+      codeFontDesc: "Шрифт кода в чатах и диффах", motionName: "Уменьшение движения",
+      motionDesc: "Меньше анимаций: как в системе, всегда или никогда",
+      motionSystem: "Системный", motionOn: "Вкл.", motionOff: "Выкл.",
+      separateThemes: "Раздельные режимы светлой и тёмной тем",
+      separateThemesDesc: "Светлая тема появится позже; выбор сохранится",
+      contrastName: "Контраст", diffName: "Маркеры различий",
+      diffDesc: "Показывать изменения цветом или знаками +/−",
+      diffColor: "Цвет", diffSigns: "+/−",
+      jobsEmpty: "Расписаний нет — заведите их командой /schedule в TUI",
+      jobsHint: "Задачи создаются, запускаются и хранят историю в TUI; здесь их видно и можно поставить на паузу",
+      pause: "Пауза", resume: "Продолжить", runNow: "Запустить", remove: "Удалить",
+      pluginsEmpty: "Плагинов нет — добавьте MCP-серверы в файл",
+      pluginTools: "инструментов", pluginDown: "недоступен",
+      loading: "Загружаю…", loadFailed: "Не удалось загрузить — попробуйте ещё раз",
+      saved: "Сохранено", saveFailed: "Не сохранилось", saveRefused: "Сервер отказал",
+      off: "выкл", on: "вкл",
     },
     en: {
-      newChat: "New chat", scheduled: "Scheduled", library: "Library",
-      plugins: "Plugins", explore: "Explore", pinned: "Pinned", projects: "Projects",
-      recent: "Recent", emptyPinned: "No pinned chats yet",
-      emptyProjects: "No projects yet", emptyRecent: "Nothing yet",
-      hello: "What is on your mind today?", ask: "Ask exp-1",
-      reasoning: "Fast answers", reasoningOn: "Fast answers are on",
-      voice: "Voice", mic: "Microphone",
-      soonToast: "This part lands in the next step — settings work now.",
+      newChat: "New chat", scheduled: "Scheduled", plugins: "Plugins",
+      pinned: "Pinned", projects: "Projects", recent: "Recent",
+      emptyPinned: "No pinned chats yet", emptyProjects: "No projects yet",
+      emptyRecent: "Nothing yet", hello: "What is on your mind today?",
+      ask: "Ask exp-1", reasoning: "Fast answers", reasoningOn: "Fast answers are on",
+      voice: "Voice", mic: "Microphone", nextStep: "The chat lands in the next step.",
       disclaimer: "exp-1 can make mistakes. Check important information.",
       settings: "Settings", back: "Back to the app", search: "Search",
       personalGroup: "Personal settings", general: "General",
-      personalization: "Personalization", appearance: "Appearance",
+      appearance: "Appearance", personalization: "Personalization",
       notifications: "Notifications", profile: "Profile", security: "Security and login",
       account: "Account", archived: "Archived chats", parental: "Parental controls",
       trusted: "Trusted contact", voiceSection: "Voice", storage: "Storage",
       pets: "Pets", keyboard: "Keyboard", usage: "Usage", payment: "Payment",
-      data: "Data controls", integrations: "Integrations", soon: "soon",
+      data: "Data controls", integrations: "Integrations",
       langName: "Language", langDesc: "Language of the application interface",
       langAuto: "Detect automatically",
       memorySection: "Memory", memoryName: "Enable memory",
       memoryDesc: "Let exp-1 use your chats and files to answer more accurately",
       memorySummary: "Memory summary",
-      memorySummaryDesc: "See what exp-1 knows about you in the custom instructions",
-      manage: "Manage",
-      styleSection: "Base style and tone", styleName: "Style and tone",
-      styleDesc: "How the model talks in every chat",
-      styleDefault: "Default", stylePro: "Professional",
-      styleFriendly: "Friendly", styleCandid: "Candid",
+      memorySummaryDesc: "What exp-1 knows about you sits in the custom instructions",
+      manage: "Manage", styleSection: "Base style and tone", styleName: "Style and tone",
+      styleDesc: "How the model talks in every chat", styleDefault: "Default",
+      stylePro: "Professional", styleFriendly: "Friendly", styleCandid: "Candid",
       friendliness: "Friendliness", enthusiasm: "Enthusiasm", emoji: "Emoji",
       visualReplies: "Visual replies", headings: "Headings and lists",
       less: "Less", def: "Default", more: "More",
-      customSection: "Custom instructions", customName: "exp-1",
-      customDesc: "Add instructions and context for every chat",
+      customSection: "Custom instructions", customDesc: "Add instructions and context for every chat",
       customHint: "Saved automatically; it joins the system prompt of every chat.",
+      modelsSection: "Models", modelsDesc: "Pick the three models with /web-models in the TUI",
+      tierFast: "Fast", tierMedium: "Medium", tierPowerful: "Powerful", tierUnset: "not set",
       extraSection: "Additional settings", fast: "Fast answers",
       fastDesc: "Answer with the lowest reasoning, or none at all, when the provider allows it",
       suggested: "Suggested prompts", suggestedDesc: "Show example requests on the empty screen",
       history: "Use record history", historyDesc: "Use earlier conversations when answering",
-      modelsSection: "Models", modelsDesc: "Pick the three models with /web-models in the TUI",
-      tierFast: "Fast", tierMedium: "Medium", tierPowerful: "Powerful",
-      tierUnset: "not set", saved: "Saved", saveFailed: "Not saved — try again",
-      noKey: "No access: open the page again through /web in the TUI",
-      soonTitle: "Soon", soonBody: "This section is not wired up yet. General, Appearance and Personalization work now.",
-      modeSection: "Visual style", modeName: "Mode",
-      modeLight: "Light", modeDark: "Dark", modeAuto: "Match system",
-      themeName: "Theme", themeDesc: "The TUI's theme sets this page's accent colour",
-      accentName: "Accent colour", bgName: "Background", fgName: "Foreground colour",
-      fromTui: "change it with /themes in the TUI", advanced: "Advanced",
+      modeSection: "Visual style", modeName: "Mode", modeLight: "Light",
+      modeDark: "Dark", modeAuto: "Match system", themeName: "Theme",
+      themeDesc: "The TUI's theme sets the accent until one is picked here",
+      accentName: "Accent colour", accentDefault: "Default", accentBlue: "Blue",
+      accentGreen: "Green", accentYellow: "Yellow", accentPink: "Pink",
+      accentOrange: "Orange", accentPurple: "Purple", accentWhite: "White",
+      accentCustom: "Custom colour", bgName: "Background", fgName: "Foreground colour",
+      advanced: "Advanced", uiFont: "Interface font size",
+      uiFontDesc: "Base text size of the page", codeFont: "Code font size",
+      codeFontDesc: "Code in chats and diffs", motionName: "Reduce motion",
+      motionDesc: "Fewer animations: the system's choice, always or never",
+      motionSystem: "System", motionOn: "On", motionOff: "Off",
+      separateThemes: "Separate light and dark modes",
+      separateThemesDesc: "A light theme comes later; the choice is kept",
+      contrastName: "Contrast", diffName: "Diff markers",
+      diffDesc: "Mark changes with colour or with +/− signs",
+      diffColor: "Colour", diffSigns: "+/−",
+      jobsEmpty: "No schedules yet — make them with /schedule in the TUI",
+      jobsHint: "Jobs are made and run from the TUI; here you can see them and pause one",
+      pause: "Pause", resume: "Resume", runNow: "Run now", remove: "Remove",
+      pluginsEmpty: "No plugins yet — add MCP servers to the file",
+      pluginTools: "tools", pluginDown: "unavailable",
+      loading: "Loading…", loadFailed: "Could not load — try again",
+      saved: "Saved", saveFailed: "Not saved", saveRefused: "The server refused",
+      off: "off", on: "on",
     },
   };
 
@@ -131,9 +156,7 @@
     plus: icon('<path d="M12 5v14M5 12h14"/>'),
     pencil: icon('<path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M14 6l4 4"/>'),
     clock: icon('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
-    book: icon('<path d="M5 4h9a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M16 6h3v14H9"/>'),
     grid: icon('<path d="M4 9h6V4H4zM14 9h6V4h-6zM4 20h6v-5H4zM14 20h6v-5h-6z"/>'),
-    dots: icon('<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>'),
     search: icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
     panel: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>'),
     back: icon('<path d="M15 6l-6 6 6 6"/>'),
@@ -176,7 +199,7 @@
     node._timer = setTimeout(() => (node.hidden = true), 2600);
   };
 
-  const soon = () => toast(t("soonToast"));
+  const note = (text) => el("div", { class: "hint", text });
 
   async function save() {
     if (saving) return;
@@ -187,25 +210,276 @@
         headers: { "content-type": "application/json" },
         body: JSON.stringify(web),
       });
-      if (response.status === 401) return toast(t("noKey"));
-      if (!response.ok) return toast(t("saveFailed"));
-      const body = await response.json();
-      web = Object.assign(web, body.web || {});
-      toast(t("saved"));
-    } catch {
-      toast(t("saveFailed"));
+      if (response.ok) {
+        web = Object.assign(web, (await response.json()).web || {});
+        toast(t("saved"));
+      } else {
+        toast(`${t("saveFailed")} — HTTP ${response.status}`);
+      }
+    } catch (error) {
+      toast(`${t("saveFailed")} — ${error.message}`);
     } finally {
       saving = false;
     }
   }
 
-  /* ------------------------------------------------------------- navigation */
+  /* ------------------------------------------------------------------ theme */
 
-  const route = () => location.hash.replace(/^#/, "") || "/";
-  const go = (path) => {
-    location.hash = "#" + path;
+  const validHex = (value) => /^#[0-9a-f]{6}$/i.test((value || "").trim());
+
+  function accentValue() {
+    const chosen = (web.accent || "").trim();
+    if (!chosen) return boot.accent || "#3b82f6";
+    const named = (boot.palette || []).find((colour) => colour.name === chosen);
+    if (named) return named.hex;
+    return validHex(chosen) ? chosen.toLowerCase() : boot.accent || "#3b82f6";
+  }
+
+  function setColour(name, value, fallback) {
+    const style = document.documentElement.style;
+    if (validHex(value)) style.setProperty(name, value.trim().toLowerCase());
+    else if (value) style.setProperty(name, fallback);
+    else style.removeProperty(name);
+  }
+
+  function applyTheme() {
+    const style = document.documentElement.style;
+    const accent = accentValue();
+    style.setProperty("--accent", accent);
+    style.setProperty("--accent-soft", accent + "26");
+    setColour("--bg", web.background, "#212121");
+    setColour("--fg", web.foreground, "#ececec");
+    style.setProperty("--ui-font", `${Math.min(28, Math.max(10, web.ui_font || 15))}px`);
+    style.setProperty("--code-font", `${Math.min(28, Math.max(8, web.code_font || 12))}px`);
+    style.setProperty("--contrast", (0.6 + Math.min(200, web.contrast ?? 60) / 100).toFixed(2));
+    document.documentElement.dataset.motion =
+      web.motion === "on" || web.motion === "off" ? web.motion : "system";
+  }
+
+  /* -------------------------------------------------------------- the parts */
+
+  const hexToHsv = (hex) => {
+    const value = (hex || "#000000").replace("#", "");
+    const r = parseInt(value.slice(0, 2), 16) / 255;
+    const g = parseInt(value.slice(2, 4), 16) / 255;
+    const b = parseInt(value.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let hue = 0;
+    if (max !== min) {
+      const d = max - min;
+      if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) hue = ((b - r) / d + 2) / 6;
+      else hue = ((r - g) / d + 4) / 6;
+    }
+    return { h: hue, s: max === 0 ? 0 : (max - min) / max, v: max };
   };
-  window.addEventListener("hashchange", render);
+
+  const hsvToHex = ({ h, s, v }) => {
+    const f = (n) => {
+      const k = (n + h * 6) % 6;
+      const value = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+      return Math.round(value * 255)
+        .toString(16)
+        .padStart(2, "0");
+    };
+    return `#${f(5)}${f(3)}${f(1)}`;
+  };
+
+  function closeOverlays() {
+    for (const node of document.querySelectorAll(".menu, .picker")) node.remove();
+  }
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".menu") && !event.target.closest(".picker") && !event.target.closest(".select")) {
+      closeOverlays();
+    }
+  });
+
+  const place = (node, anchor) => {
+    document.body.append(node);
+    const box = anchor.getBoundingClientRect();
+    node.style.left = `${Math.max(12, Math.min(box.left, window.innerWidth - node.offsetWidth - 12))}px`;
+    node.style.top = `${Math.min(box.bottom + 6, window.innerHeight - node.offsetHeight - 12)}px`;
+    return node;
+  };
+
+  function openColourPicker(anchor, key) {
+    closeOverlays();
+    let hsv = hexToHsv(validHex(web[key]) ? web[key] : "#212121");
+    const field = el("div", { class: "field" });
+    const knob = el("span", { class: "knob" });
+    field.append(knob);
+    const hue = el("input", { type: "range", class: "hue", min: "0", max: "360", value: String(Math.round(hsv.h * 360)) });
+    const hex = el("input", { type: "text", class: "hex", value: web[key] || "" });
+    const picker = el("div", { class: "picker" }, [
+      field,
+      hue,
+      el("div", { class: "line" }, [hex, el("button", { class: "button", text: t("saved"), onclick: () => {
+        picker.remove();
+        save();
+      } })]),
+    ]);
+
+    const paint = (commit) => {
+      field.style.backgroundImage =
+        `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${Math.round(hsv.h * 360)}, 100%, 50%))`;
+      knob.style.left = `${hsv.s * 100}%`;
+      knob.style.top = `${(1 - hsv.v) * 100}%`;
+      const value = hsvToHex(hsv);
+      hex.value = value;
+      web[key] = value;
+      applyTheme();
+      if (commit) save();
+    };
+
+    field.addEventListener("pointerdown", (event) => {
+      field.setPointerCapture(event.pointerId);
+      const move = (moveEvent) => {
+        const box = field.getBoundingClientRect();
+        hsv.s = Math.min(1, Math.max(0, (moveEvent.clientX - box.left) / box.width));
+        hsv.v = Math.min(1, Math.max(0, 1 - (moveEvent.clientY - box.top) / box.height));
+        paint(false);
+      };
+      move(event);
+      const up = () => {
+        field.removeEventListener("pointermove", move);
+        field.removeEventListener("pointerup", up);
+        paint(true);
+      };
+      field.addEventListener("pointermove", move);
+      field.addEventListener("pointerup", up);
+    });
+    hue.addEventListener("input", () => {
+      hsv.h = Number(hue.value) / 360;
+      paint(false);
+    });
+    hue.addEventListener("change", () => paint(true));
+    hex.addEventListener("change", () => {
+      if (!validHex(hex.value)) return;
+      hsv = hexToHsv(hex.value);
+      hue.value = String(Math.round(hsv.h * 360));
+      paint(true);
+    });
+
+    place(picker, anchor);
+    paint(false);
+  }
+
+  const MENUS = () => ({
+    language: [
+      { value: "", label: t("langAuto") },
+      { value: "ru", label: "Русский" },
+      { value: "en", label: "English" },
+    ],
+    style: [
+      { value: "default", label: t("styleDefault") },
+      { value: "professional", label: t("stylePro") },
+      { value: "friendly", label: t("styleFriendly") },
+      { value: "candid", label: t("styleCandid") },
+    ],
+    visual_replies: [
+      { value: "default", label: t("def") },
+      { value: "less", label: t("less") },
+    ],
+  });
+
+  const trait = (key) => [
+    { value: "less", label: t("less") },
+    { value: "default", label: t("def") },
+    { value: "more", label: t("more") },
+  ];
+
+  const select = (key, options, after, swatchFor) => {
+    const node = el("button", { class: "select" });
+    const current = () => (options().find((option) => option.value === (web[key] ?? options()[0].value)) || options()[0]);
+    const label = () => {
+      const choice = current();
+      const children = [];
+      if (swatchFor) children.push(el("span", { class: "dot", style: `background:${swatchFor(choice)}` }));
+      children.push(el("span", { text: choice.label }));
+      children.push(el("span", { html: icons.chevron }));
+      node.textContent = "";
+      node.append(...children);
+    };
+    label();
+    node.addEventListener("click", (event) => {
+      event.stopPropagation();
+      closeOverlays();
+      const menu = el("div", { class: "menu" });
+      for (const option of options()) {
+        menu.append(
+          el("button", {
+            class: option.value === (web[key] ?? options()[0].value) ? "on" : "",
+            onclick: () => {
+              if (option.action) {
+                closeOverlays();
+                option.action(node);
+                return;
+              }
+              web[key] = option.value;
+              closeOverlays();
+              label();
+              applyTheme();
+              save();
+              if (after) after();
+            },
+          }, [
+            swatchFor ? el("span", { class: "dot", style: `background:${swatchFor(option)}` }) : null,
+            el("span", { text: option.label }),
+          ]),
+        );
+      }
+      place(menu, node);
+    });
+    return node;
+  };
+
+  const toggle = (key, after) => {
+    const node = el("button", {
+      class: "toggle" + (web[key] ? " on" : ""),
+      role: "switch",
+      "aria-checked": String(!!web[key]),
+    });
+    node.addEventListener("click", () => {
+      web[key] = !web[key];
+      node.classList.toggle("on", !!web[key]);
+      node.setAttribute("aria-checked", String(!!web[key]));
+      save();
+      if (after) after();
+    });
+    return node;
+  };
+
+  const rows = (list) => el("div", { class: "card" }, list);
+  const row = (name, desc, control) =>
+    el("div", { class: "row" }, [
+      el("div", { class: "text" }, [
+        el("div", { class: "name", text: name }),
+        desc ? el("div", { class: "desc", text: desc }) : null,
+      ]),
+      control ? el("div", { class: "control" }, [control]) : el("span", { class: "spacer", text: "›" }),
+    ]);
+  const section = (title) => el("div", { class: "set-section", text: title });
+
+  const segmented = (key, options, after) => {
+    const node = el("div", { class: "segment small" });
+    for (const option of options) {
+      node.append(
+        el("button", {
+          class: (web[key] ?? options[0].value) === option.value ? "on" : "",
+          text: option.label,
+          onclick: (event) => {
+            web[key] = option.value;
+            for (const sibling of event.currentTarget.parentElement.children) sibling.classList.remove("on");
+            event.currentTarget.classList.add("on");
+            save();
+            if (after) after();
+          },
+        }),
+      );
+    }
+    return node;
+  };
 
   /* ---------------------------------------------------------------- sidebar */
 
@@ -222,7 +496,7 @@
       .filter(Boolean);
     const list = el("div", { class: "side-scroll" });
     for (const session of pinned) {
-      list.append(el("button", { class: "side-item", text: session.title, onclick: soon }));
+      list.append(el("button", { class: "side-item", text: session.title, onclick: nextStep }));
     }
     if (!pinned.length) list.append(el("div", { class: "side-empty", text: t("emptyPinned") }));
     list.append(el("div", { class: "side-label", text: t("projects") }));
@@ -230,7 +504,7 @@
     list.append(el("div", { class: "side-label", text: t("recent") }));
     if (!sessions.length) list.append(el("div", { class: "side-empty", text: t("emptyRecent") }));
     for (const session of sessions) {
-      list.append(el("button", { class: "side-item", text: session.title, title: session.when, onclick: soon }));
+      list.append(el("button", { class: "side-item", text: session.title, title: session.when, onclick: nextStep }));
     }
 
     return [
@@ -240,13 +514,8 @@
           el("span", { text: "exp-1" }),
         ]),
         el("div", { class: "side-icons" }, [
-          el("button", { class: "icon-btn", html: icons.search, title: t("search"), onclick: soon }),
-          el("button", {
-            class: "icon-btn",
-            html: icons.panel,
-            title: t("settings"),
-            onclick: () => go("/settings/general"),
-          }),
+          el("button", { class: "icon-btn", html: icons.search, title: t("search"), onclick: nextStep }),
+          el("button", { class: "icon-btn", html: icons.panel, title: t("settings"), onclick: () => go("/settings/general") }),
         ]),
       ]),
       el("button", { class: "side-row primary", onclick: () => go("/") }, [
@@ -254,9 +523,7 @@
         el("span", { text: t("newChat") }),
       ]),
       sideRow(icons.clock, t("scheduled"), "/scheduled", String(boot.scheduled ?? 0)),
-      sideRow(icons.book, t("library"), "/library"),
       sideRow(icons.grid, t("plugins"), "/plugins", String(boot.plugins ?? 0)),
-      sideRow(icons.dots, t("explore"), "/explore"),
       list,
       el("div", { class: "side-foot" }, [
         el("div", { class: "profile", onclick: () => go("/settings/personalization") }, [
@@ -272,11 +539,13 @@
 
   /* ------------------------------------------------------------------- chat */
 
+  const nextStep = () => toast(t("nextStep"));
+
   function chatView() {
     const input = el("input", {
       placeholder: t("ask"),
       onkeydown: (event) => {
-        if (event.key === "Enter") soon();
+        if (event.key === "Enter") nextStep();
       },
     });
     const fast = el("button", { class: "pill" + (web.fast_answers ? " on" : "") }, [
@@ -293,29 +562,27 @@
     const view = el("div", { class: "chat-view" }, [
       el("div", { class: "chat-hello", text: t("hello") }),
       el("div", { class: "composer" }, [
-        el("button", { class: "plus", html: icons.plus, onclick: soon }),
+        el("button", { class: "plus", html: icons.plus, onclick: nextStep }),
         input,
         el("div", { class: "tools" }, [
           fast,
-          el("button", { class: "mic", html: icons.mic, title: t("mic"), onclick: soon }),
-          el("button", { class: "voice", html: icons.wave, title: t("voice"), onclick: soon }),
+          el("button", { class: "mic", html: icons.mic, title: t("mic"), onclick: nextStep }),
+          el("button", { class: "voice", html: icons.wave, title: t("voice"), onclick: nextStep }),
         ]),
       ]),
       el("div", { class: "chat-under", text: t("disclaimer") }),
     ]);
     if (web.suggested_prompts) {
-      const chips = el("div", { class: "chat-chips" });
-      chips.append(el("button", { class: "chip", text: "/schedule", onclick: soon }));
-      chips.append(el("button", { class: "chip", text: "/web-models", onclick: soon }));
-      chips.append(
-        el("button", { class: "chip", text: t("settings"), onclick: () => go("/settings/general") }),
-      );
-      view.append(chips);
+      const box = el("div", { class: "chat-chips" });
+      for (const text of ["/schedule", "/web-models", t("settings")]) {
+        box.append(el("button", { class: "chip", text, onclick: text === t("settings") ? () => go("/settings/general") : nextStep }));
+      }
+      view.append(box);
     }
     return view;
   }
 
-  /* --------------------------------------------------------- settings: bits */
+  /* --------------------------------------------------------------- settings */
 
   const SETTINGS_ROWS = [
     { key: "general", icon: icons.sliders, path: "/settings/general" },
@@ -338,88 +605,6 @@
     { key: "integrations", icon: icons.puzzle },
   ];
 
-  const card = (children) => el("div", { class: "card" }, children);
-
-  const row = (name, desc, control) =>
-    el("div", { class: "row" }, [
-      el("div", { class: "text" }, [
-        el("div", { class: "name", text: name }),
-        desc ? el("div", { class: "desc", text: desc }) : null,
-      ]),
-      control ? el("div", { class: "control" }, [control]) : el("span", { class: "spacer", text: "›" }),
-    ]);
-
-  const section = (title) => el("div", { class: "set-section", text: title });
-
-  const toggle = (key) => {
-    const node = el("button", {
-      class: "toggle" + (web[key] ? " on" : ""),
-      role: "switch",
-      "aria-checked": String(!!web[key]),
-    });
-    node.addEventListener("click", () => {
-      web[key] = !web[key];
-      node.classList.toggle("on", !!web[key]);
-      node.setAttribute("aria-checked", String(!!web[key]));
-      save();
-    });
-    return node;
-  };
-
-  function closeMenus() {
-    for (const menu of document.querySelectorAll(".menu")) menu.remove();
-  }
-  document.addEventListener("click", (event) => {
-    if (!event.target.closest(".menu") && !event.target.closest(".select")) closeMenus();
-  });
-
-  const select = (key, options, after) => {
-    const node = el("button", { class: "select" });
-    const label = () =>
-      (options.find((option) => option.value === (web[key] || options[0].value)) || options[0]).label;
-    node.append(el("span", { text: label() }), el("span", { html: icons.chevron }));
-    node.addEventListener("click", (event) => {
-      event.stopPropagation();
-      closeMenus();
-      const menu = el("div", { class: "menu" });
-      for (const option of options) {
-        menu.append(
-          el("button", {
-            class: option.value === (web[key] || options[0].value) ? "on" : "",
-            text: option.label,
-            onclick: () => {
-              web[key] = option.value;
-              closeMenus();
-              node.firstChild.textContent = option.label;
-              save();
-              if (after) after();
-            },
-          }),
-        );
-      }
-      document.body.append(menu);
-      const box = node.getBoundingClientRect();
-      menu.style.left =
-        Math.max(12, Math.min(box.left, window.innerWidth - menu.offsetWidth - 12)) + "px";
-      menu.style.top = Math.min(box.bottom + 6, window.innerHeight - menu.offsetHeight - 12) + "px";
-    });
-    return node;
-  };
-
-  const three = (key) =>
-    select(key, [
-      { value: "less", label: t("less") },
-      { value: "default", label: t("def") },
-      { value: "more", label: t("more") },
-    ]);
-
-  const swatch = (colour) =>
-    el("span", { class: "swatch", style: `background:${colour}`, html: "" });
-
-  const valuePill = (text) => el("span", { class: "select static", text });
-
-  /* ------------------------------------------------------ settings: screens */
-
   function settingsNav(active) {
     const filter = el("input", { placeholder: t("search") });
     const list = el("div");
@@ -430,19 +615,10 @@
         const label = t(item.key);
         if (needle && !label.toLowerCase().includes(needle)) continue;
         list.append(
-          el(
-            "button",
-            {
-              class:
-                "set-link" + (item.path === active ? " active" : "") + (item.path ? "" : " soon"),
-              onclick: item.path ? () => go(item.path) : soon,
-            },
-            [
-              el("span", { html: item.icon }),
-              el("span", { text: label }),
-              item.path ? null : el("span", { class: "tag", text: t("soon") }),
-            ],
-          ),
+          el("button", {
+            class: "set-link" + (item.path === active ? " active" : ""),
+            onclick: item.path ? () => go(item.path) : nextStep,
+          }, [el("span", { html: item.icon }), el("span", { text: label })]),
         );
       }
     };
@@ -459,30 +635,43 @@
     ]);
   }
 
-  function generalScreen() {
-    return el("div", { class: "set-page" }, [
-      el("h1", { class: "set-title", text: t("general") }),
-      card([
-        row(
-          t("langName"),
-          t("langDesc"),
-          select("language", [
-            { value: "", label: t("langAuto") },
-            { value: "ru", label: "Русский" },
-            { value: "en", label: "English" },
-          ], render),
-        ),
+  function generalScreen(body) {
+    body.append(
+      el("div", { class: "set-page" }, [
+        el("h1", { class: "set-title", text: t("general") }),
+        rows([
+          row(t("langName"), t("langDesc"), select("language", () => MENUS().language, render)),
+        ]),
       ]),
-    ]);
+    );
   }
 
-  function appearanceScreen() {
+  function appearanceScreen(body) {
+    const paletteName = (value) => `accent${value.charAt(0).toUpperCase()}${value.slice(1)}`;
+    const accentOptions = () => {
+      const items = [{ value: "", label: t("accentDefault") }];
+      for (const colour of boot.palette || []) {
+        items.push({ value: colour.name, label: t(paletteName(colour.name)) });
+      }
+      items.push({
+        value: "__custom",
+        label: t("accentCustom"),
+        action: (anchor) => openColourPicker(anchor, "accent"),
+      });
+      return items;
+    };
+    const accentSwatch = (option) => {
+      if (option.value === "" || option.value === "__custom") return accentValue();
+      const named = (boot.palette || []).find((colour) => colour.name === option.value);
+      return named ? named.hex : accentValue();
+    };
+
     const modes = [
       { label: t("modeLight"), cls: "mode light" },
       { label: t("modeDark"), cls: "mode dark on" },
       { label: t("modeAuto"), cls: "mode auto" },
     ].map((mode) =>
-      el("button", { class: mode.cls, title: mode.label, onclick: soon }, [
+      el("button", { class: mode.cls, title: mode.label, onclick: nextStep }, [
         el("span", { class: "mode-bar" }),
         el("span", { class: "mode-line" }),
         el("span", { class: "mode-line short" }),
@@ -490,50 +679,100 @@
       ]),
     );
 
-    return el("div", { class: "set-page" }, [
-      el("h1", { class: "set-title", text: t("appearance") }),
-      section(t("modeSection")),
-      card([
-        el("div", { class: "row" }, [
-          el("div", { class: "text" }, [el("div", { class: "name", text: t("modeName") })]),
-          el("div", { class: "control modes" }, modes),
+    const colourRow = (key, name) => {
+      const swatch = el("span", { class: "dot", style: `background:${validHex(web[key]) ? web[key] : (key === "--bg" ? "#212121" : "#ececec")}` });
+      const value = el("span", { text: web[key] || (key === "background" ? "#212121" : "#ececec") });
+      const pill = el("button", { class: "select static" }, [swatch, value]);
+      pill.addEventListener("click", () => openColourPicker(pill, key));
+      return row(name, null, pill);
+    };
+
+    const advanced = el("div");
+    const advancedHead = el("div", { class: "advanced-head" + (advancedOpen ? " open" : "") }, [
+      el("span", { text: t("advanced") }),
+      el("span", { class: "chevron", html: icons.chevron }),
+    ]);
+    const paintAdvanced = () => {
+      advanced.textContent = "";
+      advancedHead.classList.toggle("open", advancedOpen);
+      if (!advancedOpen) return;
+      const number = (key) => {
+        const field = el("input", { type: "number", class: "number", min: "8", max: "28", value: String(web[key] || "") });
+        field.addEventListener("change", () => {
+          web[key] = Number(field.value);
+          applyTheme();
+          save();
+        });
+        return el("span", {}, [field, el("span", { class: "unit", text: "px" })]);
+      };
+      const slider = el("input", { type: "range", class: "slider", min: "0", max: "140", value: String(web.contrast ?? 60) });
+      slider.addEventListener("input", () => {
+        web.contrast = Number(slider.value);
+        applyTheme();
+      });
+      slider.addEventListener("change", () => save());
+      advanced.append(
+        rows([
+          row(t("uiFont"), t("uiFontDesc"), number("ui_font")),
+          row(t("codeFont"), t("codeFontDesc"), number("code_font")),
         ]),
-      ]),
-      el("div", { class: "set-section spacer-line" }),
-      card([
-        row(
-          t("themeName"),
-          t("themeDesc"),
-          el("span", { class: "select static" }, [
+        rows([
+          row(t("motionName"), t("motionDesc"), segmented("motion", [
+            { value: "system", label: t("motionSystem") },
+            { value: "on", label: t("motionOn") },
+            { value: "off", label: t("motionOff") },
+          ], applyTheme)),
+          row(t("separateThemes"), t("separateThemesDesc"), toggle("separate_themes")),
+        ]),
+        rows([
+          row(t("contrastName"), null, el("span", {}, [slider, el("span", { class: "unit", text: String(web.contrast ?? 60) })])),
+          row(t("diffName"), t("diffDesc"), segmented("diff_markers", [
+            { value: "color", label: t("diffColor") },
+            { value: "signs", label: t("diffSigns") },
+          ])),
+        ]),
+      );
+    };
+    advancedHead.addEventListener("click", () => {
+      advancedOpen = !advancedOpen;
+      paintAdvanced();
+    });
+    paintAdvanced();
+
+    body.append(
+      el("div", { class: "set-page" }, [
+        el("h1", { class: "set-title", text: t("appearance") }),
+        section(t("modeSection")),
+        rows([
+          el("div", { class: "row" }, [
+            el("div", { class: "text" }, [el("div", { class: "name", text: t("modeName") })]),
+            el("div", { class: "control modes" }, modes),
+          ]),
+        ]),
+        el("div", { class: "set-section spacer-line" }),
+        rows([
+          row(t("themeName"), t("themeDesc"), el("span", { class: "select static" }, [
             el("span", { class: "aa", text: "Aa" }),
             el("span", { text: boot.theme || "default" }),
-          ]),
-        ),
-        row(
-          t("accentName"),
-          null,
-          el("span", { class: "select static" }, [swatch(accent), el("span", { text: accent })]),
-        ),
-        row(t("bgName"), null, el("span", { class: "select static" }, [swatch("#212121"), el("span", { text: "#212121" })])),
-        row(
-          t("fgName"),
-          null,
-          el("span", { class: "select static" }, [swatch("#ececec"), el("span", { text: "#ececec" })]),
-        ),
+          ])),
+          row(t("accentName"), null, select("accent", accentOptions, null, accentSwatch)),
+          colourRow("background", t("bgName")),
+          colourRow("foreground", t("fgName")),
+        ]),
+        advancedHead,
+        advanced,
       ]),
-      el("div", { class: "hint", text: t("fromTui") }),
-      el("div", { class: "set-section soon-row", onclick: soon, text: t("advanced") + " ›" }),
-    ]);
+    );
   }
 
-  function personalizationScreen() {
+  function personalizationScreen(body) {
     const textarea = el("textarea", { placeholder: t("customDesc") });
     textarea.value = web.custom_instructions || "";
     textarea.addEventListener("blur", () => {
       web.custom_instructions = textarea.value;
       save();
     });
-    const focusInstructions = () => {
+    const focus = () => {
       textarea.focus();
       textarea.scrollIntoView({ block: "center", behavior: "smooth" });
     };
@@ -545,109 +784,184 @@
       ["powerful", t("tierPowerful")],
     ].map(([slot, label]) => row(label, tiers[slot] || t("tierUnset"), null));
 
-    return el("div", { class: "set-page" }, [
-      el("h1", { class: "set-title", text: t("personalization") }),
-      section(t("memorySection")),
-      card([
-        row(t("memoryName"), t("memoryDesc"), toggle("memory")),
-        el("div", { class: "row link", onclick: focusInstructions }, [
-          el("div", { class: "text" }, [
-            el("div", { class: "name", text: t("memorySummary") }),
-            el("div", { class: "desc", text: t("memorySummaryDesc") }),
+    body.append(
+      el("div", { class: "set-page" }, [
+        el("h1", { class: "set-title", text: t("personalization") }),
+        section(t("memorySection")),
+        rows([
+          row(t("memoryName"), t("memoryDesc"), toggle("memory")),
+          el("div", { class: "row link", onclick: focus }, [
+            el("div", { class: "text" }, [
+              el("div", { class: "name", text: t("memorySummary") }),
+              el("div", { class: "desc", text: t("memorySummaryDesc") }),
+            ]),
+            el("div", { class: "control" }, [el("span", { class: "button", text: t("manage") })]),
           ]),
-          el("div", { class: "control" }, [el("span", { class: "button", text: t("manage") })]),
+        ]),
+        section(t("styleSection")),
+        rows([
+          row(t("styleName"), t("styleDesc"), select("style", () => MENUS().style)),
+          row(t("friendliness"), null, select("friendliness", () => trait())),
+          row(t("enthusiasm"), null, select("enthusiasm", () => trait())),
+          row(t("emoji"), null, select("emoji", () => trait())),
+          row(t("visualReplies"), null, select("visual_replies", () => MENUS().visual_replies)),
+          row(t("headings"), null, select("headings", () => trait())),
+        ]),
+        section(t("customSection")),
+        rows([el("div", { class: "instructions" }, [textarea, note(t("customHint"))])]),
+        section(t("modelsSection")),
+        rows(tierRows),
+        note(t("modelsDesc")),
+        section(t("extraSection")),
+        rows([
+          row(t("fast"), t("fastDesc"), toggle("fast_answers")),
+          row(t("suggested"), t("suggestedDesc"), toggle("suggested_prompts", render)),
+          row(t("history"), t("historyDesc"), toggle("record_history")),
         ]),
       ]),
-      section(t("styleSection")),
-      card([
-        row(
-          t("styleName"),
-          t("styleDesc"),
-          select("style", [
-            { value: "default", label: t("styleDefault") },
-            { value: "professional", label: t("stylePro") },
-            { value: "friendly", label: t("styleFriendly") },
-            { value: "candid", label: t("styleCandid") },
-          ]),
-        ),
-        row(t("friendliness"), null, three("friendliness")),
-        row(t("enthusiasm"), null, three("enthusiasm")),
-        row(t("emoji"), null, three("emoji")),
-        row(
-          t("visualReplies"),
-          null,
-          select("visual_replies", [
-            { value: "default", label: t("def") },
-            { value: "less", label: t("less") },
-          ]),
-        ),
-        row(t("headings"), null, three("headings")),
-      ]),
-      section(t("customSection")),
-      card([
-        el("div", { class: "instructions" }, [
-          textarea,
-          el("div", { class: "hint", text: t("customHint") }),
-        ]),
-      ]),
-      section(t("modelsSection")),
-      card(tierRows),
-      el("div", { class: "hint", text: t("modelsDesc") }),
-      section(t("extraSection")),
-      card([
-        row(t("fast"), t("fastDesc"), toggle("fast_answers")),
-        row(t("suggested"), t("suggestedDesc"), toggle("suggested_prompts")),
-        row(t("history"), t("historyDesc"), toggle("record_history")),
-      ]),
-    ]);
+    );
   }
+
+  /* ------------------------------------------------------ scheduled, plugins */
+
+  async function json(url, options) {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+
+  function scheduledScreen(body) {
+    const page = el("div", { class: "set-page" }, [
+      el("h1", { class: "set-title", text: t("scheduled") }),
+      note(t("loading")),
+    ]);
+    body.append(page);
+    const paint = async () => {
+      page.textContent = "";
+      page.append(el("h1", { class: "set-title", text: t("scheduled") }));
+      let jobs = [];
+      try {
+        jobs = await json("/api/schedules");
+      } catch {
+        page.append(note(t("loadFailed")));
+        return;
+      }
+      if (!jobs.length) {
+        page.append(note(`${t("jobsEmpty")}`));
+        return;
+      }
+      const list = el("div", { class: "card" });
+      for (const job of jobs) {
+        const state = job.done ? "done" : job.paused ? t("pause") : job.every ? `every ${job.every}` : job.when;
+        const actions = el("div", { class: "acts" });
+        const act = async (action, method) => {
+          try {
+            await json(`/api/schedules/${encodeURIComponent(job.id)}${action ? "/" + action : ""}`, { method: method || "POST" });
+            paint();
+          } catch (error) {
+            toast(`${t("loadFailed")} — ${error.message}`);
+          }
+        };
+        if (!job.done) {
+          actions.append(el("button", { text: job.paused ? t("resume") : t("pause"), onclick: () => act(job.paused ? "resume" : "pause") }));
+          actions.append(el("button", { text: t("runNow"), onclick: () => act("run") }));
+        }
+        actions.append(el("button", { class: "danger", text: t("remove"), onclick: () => act("", "DELETE") }));
+        list.append(
+          el("div", { class: "job" }, [
+            el("div", { class: "text" }, [
+              el("div", { class: "name", text: job.name }),
+              el("div", { class: "desc", text: `${state}${job.last ? " · " + job.last : ""}` }),
+            ]),
+            actions,
+          ]),
+        );
+      }
+      page.append(list, note(t("jobsHint")));
+    };
+    paint();
+  }
+
+  function pluginsScreen(body) {
+    const page = el("div", { class: "set-page" }, [
+      el("h1", { class: "set-title", text: t("plugins") }),
+      note(t("loading")),
+    ]);
+    body.append(page);
+    json("/api/plugins")
+      .then((servers) => {
+        page.textContent = "";
+        page.append(el("h1", { class: "set-title", text: t("plugins") }));
+        if (!servers.length) {
+          page.append(note(`${t("pluginsEmpty")} ${boot.mcp_path || ""}`));
+          return;
+        }
+        const list = el("div", { class: "card" });
+        for (const server of servers) {
+          const tools = server.tools ?? 0;
+          const desc = server.error
+            ? `${t("pluginDown")}: ${server.error}`
+            : `${tools} ${t("pluginTools")}`;
+          list.append(
+            el("div", { class: "job" }, [
+              el("div", { class: "text" }, [
+                el("div", { class: "name", text: server.name || "?" }),
+                el("div", { class: "desc", text: `${server.kind || "?"} · ${desc}` }),
+              ]),
+            ]),
+          );
+        }
+        page.append(list, note(`${boot.mcp_path || ""}`));
+      })
+      .catch(() => {
+        page.textContent = "";
+        page.append(el("h1", { class: "set-title", text: t("plugins") }), note(t("loadFailed")));
+      });
+  }
+
+  /* ------------------------------------------------------------------ paint */
 
   const SCREENS = {
     "/settings/general": generalScreen,
     "/settings/appearance": appearanceScreen,
     "/settings/personalization": personalizationScreen,
+    "/scheduled": scheduledScreen,
+    "/plugins": pluginsScreen,
   };
 
-  const CHAT_LINKS = ["scheduled", "library", "plugins", "explore"];
-
-  function soonPage(key) {
-    const title = CHAT_LINKS.includes(key) ? t(key) : t("soonTitle");
-    return el("div", { class: "soon-page" }, [
-      el("div", {}, [el("h2", { text: title }), el("p", { text: t("soonBody") })]),
-    ]);
-  }
-
-  /* ------------------------------------------------------------------ paint */
+  const route = () => location.hash.replace(/^#/, "") || "/";
+  const go = (path) => {
+    if (route() === path) render();
+    else location.hash = "#" + path;
+  };
+  window.addEventListener("hashchange", render);
 
   function render() {
-    const current = route();
+    const current = SCREENS[route()] ? route() : "/";
     document.documentElement.lang = language();
+    applyTheme();
     const sidebar = document.getElementById("sidebar");
     const main = document.getElementById("main");
     sidebar.textContent = "";
     sidebar.append(...sidebarNodes());
     main.textContent = "";
-    if (current === "/") main.append(chatView());
-    else if (SCREENS[current]) main.append(el("div", { class: "settings" }, [settingsNav(current), el("div", { class: "set-body" }, [SCREENS[current]()])]));
-    else main.append(soonPage(current.replace("/", "")));
+    if (current === "/") {
+      main.append(chatView());
+      return;
+    }
+    const withNav = current.startsWith("/settings/");
+    const body = el("div", { class: withNav ? "set-body" : "set-body" });
+    main.append(el("div", { class: "settings" }, [withNav ? settingsNav(current) : el("div", { class: "set-nav" }, [el("button", { class: "set-back", onclick: () => go("/") }, [el("span", { html: icons.back }), el("span", { text: t("back") })])]), body]));
+    SCREENS[current](body);
   }
 
-  /* The accent is the TUI's theme; a page left open picks up a change when the
-     window is looked at again. */
+  /* A page left open picks up a theme or colour changed elsewhere. */
   window.addEventListener("focus", async () => {
     try {
-      const response = await fetch("/api/config");
-      if (!response.ok) return;
-      const body = await response.json();
-      const fresh = body.web || {};
-      const accentNow = body.accent || accent;
-      if (accentNow !== accent) {
-        accent = accentNow;
-        document.documentElement.style.setProperty("--accent", accent);
-        document.documentElement.style.setProperty("--accent-soft", accent + "26");
-        render();
-      }
-      web = Object.assign(web, fresh);
+      const config = await json("/api/config");
+      web = Object.assign(web, config.web || {});
+      boot.accent = config.accent || boot.accent;
+      applyTheme();
     } catch {
       /* a closed server is not worth a message here */
     }

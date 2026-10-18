@@ -19,8 +19,77 @@ const INDEX: &str = include_str!("../web/index.html");
 const APP_CSS: &str = include_str!("../web/app.css");
 const APP_JS: &str = include_str!("../web/app.js");
 
-/// Where the boot state goes in `index.html`.
+/// Where the boot state goes in `index.html`, and the style block with the
+/// page's colours.
 const BOOT: &str = "__EXP1_BOOT__";
+const THEME: &str = "__EXP1_THEME__";
+
+/// The colours the page offers by name, in the order its menu lists them. The
+/// names are the same ones `app/theme.rs` uses for the terminal's themes.
+pub(crate) const ACCENTS: [(&str, &str); 7] = [
+    ("blue", "#3b82f6"),
+    ("green", "#22c55e"),
+    ("yellow", "#eab308"),
+    ("pink", "#ec4899"),
+    ("orange", "#f97316"),
+    ("purple", "#8b5cf6"),
+    ("white", "#ffffff"),
+];
+
+/// The colour the page paints with: what the user picked, a palette name or a
+/// `#rrggbb`, otherwise the accent of the theme the TUI is on.
+pub(crate) fn accent_hex(settings: &store::Settings) -> String {
+    let chosen = settings.web.accent.trim();
+    if chosen.is_empty() {
+        return crate::app::by_name(&settings.theme).accent_hex();
+    }
+    if let Some((_, hex)) = ACCENTS
+        .iter()
+        .find(|(name, _)| name.eq_ignore_ascii_case(chosen))
+    {
+        return (*hex).to_string();
+    }
+    if valid_hex(chosen) {
+        return chosen.to_lowercase();
+    }
+    crate::app::by_name(&settings.theme).accent_hex()
+}
+
+/// The only shape a colour may have before it reaches a stylesheet.
+fn valid_hex(value: &str) -> bool {
+    value.len() == 7
+        && value.starts_with('#')
+        && value[1..].chars().all(|ch| ch.is_ascii_hexdigit())
+}
+
+/// A colour from the settings, or the built-in one when it is missing or wrong.
+fn colour_or(value: &str, fallback: &str) -> String {
+    let value = value.trim();
+    if value.is_empty() {
+        fallback.to_string()
+    } else if valid_hex(value) {
+        value.to_lowercase()
+    } else {
+        fallback.to_string()
+    }
+}
+
+/// The variables the page paints from: the accent, the two page colours, the
+/// two text sizes, the motion choice and the contrast. Everything is checked
+/// here, because this string goes straight into a `<style>` tag.
+pub(crate) fn theme_style(settings: &store::Settings) -> String {
+    let web = &settings.web;
+    let accent = accent_hex(settings);
+    let background = colour_or(&web.background, "#212121");
+    let foreground = colour_or(&web.foreground, "#ececec");
+    let contrast = 0.6 + f32::from(web.contrast.min(200)) / 100.0;
+    format!(
+        ":root{{--accent:{accent};--accent-soft:{accent}26;--bg:{background};--fg:{foreground};\
+         --ui-font:{}px;--code-font:{}px;--contrast:{contrast:.2};}}",
+        web.ui_font.clamp(10, 28),
+        web.code_font.clamp(8, 28),
+    )
+}
 
 /// A browser cannot send our bearer header, so the page takes the same password
 /// once in the URL and keeps it as a cookie from then on.
@@ -96,13 +165,12 @@ pub(crate) async fn page(
         return locked();
     }
     let boot = boot_state(&shared, &accept_language(&headers)).await;
-    // The accent comes from the TUI's theme, and it goes in before the script
-    // runs so the first paint is already the right colour.
-    let theme = crate::app::by_name(&store::load_settings().theme);
+    // The page's colours and sizes come from the settings, and they go in
+    // before the script runs so the first paint is already right.
+    let settings = store::load_settings();
     let page = INDEX
         .replace(BOOT, &boot)
-        .replace("__EXP1_ACCENT__", &theme.accent_hex())
-        .replace("__EXP1_ACCENT_SOFT__", &theme.accent_soft());
+        .replace(THEME, &theme_style(&settings));
     let mut response = Html(page).into_response();
     if handed_over {
         let cookie = format!(
@@ -130,10 +198,12 @@ async fn boot_state(shared: &Arc<Shared>, language: &str) -> String {
         "provider": settings.provider,
         "model": settings.model,
         "theme": settings.theme,
-        "accent": crate::app::by_name(&settings.theme).accent_hex(),
+        "accent": accent_hex(&settings),
+        "palette": ACCENTS.iter().map(|(name, hex)| serde_json::json!({ "name": name, "hex": hex })).collect::<Vec<_>>(),
         "sessions": sessions,
         "plugins": plugins,
         "scheduled": scheduled,
+        "mcp_path": crate::store::mcp_path().display().to_string(),
     });
     // A JSON blob inside a <script> tag must not be able to close that tag.
     serde_json::to_string(&state)
@@ -185,7 +255,8 @@ pub(crate) async fn config_get(State(shared): State<Arc<Shared>>, headers: Heade
         "provider": settings.provider,
         "model": settings.model,
         "theme": settings.theme,
-        "accent": crate::app::by_name(&settings.theme).accent_hex(),
+        "accent": accent_hex(&settings),
+        "palette": ACCENTS.iter().map(|(name, hex)| serde_json::json!({ "name": name, "hex": hex })).collect::<Vec<_>>(),
         "version": env!("CARGO_PKG_VERSION"),
     }))
     .into_response()
@@ -215,6 +286,52 @@ pub(crate) async fn sessions(State(shared): State<Arc<Shared>>, headers: HeaderM
     Json(session_rows(200)).into_response()
 }
 
+/// `GET /api/schedules`: the jobs, as the page's scheduled section lists them.
+pub(crate) async fn schedules(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Response {
+    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
+        return locked();
+    }
+    Json(jobs_json(&shared)).into_response()
+}
+
+/// `POST /api/schedules/{id}/{action}`: `run`, `pause` or `resume` one job.
+pub(crate) async fn schedule_action(
+    State(shared): State<Arc<Shared>>,
+    Path((id, action)): Path<(String, String)>,
+    headers: HeaderMap,
+) -> Response {
+    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
+        return locked();
+    }
+    match act(&shared, &id, &action) {
+        Ok(note) => Json(serde_json::json!({ "note": note })).into_response(),
+        Err(message) => (StatusCode::NOT_FOUND, message).into_response(),
+    }
+}
+
+/// `DELETE /api/schedules/{id}`: drop one job.
+pub(crate) async fn schedule_remove(
+    State(shared): State<Arc<Shared>>,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+) -> Response {
+    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
+        return locked();
+    }
+    match remove(&shared, &id) {
+        Ok(note) => Json(serde_json::json!({ "note": note })).into_response(),
+        Err(message) => (StatusCode::NOT_FOUND, message).into_response(),
+    }
+}
+
+/// `GET /api/plugins`: the MCP servers and the tools they offer.
+pub(crate) async fn plugins(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Response {
+    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
+        return locked();
+    }
+    Json(shared.mcp.status().await).into_response()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -229,5 +346,43 @@ mod tests {
         for host in ["", "example.com", "example.com:7878", "evil.test", "127.0.0.1.evil.test", "0.0.0.0:7878"] {
             assert!(!loopback_name(host), "{host} is not loopback");
         }
+    }
+
+    /// A colour reaches a stylesheet, so only a palette name or a plain
+    /// `#rrggbb` gets through; anything else falls back to the theme.
+    #[test]
+    fn only_real_colours_reach_the_stylesheet() {
+        let mut settings = store::Settings::default();
+        settings.theme = "amber".to_string();
+        assert_eq!(accent_hex(&settings), "#d99120", "the theme decides by default");
+        settings.web.accent = "pink".to_string();
+        assert_eq!(accent_hex(&settings), "#ec4899", "a palette name");
+        settings.web.accent = "#123abc".to_string();
+        assert_eq!(accent_hex(&settings), "#123abc", "a colour of one's own");
+        settings.web.accent = "red;} body { background: url(evil) }".to_string();
+        assert_eq!(accent_hex(&settings), "#d99120", "an injection falls back");
+        assert_eq!(colour_or("#AABBCC", "#000000"), "#aabbcc");
+        assert_eq!(colour_or("javascript:alert(1)", "#212121"), "#212121");
+        assert_eq!(colour_or("", "#212121"), "#212121");
+    }
+
+    /// The style block carries the sizes and the contrast, and it clamps what it
+    /// cannot use. The motion choice is an attribute the script sets, because a
+    /// stylesheet cannot put one on the element itself.
+    #[test]
+    fn the_style_block_carries_the_appearance_settings() {
+        let mut settings = store::Settings::default();
+        settings.web.ui_font = 200;
+        settings.web.code_font = 2;
+        settings.web.contrast = 60;
+        let style = theme_style(&settings);
+        assert!(style.contains("--ui-font:28px"), "{style}");
+        assert!(style.contains("--code-font:8px"), "{style}");
+        assert!(style.contains("--contrast:1.20"), "{style}");
+        settings.web.background = "#101010".to_string();
+        settings.web.foreground = "rgb(1,2,3)".to_string();
+        let style = theme_style(&settings);
+        assert!(style.contains("--bg:#101010"), "{style}");
+        assert!(style.contains("--fg:#ececec"), "not a colour, so the default: {style}");
     }
 }
