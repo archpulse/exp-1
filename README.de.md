@@ -217,6 +217,8 @@ Werden lokal behandelt; sie erreichen das Modell nie.
 | `/diff` | Unified-Diff dessen, was die letzte Runde geändert hat |
 | `/fork` | Diese Unterhaltung als neue Sitzung fortsetzen und die ursprüngliche unberührt lassen |
 | `/schedule` | Eine Anfrage später von selbst laufen lassen: `/schedule <was zu tun ist und wann>` legt einen Auftrag an, nacktes `/schedule` listet sie, `rm` und `pause` verwalten einen |
+| `/web` | Die chat-artige Seite auf localhost im Browser öffnen; der Akzent folgt dem in der TUI gewählten Theme |
+| `/web-models` | Die drei Modelle der Seite wählen: schnell, mittel, stark |
 | `/sessions <text>` | Die gespeicherten Unterhaltungen durchsuchen, statt sie nur aufzulisten |
 | `/retitle` | Die Sitzung erneut benennen, aus der ursprünglichen Anfrage und der jüngsten Unterhaltung |
 | `/effort` | Den Denkaufwand für das aktuelle Modell wählen, ohne das Modell zu wechseln |

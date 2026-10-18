@@ -169,6 +169,8 @@ Zpracovávají se lokálně; nikdy se nedostanou k modelu.
 | `/diff` | Sjednocený diff změn posledního tahu |
 | `/fork` | Pokračuje touto konverzací jako novou relací, původní nechá být |
 | `/schedule` | Nechat požadavek běžet později samo: `/schedule <co udělat a kdy>` založí úlohu, samotné `/schedule` je vypíše, `rm` a `pause` s úlohou zacházejí |
+| `/web` | Otevřít v prohlížeči stránku ve stylu chatu na localhost; akcent vychází z tématu zvoleného v TUI |
+| `/web-models` | Vybrat tři modely pro stránku: rychlý, střední, výkonný |
 | `/sessions <text>` | Místo pouhého výpisu prohledá uložené konverzace |
 | `/retitle` | Pojmenuje relaci znovu podle původního zadání a nedávné konverzace |
 | `/effort` | Vybere úsilí uvažování pro aktuální model, aniž by změnil model |

@@ -211,6 +211,8 @@ Handled locally; they never reach the model.
 | `/diff` | Unified diff of what the last turn changed |
 | `/fork` | Continue this conversation as a new session, leaving the original alone |
 | `/schedule` | Run a request later on its own: `/schedule <what to do, and when>` creates a job, bare `/schedule` lists them, `rm` and `pause` manage one |
+| `/web` | Open the chat-like page on localhost in the browser; its accent follows the theme chosen in the TUI |
+| `/web-models` | Pick the page's three models: fast, medium, powerful |
 | `/sessions <text>` | Search the saved conversations instead of just listing them |
 | `/retitle` | Name the session again from the original request and the recent conversation |
 | `/effort` | Pick the reasoning effort for the current model, without changing the model |
