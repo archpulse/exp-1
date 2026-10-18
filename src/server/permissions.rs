@@ -5,14 +5,34 @@ use crate::tools;
 
 use super::*;
 
-/// In plan mode the tools that change files are refused before they run.
-pub(crate) fn plan_refusal(session: &Arc<Session>, name: &str) -> Option<String> {
+/// In plan mode the tools that change files are refused before they run. A
+/// schedule is a change too, unless the call only reads the list.
+pub(crate) fn plan_refusal(session: &Arc<Session>, name: &str, arguments: &str) -> Option<String> {
     if session.mode() != "plan" {
         return None;
     }
-    matches!(name, "write" | "edit" | "delete").then(|| {
-        format!("{name}: refused — the session is in plan mode (shift+tab to leave it)")
-    })
+    if matches!(name, "write" | "edit" | "delete") {
+        return Some(format!(
+            "{name}: refused — the session is in plan mode (shift+tab to leave it)"
+        ));
+    }
+    if name == "schedule" {
+        let action = serde_json::from_str::<serde_json::Value>(arguments)
+            .ok()
+            .and_then(|args| {
+                args.get("action")
+                    .and_then(|action| action.as_str())
+                    .map(str::to_string)
+            })
+            .unwrap_or_else(|| "create".to_string());
+        if action != "list" {
+            return Some(
+                "schedule: refused — the session is in plan mode (shift+tab to leave it)"
+                    .to_string(),
+            );
+        }
+    }
+    None
 }
 
 /// What a permission rule matches for this call: the path for file tools, the
@@ -51,6 +71,10 @@ pub(crate) fn permission_resource(name: &str, arguments: &str, cwd: &std::path::
             .unwrap_or_else(|| arguments.to_string()),
         "fetch" => text("url").unwrap_or_else(|| arguments.to_string()),
         "websearch" => text("query").unwrap_or_else(|| arguments.to_string()),
+        "schedule" => text("name")
+            .or_else(|| text("request"))
+            .or_else(|| text("id"))
+            .unwrap_or_else(|| arguments.to_string()),
         _ => arguments.to_string(),
     }
 }

@@ -79,7 +79,7 @@ async fn run_one(
 ) -> tools::Outcome {
     let refusal = permission_check(session, name, arguments)
         .await
-        .or_else(|| plan_refusal(session, name));
+        .or_else(|| plan_refusal(session, name, arguments));
     if let Some(refusal) = refusal {
         session.push("system", refusal.clone());
         return tools::Outcome {
@@ -89,6 +89,10 @@ async fn run_one(
     }
     if name == "task" {
         return run_subagent(shared.clone(), session.clone(), subagent_prompt(arguments), 0).await;
+    }
+    if name == "schedule" {
+        // The scheduler owns the jobs, and only the server has it.
+        return schedule_tool(shared, session, arguments).await;
     }
     if let Some(result) = shared.mcp.call(name, arguments).await {
         return match result {
@@ -217,6 +221,15 @@ pub(crate) async fn run_turn(
             text.push_str("\n\n");
             text.push_str(&store::prompt("plan", PLAN_NOTE));
         }
+        // The model has no clock of its own. One line is cheaper than every
+        // dated question coming back wrong, and without it `/schedule` cannot
+        // turn "every day at nine" into a time.
+        let now = chrono::Local::now();
+        text.push_str(&format!(
+            "\n\nCurrent local time: {} ({}).",
+            now.format("%Y-%m-%d %H:%M"),
+            now.format("%A")
+        ));
         text
     };
 

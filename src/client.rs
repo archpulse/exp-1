@@ -502,4 +502,66 @@ impl Connection {
         response.json().await.context("read the catalogue")
     }
 
+    /// The scheduled jobs, as the server holds them.
+    pub async fn schedules(&self) -> Result<Vec<crate::schedule::Job>> {
+        let response = self
+            .auth(self.http.get(format!("{}/schedules", self.url)))
+            .send()
+            .await
+            .context("fetch the schedules")?;
+        if !response.status().is_success() {
+            bail!("schedules failed: HTTP {}", response.status());
+        }
+        response.json().await.context("read the schedules")
+    }
+
+    /// `run`, `pause` or `resume` one job. Returns the server's note.
+    pub async fn schedule_action(&self, id: &str, action: &str) -> Result<String> {
+        let response = self
+            .auth(self.http.post(format!("{}/schedules/{}/{action}", self.url, segment(id))))
+            .send()
+            .await
+            .context("act on the schedule")?;
+        schedule_note(response).await
+    }
+
+    /// Removes one job. Returns the server's note.
+    pub async fn cancel_schedule(&self, id: &str) -> Result<String> {
+        let response = self
+            .auth(self.http.delete(format!("{}/schedules/{}", self.url, segment(id))))
+            .send()
+            .await
+            .context("cancel the schedule")?;
+        schedule_note(response).await
+    }
+
+}
+
+/// Percent-encodes one path segment: a job can be named with spaces.
+fn segment(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for byte in text.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(byte as char)
+            }
+            other => out.push_str(&format!("%{other:02X}")),
+        }
+    }
+    out
+}
+
+/// The note out of a schedule response, or the server's complaint.
+async fn schedule_note(response: reqwest::Response) -> Result<String> {
+    let status = response.status();
+    let body = response.text().await.unwrap_or_default();
+    if !status.is_success() {
+        bail!("{body}");
+    }
+    let value: serde_json::Value = serde_json::from_str(&body).unwrap_or_default();
+    Ok(value
+        .get("note")
+        .and_then(|note| note.as_str())
+        .unwrap_or_default()
+        .to_string())
 }

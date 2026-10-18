@@ -102,6 +102,10 @@ pub enum WireEvent {
     Usage { usage: WireUsage },
     Error { message: String },
     Done { label: String },
+    /// A scheduled job ran, failed, or was missed while nothing was running.
+    /// It belongs to no session in particular: the scheduler sends it to every
+    /// client, and a client shows each id once.
+    Notice { id: String, text: String },
     /// The agent is blocked on an answer.
     Ask(WireAnswerRequest),
     AskClosed,

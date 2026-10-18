@@ -21,7 +21,7 @@ const POPUP_MAX: usize = 9;
 const NAME_COLUMN: usize = 14;
 const CARET: &str = "│";
 const BLINK: Duration = Duration::from_millis(500);
-pub const COMMANDS: [(&str, &str); 18] = [
+pub const COMMANDS: [(&str, &str); 19] = [
     (
         "/login",
         "choose a provider; one that is signed in just switches",
@@ -33,6 +33,7 @@ pub const COMMANDS: [(&str, &str); 18] = [
     ("/themes", "switch the colour scheme"),
     ("/btw", "ask a side question without stopping the main task"),
     ("/sessions", "reopen an earlier conversation"),
+    ("/schedule", "let a request run later, on its own"),
     ("/retitle", "name this session again from the conversation"),
     ("/effort", "choose the reasoning effort for the current model"),
     ("/mcp", "show the MCP servers and the tools they offer"),
@@ -113,6 +114,9 @@ pub struct App {
     /// Set when a long turn finished while the user was probably away; the
     /// event loop rings the terminal bell and clears it.
     pub attention: bool,
+    /// Ids of schedule notices already shown: the scheduler broadcasts each one
+    /// to every attached session, and only the first delivery counts.
+    pub seen_notices: std::collections::HashSet<String>,
     /// `build` or `plan`, switched with shift+tab.
     pub mode: String,
     /// How much the agent asks before a tool runs, switched with
@@ -220,6 +224,7 @@ impl App {
             title_started: false,
             skills: Vec::new(),
             attention: false,
+            seen_notices: std::collections::HashSet::new(),
             mode: "build".to_string(),
             permissions: crate::tools::PermissionMode::AlwaysAsk,
             first_run: false,

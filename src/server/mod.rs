@@ -3,7 +3,7 @@
 
 use anyhow::{Context, Result};
 use axum::Router;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tokio::net::TcpListener;
@@ -135,7 +135,12 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
         mcp,
         plan: Mutex::new(plan),
         sessions: Mutex::new(restored),
+        scheduler: Scheduler::load(),
     });
+
+    // The clock behind `/schedule`: it reports and catches up on what was
+    // missed while nothing was running, then keeps watching the list.
+    spawn_scheduler(shared.clone());
 
     // The model list is fetched, not baked in: bring it up to date in the
     // background so the first picker of the day is current.
@@ -173,6 +178,9 @@ pub async fn serve(listener: TcpListener, port: u16) -> Result<()> {
         .route("/providers", get(list_providers))
         .route("/login", post(login))
         .route("/scoped-models", post(scoped_models))
+        .route("/schedules", get(list_schedules))
+        .route("/schedules/{id}", delete(delete_schedule))
+        .route("/schedules/{id}/{action}", post(schedule_action))
         .with_state(shared.clone());
 
     eprintln!("exp-1 server listening on http://127.0.0.1:{port}");
@@ -190,8 +198,9 @@ mod permissions;
 mod titles;
 mod gateway;
 mod routes;
+mod scheduler;
 
-pub(crate) use self::{prompts::*, subagent::*, turn::*, history::*, session::*, shown::*, permissions::*, titles::*, gateway::*, routes::*};
+pub(crate) use self::{prompts::*, subagent::*, turn::*, history::*, session::*, shown::*, permissions::*, titles::*, gateway::*, routes::*, scheduler::{fire_job, schedule_tool, spawn_scheduler, Scheduler}};
 
 #[cfg(test)]
 mod tests;

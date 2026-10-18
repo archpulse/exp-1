@@ -158,10 +158,22 @@ impl Session {
             .unwrap_or_else(|_| PathBuf::from("."))
     }
 
-    pub(crate) fn broadcast(&self, event: WireEvent) {
-        if let Ok(mut clients) = self.clients.lock() {
-            clients.retain(|sender| sender.send(event.clone()).is_ok());
-        }
+    /// Hands an event to every attached client, and reports how many took it:
+    /// the scheduler uses that to decide whether a notice has been read.
+    pub(crate) fn broadcast(&self, event: WireEvent) -> usize {
+        let Ok(mut clients) = self.clients.lock() else {
+            return 0;
+        };
+        let mut delivered = 0usize;
+        clients.retain(|sender| {
+            if sender.send(event.clone()).is_ok() {
+                delivered += 1;
+                true
+            } else {
+                false
+            }
+        });
+        delivered
     }
 
     pub(crate) fn subscribe(&self) -> mpsc::UnboundedReceiver<WireEvent> {
@@ -253,6 +265,8 @@ pub(crate) struct Shared {
     pub(crate) mcp: Arc<crate::mcp::Registry>,
     pub(crate) plan: Mutex<Option<String>>,
     pub(crate) sessions: Mutex<HashMap<String, Arc<Session>>>,
+    /// The schedule behind `/schedule`, and the runs in flight from it.
+    pub(crate) scheduler: crate::server::Scheduler,
 }
 
 pub(crate) fn read_lock(value: &Mutex<String>) -> String {

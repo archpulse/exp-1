@@ -18,6 +18,7 @@ mod proto;
 mod providers;
 mod oauth;
 mod protocol;
+mod schedule;
 mod server;
 mod skills;
 mod store;

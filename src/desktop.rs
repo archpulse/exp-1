@@ -6,6 +6,12 @@ use super::*;
 /// Rings the terminal bell and, when the desktop has one, shows a notification.
 /// Both are best effort: a headless machine simply gets the bell.
 pub(crate) fn ring_attention() {
+    say("exp-1 agent", "the turn has finished");
+}
+
+/// The bell plus a desktop notification with words of our own: what a scheduled
+/// job did, or that the turn is over.
+pub(crate) fn say(title: &str, body: &str) {
     use std::io::Write;
     let mut out = std::io::stdout();
     let _ = out.write_all(b"\x07");
@@ -16,7 +22,11 @@ pub(crate) fn ring_attention() {
         let mut command = std::process::Command::new("osascript");
         command.args([
             "-e",
-            "display notification \"the turn has finished\" with title \"exp-1 agent\"",
+            &format!(
+                "display notification {} with title {}",
+                applescript_text(body),
+                applescript_text(title)
+            ),
         ]);
         command
     } else if cfg!(target_os = "windows") {
@@ -24,21 +34,33 @@ pub(crate) fn ring_attention() {
         command.args([
             "-NoProfile",
             "-Command",
-            "Add-Type -AssemblyName System.Windows.Forms; \
-             $n = New-Object System.Windows.Forms.NotifyIcon; \
-             $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; \
-             $n.ShowBalloonTip(5000, 'exp-1 agent', 'the turn has finished', 'Info')",
+            &format!(
+                "Add-Type -AssemblyName System.Windows.Forms; \
+                 $n = New-Object System.Windows.Forms.NotifyIcon; \
+                 $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; \
+                 $n.ShowBalloonTip(5000, '{}', '{}', 'Info')",
+                title.replace('\'', "''"),
+                body.replace('\'', "''"),
+            ),
         ]);
         command
     } else {
         let mut command = std::process::Command::new("notify-send");
-        command.args(["exp-1 agent", "the turn has finished"]);
+        command.args([title, body]);
         command
     };
     let _ = command
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn();
+}
+
+/// A string as an AppleScript literal: quotes and backslashes escaped.
+fn applescript_text(text: &str) -> String {
+    format!(
+        "\"{}\"",
+        text.replace('\\', "\\\\").replace('"', "\\\"")
+    )
 }
 /// Takes an image off the clipboard and holds it for the next prompt. Wayland
 /// first, then X11; a missing tool is simply "nothing to paste".

@@ -331,6 +331,83 @@ pub(crate) fn run_slash(app: &mut App, ctx: &Ctx, line: &str) -> bool {
             }
             start_side_question(app, ctx, rest.to_string());
         }
+        "/schedule" => {
+            // Bare verbs manage the list; anything else is the request itself,
+            // which the model turns into a time and a job.
+            let mut words = rest.splitn(2, ' ');
+            let head = words.next().unwrap_or("").trim();
+            let tail = words.next().unwrap_or("").trim().to_string();
+            match head {
+                "" | "list" => {
+                    let conn = ctx.conn.clone();
+                    let tx = ctx.events.clone();
+                    tokio::spawn(async move {
+                        match conn.schedules().await {
+                            Ok(jobs) => {
+                                let _ = tx.send(AgentMsg::Schedules(jobs));
+                            }
+                            Err(err) => {
+                                let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+                            }
+                        }
+                    });
+                }
+                "rm" | "remove" | "cancel" | "pause" | "resume" | "run" | "now" => {
+                    if tail.is_empty() {
+                        app.thread_mut().push(
+                            Role::System,
+                            format!("usage: /schedule {head} <id or name>"),
+                        );
+                    } else {
+                        let conn = ctx.conn.clone();
+                        let tx = ctx.events.clone();
+                        let action = head.to_string();
+                        tokio::spawn(async move {
+                            let result =
+                                if matches!(action.as_str(), "rm" | "remove" | "cancel") {
+                                    conn.cancel_schedule(&tail).await
+                                } else {
+                                    let verb = if action == "now" { "run" } else { &action };
+                                    conn.schedule_action(&tail, verb).await
+                                };
+                            match result {
+                                Ok(note) => {
+                                    let _ = tx.send(AgentMsg::ScheduleNote(note));
+                                }
+                                Err(err) => {
+                                    let _ = tx.send(AgentMsg::Error(0, format!("{err:#}")));
+                                }
+                            }
+                        });
+                    }
+                }
+                _ => {
+                    let text = format!("⏱ schedule (use the schedule tool): {rest}");
+                    {
+                        let thread = app.thread_mut();
+                        thread.remember(&text);
+                        if thread.name.is_empty() {
+                            thread.name = thread_name(&text);
+                        }
+                        thread.push_user(&text, 0);
+                        thread.clear_input();
+                        thread.error = None;
+                        thread.scroll = 0;
+                        thread.started_at = Some(Instant::now());
+                        thread.activity_since = Some(Instant::now());
+                        thread.phase = Phase::Streaming;
+                    }
+                    let conn = ctx.conn.clone();
+                    let session = ctx.session(0);
+                    tokio::spawn(async move {
+                        if let Err(err) = conn.prompt(&session, &text, Vec::new(), Vec::new()).await
+                        {
+                            eprintln!("exp-1: schedule prompt failed: {err:#}");
+                        }
+                    });
+                }
+            }
+        }
         "/login" => {
             // `/login <id>` signs in again; bare `/login` opens the picker.
             if !rest.is_empty() {

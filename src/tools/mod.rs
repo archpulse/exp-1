@@ -305,10 +305,11 @@ impl PermissionMode {
 
     /// Whether the mode asks for this tool on its own. Read-only tools
     /// (`read`, `grep`, `count`, `ast`, `fetch`, `websearch`) never ask, so
-    /// only the tools that change files and the shell are ever named here.
+    /// only the tools that change files, the shell, and the scheduler are ever
+    /// named here.
     pub fn asks(self, tool: &str) -> bool {
         match self {
-            Self::AlwaysAsk => matches!(tool, "write" | "edit" | "delete" | "shell"),
+            Self::AlwaysAsk => matches!(tool, "write" | "edit" | "delete" | "shell" | "schedule"),
             Self::NeverAsk => false,
             Self::AskOnlyCommands => tool == "shell",
         }

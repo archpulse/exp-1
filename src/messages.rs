@@ -54,6 +54,12 @@ pub(crate) enum AgentMsg {
     DictationFailed(String),
     /// A login completed: label, model, effort, and the line to show.
     ProviderChanged(String, String, String, String),
+    /// A scheduled job's notice: its id, shown once, and the line to show.
+    Notice(String, String),
+    /// The schedule list arrived, for `/schedule`.
+    Schedules(Vec<crate::schedule::Job>),
+    /// The server's note about one schedule action.
+    ScheduleNote(String),
     Ask(usize, proto::WireAnswerRequest),
     AskClosed(usize),
     Idle(usize),
@@ -86,6 +92,7 @@ fn translate(thread: usize, event: WireEvent) -> Vec<AgentMsg> {
         )],
         WireEvent::Error { message } => vec![AgentMsg::Error(thread, message)],
         WireEvent::Done { label } => vec![AgentMsg::Done(thread, label)],
+        WireEvent::Notice { id, text } => vec![AgentMsg::Notice(id, text)],
         WireEvent::Title { title } => vec![AgentMsg::Title(thread, title)],
         WireEvent::Ask(request) => vec![AgentMsg::Ask(thread, request)],
         WireEvent::AskClosed => vec![AgentMsg::AskClosed(thread)],
@@ -132,6 +139,22 @@ pub(crate) fn render_mcp(servers: &[serde_json::Value]) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+/// The `/schedule` list: one row per job, then how to act on one.
+pub(crate) fn render_schedules(jobs: &[crate::schedule::Job]) -> String {
+    if jobs.is_empty() {
+        return "no schedules yet — `/schedule <what to do, and when>` creates one".to_string();
+    }
+    let mut out = format!("⏱ schedules ({})\n", jobs.len());
+    for job in jobs {
+        out.push_str(&job.line());
+        out.push('\n');
+    }
+    out.push_str(
+        "\n`/schedule rm <id>` · `/schedule pause <id>` · `/schedule resume <id>` · `/schedule run <id>`",
+    );
+    out
 }
 
 pub(crate) fn thread_name(prompt: &str) -> String {
@@ -364,6 +387,21 @@ pub(crate) fn apply(app: &mut App, message: AgentMsg) {
             thread.phase = Phase::Idle;
             thread.live.clear();
             thread.started_at = None;
+        })),
+        AgentMsg::Notice(id, text) => (0, Box::new(move |app: &mut App| {
+            // The notice reaches every attached session, so the same id arrives
+            // more than once; the first delivery is the one worth showing.
+            if !app.seen_notices.insert(id) {
+                return;
+            }
+            app.thread_mut().push(Role::System, text.clone());
+            crate::desktop::say("exp-1 · scheduled", &text);
+        })),
+        AgentMsg::Schedules(jobs) => (0, Box::new(move |app: &mut App| {
+            app.thread_mut().push(Role::System, render_schedules(&jobs));
+        })),
+        AgentMsg::ScheduleNote(note) => (0, Box::new(move |app: &mut App| {
+            app.thread_mut().push(Role::System, note);
         })),
     };
     if index < app.threads.len() {

@@ -39,6 +39,17 @@ pub(crate) fn command_preview(name: &str, arguments: &str) -> String {
         "task" => path("description")
             .map(|d| format!("task: {d}"))
             .unwrap_or_else(|| "task".to_string()),
+        "schedule" => {
+            let action = path("action").unwrap_or_else(|| "create".to_string());
+            match path("name").or_else(|| path("request")) {
+                Some(subject) if action == "create" => {
+                    let first = subject.lines().next().unwrap_or_default().trim();
+                    let short: String = first.chars().take(48).collect();
+                    format!("schedule: «{short}»")
+                }
+                _ => format!("schedule: {action}"),
+            }
+        }
         _ => {
             let argv = value
                 .get("command")

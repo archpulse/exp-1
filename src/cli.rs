@@ -97,6 +97,7 @@ fn print_help() {
          \x20 /compact       summarise the conversation now\n\
          \x20 /undo /diff     restore or inspect what the last turn changed\n\
          \x20 /fork          continue as a new session\n\
+         \x20 /schedule      run a request later on its own, in its own session\n\
          \x20 /retry <1-10>   configure request attempts\n\
          \x20 /model /themes /status /init /clear /btw /help\n\n\
          KEYS:\n\
