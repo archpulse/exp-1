@@ -5,9 +5,11 @@
      chosen background and foreground repaint the whole page. */
   --bg: #212121;
   --fg: #ececec;
-  --bg-side: color-mix(in srgb, var(--bg) 88%, #000);
-  --surface: color-mix(in srgb, var(--bg) 90%, #fff);
-  --surface-2: color-mix(in srgb, var(--bg) 84%, #fff);
+  /* Mixed against the two base colours, so a chosen background and foreground
+     keep every surface consistent, in either mode. */
+  --bg-side: color-mix(in srgb, var(--bg) 90%, #000);
+  --surface: color-mix(in srgb, var(--bg) 96%, var(--fg));
+  --surface-2: color-mix(in srgb, var(--bg) 92%, var(--fg));
   --line: color-mix(in srgb, var(--fg) 14%, transparent);
   --line-soft: color-mix(in srgb, var(--fg) 8%, transparent);
   --text: var(--fg);
@@ -15,16 +17,16 @@
   --faint: color-mix(in srgb, var(--fg) 56%, var(--bg));
   --accent: #3b82f6;
   --accent-soft: #3b82f626;
-  --hover: color-mix(in srgb, var(--fg) 9%, transparent);
-  --active: color-mix(in srgb, var(--fg) 16%, transparent);
-  --ui-font: 15px;
+  --hover: color-mix(in srgb, var(--fg) 6%, transparent);
+  --active: color-mix(in srgb, var(--fg) 10%, transparent);
+  --ui-font: 16px;
   --code-font: 12px;
   --contrast: 1.2;
   --radius: 12px;
   --radius-lg: 16px;
-  --sidebar: 268px;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --sidebar: clamp(300px, 25.5vw, 440px);
+  --font: "Google Sans Flex", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -38,6 +40,19 @@ html, body {
   font-size: var(--ui-font);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Light and dark: the reference ships both, and the mode tiles pick one. Only
+   the two base colours change, and everything derived follows them. */
+html[data-mode="light"] {
+  --bg: #ffffff;
+  --fg: #0d0d0d;
+}
+@media (prefers-color-scheme: light) {
+  html[data-mode="system"] {
+    --bg: #ffffff;
+    --fg: #0d0d0d;
+  }
 }
 
 /* Motion: the system's choice, or the one made in Appearance. */
@@ -69,6 +84,7 @@ svg { flex: none; }
   padding: 8px;
   overflow: hidden;
 }
+.sidebar[hidden] { display: none; }
 
 .side-top { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 8px; }
 .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: .2px; }
@@ -81,8 +97,8 @@ svg { flex: none; }
 .icon-btn:hover { background: var(--hover); color: var(--text); }
 
 .side-row {
-  display: flex; align-items: center; gap: 10px;
-  height: 38px; padding: 0 10px; border-radius: 10px;
+  display: flex; align-items: center; gap: 12px;
+  height: 44px; padding: 0 12px; border-radius: 10px; font-size: 17px;
   color: var(--text); text-align: left; width: 100%;
 }
 .side-row:hover { background: var(--hover); }
@@ -95,13 +111,13 @@ svg { flex: none; }
 .side-scroll::-webkit-scrollbar-thumb { background: #ffffff1f; border-radius: 4px; }
 
 .side-label {
-  color: var(--faint); font-size: 12px; font-weight: 600;
-  padding: 14px 10px 6px; letter-spacing: .3px;
+  color: var(--muted); font-size: 14px; font-weight: 600;
+  padding: 16px 12px 6px; letter-spacing: .2px;
 }
 
 .side-item {
-  display: block; padding: 7px 10px; border-radius: 10px;
-  color: var(--muted); font-size: 14px;
+  display: block; padding: 9px 12px; border-radius: 10px;
+  color: var(--muted); font-size: 15px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .side-item:hover { background: var(--hover); color: var(--text); }
@@ -135,22 +151,22 @@ svg { flex: none; }
 /* ------------------------------------------------------------- chat view */
 
 .chat-view { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 24px 64px; }
-.chat-hello { font-size: 28px; font-weight: 600; margin-bottom: 26px; text-align: center; }
+.chat-hello { font-size: 32px; font-weight: 600; margin-bottom: 28px; text-align: center; }
 
 .composer {
-  width: min(768px, 100%);
-  display: flex; align-items: center; gap: 10px;
-  background: var(--surface-2); border-radius: 28px;
-  padding: 8px 10px 8px 8px;
+  width: min(960px, 100%);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface-2); border-radius: 32px;
+  padding: 11px 12px 11px 10px;
 }
 .composer .plus {
-  width: 34px; height: 34px; border-radius: 50%;
+  width: 40px; height: 40px; border-radius: 50%;
   background: #ffffff14; display: grid; place-items: center; color: var(--text);
 }
 .composer .plus:hover { background: #ffffff26; }
 .composer input {
   flex: 1; min-width: 0; background: none; border: 0; outline: 0;
-  font-size: 15px; padding: 6px 2px; color: var(--text);
+  font-size: 17px; padding: 8px 2px; color: var(--text);
 }
 .composer input::placeholder { color: var(--faint); }
 .composer .tools { display: flex; align-items: center; gap: 4px; }
@@ -160,10 +176,10 @@ svg { flex: none; }
 }
 .pill:hover { background: var(--hover); color: var(--text); }
 .pill.on { background: var(--accent-soft); color: #7cc0ff; }
-.mic { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+.mic { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
 .mic:hover { background: var(--hover); color: var(--text); }
 .voice {
-  width: 38px; height: 38px; border-radius: 50%;
+  width: 42px; height: 42px; border-radius: 50%;
   background: var(--accent); color: #fff; display: grid; place-items: center;
 }
 .voice:hover { filter: brightness(1.08); }
@@ -175,11 +191,35 @@ svg { flex: none; }
 }
 .chip:hover { background: var(--hover); color: var(--text); }
 
+/* The suggestion rows under the composer: an icon, then the words. */
+.chat-suggestions { width: min(960px, 100%); margin-top: 30px; display: flex; flex-direction: column; }
+.suggestion {
+  display: flex; align-items: center; gap: 18px; text-align: left;
+  padding: 18px 14px; border-radius: 12px; color: var(--text); font-size: 17px;
+}
+.suggestion:hover { background: var(--hover); }
+.suggestion svg { color: var(--muted); }
+
+/* The chat row that is the one you are looking at. */
+.side-row.active { background: var(--active); }
+.brand-name { font-size: 22px; font-weight: 600; letter-spacing: .2px; }
+.brand-mark { display: none; }
+
+.set-top { display: flex; padding: 2px 0 6px; }
+.theme-control { display: flex; align-items: center; gap: 6px; }
+.select.editable { cursor: text; padding: 8px 10px; }
+.select.editable input.hex-value {
+  width: 84px; background: none; border: 0; outline: 0; color: var(--muted);
+  font: inherit; text-align: right; padding: 0;
+}
+.row.footnote { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.row.footnote .desc { margin-top: 0; }
+
 /* --------------------------------------------------------------- settings */
 
 .settings { flex: 1; display: flex; min-height: 0; }
 .set-nav {
-  width: 300px; flex: none; border-right: 1px solid var(--line-soft);
+  width: clamp(260px, 25.5vw, 430px); flex: none; border-right: 1px solid var(--line-soft);
   padding: 8px 12px 24px; overflow-y: auto;
 }
 .set-back {
@@ -195,8 +235,8 @@ svg { flex: none; }
 .set-search input { flex: 1; background: none; border: 0; outline: 0; color: var(--text); }
 .set-group { color: var(--faint); font-size: 12px; font-weight: 600; padding: 12px 10px 6px; }
 .set-link {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 9px 10px; border-radius: 10px; color: var(--text); text-align: left;
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 11px 12px; border-radius: 10px; color: var(--text); text-align: left; font-size: 16px;
 }
 .set-link:hover { background: var(--hover); }
 .set-link.active { background: var(--active); }
@@ -208,20 +248,20 @@ svg { flex: none; }
 }
 
 .set-body { flex: 1; overflow-y: auto; padding: 40px 48px 80px; }
-.set-page { max-width: 760px; margin: 0 auto; }
-.set-title { font-size: 32px; font-weight: 600; margin: 0 0 28px; }
-.set-section { margin: 34px 0 12px; font-size: 16px; font-weight: 600; }
+.set-page { max-width: 960px; margin: 0 auto; }
+.set-title { font-size: 32px; font-weight: 600; margin: 0 0 30px; }
+.set-section { margin: 36px 0 14px; font-size: 17px; font-weight: 600; }
 
 .card {
   background: var(--surface); border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg); overflow: hidden;
 }
 .card + .card { margin-top: 16px; }
-.row { display: flex; align-items: center; gap: 24px; padding: 16px 20px; }
+.row { display: flex; align-items: center; gap: 24px; padding: 9px 20px; font-size: 16px; }
 .row + .row { border-top: 1px solid var(--line-soft); }
 .row .text { flex: 1; min-width: 0; }
-.row .name { font-size: 15px; }
-.row .desc { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.row .name { font-size: 16px; line-height: 1.4; }
+.row .desc { color: var(--muted); font-size: 14px; margin-top: 2px; }
 .row .control { flex: none; }
 .row.link { cursor: pointer; }
 .row.link:hover { background: #ffffff08; }
@@ -236,17 +276,17 @@ svg { flex: none; }
 
 .select {
   display: inline-flex; align-items: center; gap: 8px;
-  background: var(--surface-2); border-radius: 999px; padding: 8px 14px; color: var(--text); font-size: 14px;
+  background: var(--surface-2); border-radius: 999px; padding: 9px 15px; color: var(--text); font-size: 15px;
 }
 .select:hover { background: #3a3a3a; }
 .menu {
-  position: absolute; z-index: 20; min-width: 230px;
+  position: absolute; z-index: 20; min-width: 300px;
   background: #2f2f2f; border: 1px solid var(--line); border-radius: 14px;
   padding: 6px; box-shadow: 0 18px 50px #0009;
 }
-.menu button { display: block; width: 100%; text-align: left; padding: 9px 12px; border-radius: 9px; font-size: 14px; }
+.menu button { display: flex; align-items: center; width: 100%; text-align: left; padding: 11px 14px; border-radius: 9px; font-size: 16px; }
 .menu button:hover { background: var(--hover); }
-.menu button.on::after { content: " ✓"; color: var(--accent); }
+.menu button.on::after { content: "✓"; margin-left: auto; color: var(--fg); }
 
 .instructions { padding: 16px 20px; }
 .instructions textarea {
@@ -266,13 +306,14 @@ svg { flex: none; }
 
 /* ------------------------------------------------------------------ misc */
 
-.select.static { background: none; cursor: default; color: var(--muted); gap: 8px; }
-.select.static:hover { background: none; }
+.select.static { background: var(--surface-2); cursor: default; color: var(--muted); gap: 8px; }
+.select.static:hover { background: var(--surface-2); }
+.select.static.editable { cursor: text; }
 .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
 .aa { font-weight: 600; }
-.modes { display: flex; gap: 10px; }
+.modes { display: flex; gap: 16px; }
 .mode {
-  width: 76px; height: 54px; border-radius: 10px; border: 1px solid var(--line);
+  width: 92px; height: 56px; border-radius: 12px; border: 1px solid var(--line);
   position: relative; overflow: hidden; padding: 8px;
 }
 .mode.light { background: #f4f4f4; }
@@ -298,7 +339,12 @@ svg { flex: none; }
 
 /* ------------------------------------------------- the colours and the rest */
 
-.menu .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; vertical-align: -1px; border: 1px solid var(--line); }
+.colour-dot {
+  width: 16px; height: 16px; border-radius: 50%; display: inline-block;
+  border: 1px solid var(--line); flex: none;
+}
+.menu .colour-dot { margin-right: 10px; }
+.select .colour-dot { margin-right: 2px; }
 
 .picker {
   position: absolute; z-index: 30; background: var(--surface-2);
@@ -306,21 +352,21 @@ svg { flex: none; }
   box-shadow: 0 18px 50px #0009;
 }
 .picker .field {
-  position: relative; width: 220px; height: 150px; border-radius: 10px;
+  position: relative; width: 250px; height: 220px; border-radius: 12px;
   cursor: crosshair; background-image: linear-gradient(to top, #000, transparent),
     linear-gradient(to right, #fff, transparent);
 }
 .picker .field .knob {
-  position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  position: absolute; width: 20px; height: 20px; border-radius: 50%;
   border: 2px solid #fff; box-shadow: 0 0 0 1px #0006; transform: translate(-50%, -50%);
 }
 .picker .hue {
-  width: 220px; height: 12px; margin-top: 12px; border-radius: 6px;
+  width: 250px; height: 30px; margin-top: 14px; border-radius: 15px;
   -webkit-appearance: none; appearance: none;
   background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
 }
 .picker .hue::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%;
   background: #fff; border: 2px solid #0006; cursor: pointer;
 }
 .picker .hex {
@@ -330,13 +376,13 @@ svg { flex: none; }
 .picker .line { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 
 .number {
-  width: 68px; background: color-mix(in srgb, var(--fg) 8%, transparent);
+  width: 80px; background: color-mix(in srgb, var(--fg) 8%, transparent);
   border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
   text-align: right; outline: 0;
 }
 .unit { color: var(--faint); margin-left: 8px; }
 .slider { width: 220px; accent-color: var(--accent); }
-.segment.small button { padding: 6px 12px; font-size: 13px; }
+.segment.small button { padding: 6px 15px; font-size: 14px; }
 
 .job { display: flex; align-items: center; gap: 20px; padding: 16px 20px; }
 .job + .job { border-top: 1px solid var(--line-soft); }

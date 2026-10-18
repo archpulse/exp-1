@@ -28,7 +28,7 @@ const THEME: &str = "__EXP1_THEME__";
 /// names are the same ones `app/theme.rs` uses for the terminal's themes.
 pub(crate) const ACCENTS: [(&str, &str); 7] = [
     ("blue", "#3b82f6"),
-    ("green", "#22c55e"),
+    ("green", "#10b981"),
     ("yellow", "#eab308"),
     ("pink", "#ec4899"),
     ("orange", "#f97316"),
@@ -188,7 +188,6 @@ pub(crate) async fn page(
 /// counts the sidebar shows.
 async fn boot_state(shared: &Arc<Shared>, language: &str) -> String {
     let settings = store::load_settings();
-    let sessions = session_rows(50);
     let plugins = shared.mcp.specs().await.len();
     let scheduled = shared.scheduler.jobs().len();
     let state = serde_json::json!({
@@ -200,7 +199,6 @@ async fn boot_state(shared: &Arc<Shared>, language: &str) -> String {
         "theme": settings.theme,
         "accent": accent_hex(&settings),
         "palette": ACCENTS.iter().map(|(name, hex)| serde_json::json!({ "name": name, "hex": hex })).collect::<Vec<_>>(),
-        "sessions": sessions,
         "plugins": plugins,
         "scheduled": scheduled,
         "mcp_path": crate::store::mcp_path().display().to_string(),
@@ -209,22 +207,6 @@ async fn boot_state(shared: &Arc<Shared>, language: &str) -> String {
     serde_json::to_string(&state)
         .unwrap_or_else(|_| "{}".to_string())
         .replace('<', "\\u003c")
-}
-
-/// What the sidebar lists: the conversations, newest first. All of them, not
-/// only this directory's — the page is global.
-fn session_rows(limit: usize) -> Vec<serde_json::Value> {
-    store::list_sessions()
-        .iter()
-        .take(limit)
-        .map(|meta| {
-            serde_json::json!({
-                "id": meta.id,
-                "title": meta.label(),
-                "when": meta.when(),
-            })
-        })
-        .collect()
 }
 
 /// `GET /assets/{file}`: the styles and the script.
@@ -276,14 +258,6 @@ pub(crate) async fn config_post(
     settings.web = web;
     store::save_settings(&settings);
     Json(serde_json::json!({ "saved": true, "web": settings.web })).into_response()
-}
-
-/// `GET /api/sessions`: every conversation, newest first.
-pub(crate) async fn sessions(State(shared): State<Arc<Shared>>, headers: HeaderMap) -> Response {
-    if !web_authorized(&shared, &headers) && !host_is_loopback(&headers) {
-        return locked();
-    }
-    Json(session_rows(200)).into_response()
 }
 
 /// `GET /api/schedules`: the jobs, as the page's scheduled section lists them.

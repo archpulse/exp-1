@@ -189,6 +189,8 @@ pub struct WebSettings {
     pub headings: String,
     /// Instructions the user adds on top of the system prompt.
     pub custom_instructions: String,
+    /// `system`, `light` or `dark`: which colours the page paints with.
+    pub mode: String,
     /// The page's accent: empty follows the TUI theme, otherwise a palette name
     /// like `pink` or a `#rrggbb` the user picked.
     pub accent: String,
@@ -229,6 +231,7 @@ impl Default for WebSettings {
             visual_replies: "default".to_string(),
             headings: "more".to_string(),
             custom_instructions: String::new(),
+            mode: "system".to_string(),
             accent: String::new(),
             background: String::new(),
             foreground: String::new(),

@@ -6,8 +6,8 @@
 
   const boot = JSON.parse(document.getElementById("boot")?.textContent || "{}");
   let web = Object.assign({}, boot.web || {});
-  let sessions = boot.sessions || [];
-  let chips = [];
+  /* The page has its own conversations; the agent's sessions stay in the TUI. */
+  let sessions = [];
   let saving = false;
   let advancedOpen = false;
 
@@ -21,6 +21,8 @@
       emptyRecent: "Пока пусто", hello: "Что у вас сегодня на повестке?",
       ask: "Спросить exp-1", reasoning: "Быстрые ответы", reasoningOn: "Быстрые ответы включены",
       voice: "Голос", mic: "Микрофон", nextStep: "Чат появится в следующем шаге.",
+      suggestSchedule: "Запланировать задачу", suggestSettings: "Настроить внешний вид",
+      suggestModels: "Выбрать модели страницы",
       disclaimer: "exp-1 может ошибаться. Проверяйте важную информацию.",
       settings: "Настройки", back: "Вернуться в приложение", search: "Поиск",
       personalGroup: "Персональные настройки", general: "Общие",
@@ -33,9 +35,11 @@
       langName: "Язык", langDesc: "Язык пользовательского интерфейса приложения",
       langAuto: "Автоматически определять",
       memorySection: "Память", memoryName: "Включить память",
+      memoryIntro: "Настройте, как exp-1 обращается с памятью.",
       memoryDesc: "Разрешить exp-1 учитывать ваши чаты и файлы, чтобы отвечать точнее",
       memorySummary: "Сводка памяти",
       memorySummaryDesc: "Что exp-1 о вас знает, лежит в пользовательских инструкциях",
+      memoryFoot: "exp-1 может использовать память, чтобы отвечать точнее по прошлым разговорам.",
       manage: "Управление", styleSection: "Базовый стиль и тон", styleName: "Стиль и тон",
       styleDesc: "Как модель разговаривает во всех чатах", styleDefault: "По умолчанию",
       stylePro: "Профессиональный", styleFriendly: "Дружелюбный", styleCandid: "Прямой",
@@ -68,6 +72,7 @@
       diffDesc: "Показывать изменения цветом или знаками +/−",
       diffColor: "Цвет", diffSigns: "+/−",
       jobsEmpty: "Расписаний нет — заведите их командой /schedule в TUI",
+      jobDone: "выполнено", jobPaused: "на паузе", jobEvery: "каждые", jobDue: "срок",
       jobsHint: "Задачи создаются, запускаются и хранят историю в TUI; здесь их видно и можно поставить на паузу",
       pause: "Пауза", resume: "Продолжить", runNow: "Запустить", remove: "Удалить",
       pluginsEmpty: "Плагинов нет — добавьте MCP-серверы в файл",
@@ -83,6 +88,8 @@
       emptyRecent: "Nothing yet", hello: "What is on your mind today?",
       ask: "Ask exp-1", reasoning: "Fast answers", reasoningOn: "Fast answers are on",
       voice: "Voice", mic: "Microphone", nextStep: "The chat lands in the next step.",
+      suggestSchedule: "Schedule a task", suggestSettings: "Tune how this page looks",
+      suggestModels: "Pick the page's models",
       disclaimer: "exp-1 can make mistakes. Check important information.",
       settings: "Settings", back: "Back to the app", search: "Search",
       personalGroup: "Personal settings", general: "General",
@@ -95,9 +102,11 @@
       langName: "Language", langDesc: "Language of the application interface",
       langAuto: "Detect automatically",
       memorySection: "Memory", memoryName: "Enable memory",
+      memoryIntro: "Set how exp-1 handles memory.",
       memoryDesc: "Let exp-1 use your chats and files to answer more accurately",
       memorySummary: "Memory summary",
       memorySummaryDesc: "What exp-1 knows about you sits in the custom instructions",
+      memoryFoot: "exp-1 can use memory to answer more accurately from earlier conversations.",
       manage: "Manage", styleSection: "Base style and tone", styleName: "Style and tone",
       styleDesc: "How the model talks in every chat", styleDefault: "Default",
       stylePro: "Professional", styleFriendly: "Friendly", styleCandid: "Candid",
@@ -130,6 +139,7 @@
       diffDesc: "Mark changes with colour or with +/− signs",
       diffColor: "Colour", diffSigns: "+/−",
       jobsEmpty: "No schedules yet — make them with /schedule in the TUI",
+      jobDone: "done", jobPaused: "paused", jobEvery: "every", jobDue: "due",
       jobsHint: "Jobs are made and run from the TUI; here you can see them and pause one",
       pause: "Pause", resume: "Resume", runNow: "Run now", remove: "Remove",
       pluginsEmpty: "No plugins yet — add MCP servers to the file",
@@ -173,6 +183,8 @@
     mic: icon('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 12a7 7 0 0 0 14 0M12 19v2"/>'),
     wave: icon('<path d="M4 12h2M8 8v8M12 5v14M16 9v6M20 12h0.5"/>'),
     sparkle: icon('<path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/>'),
+    download: icon('<path d="M12 4v10M8 11l4 4 4-4M5 20h14"/>'),
+    copy: icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M6 15H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1"/>'),
   };
 
   /* ------------------------------------------------------------------ atoms */
@@ -254,6 +266,8 @@
     style.setProperty("--contrast", (0.6 + Math.min(200, web.contrast ?? 60) / 100).toFixed(2));
     document.documentElement.dataset.motion =
       web.motion === "on" || web.motion === "off" ? web.motion : "system";
+    document.documentElement.dataset.mode =
+      web.mode === "light" || web.mode === "dark" ? web.mode : "system";
   }
 
   /* -------------------------------------------------------------- the parts */
@@ -303,32 +317,32 @@
     return node;
   };
 
+  const FALLBACK = { background: "#212121", foreground: "#ececec" };
+
   function openColourPicker(anchor, key) {
     closeOverlays();
-    let hsv = hexToHsv(validHex(web[key]) ? web[key] : "#212121");
+    const start = validHex(web[key])
+      ? web[key]
+      : key === "accent"
+        ? accentValue()
+        : FALLBACK[key] || "#ececec";
+    let hsv = hexToHsv(start);
     const field = el("div", { class: "field" });
     const knob = el("span", { class: "knob" });
     field.append(knob);
     const hue = el("input", { type: "range", class: "hue", min: "0", max: "360", value: String(Math.round(hsv.h * 360)) });
-    const hex = el("input", { type: "text", class: "hex", value: web[key] || "" });
-    const picker = el("div", { class: "picker" }, [
-      field,
-      hue,
-      el("div", { class: "line" }, [hex, el("button", { class: "button", text: t("saved"), onclick: () => {
-        picker.remove();
-        save();
-      } })]),
-    ]);
+    const picker = el("div", { class: "picker" }, [field, hue]);
 
     const paint = (commit) => {
       field.style.backgroundImage =
         `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${Math.round(hsv.h * 360)}, 100%, 50%))`;
       knob.style.left = `${hsv.s * 100}%`;
       knob.style.top = `${(1 - hsv.v) * 100}%`;
-      const value = hsvToHex(hsv);
-      hex.value = value;
-      web[key] = value;
+      web[key] = hsvToHex(hsv);
       applyTheme();
+      const shown = web[key].toUpperCase();
+      const field_ = anchor.matches("input.hex-value") ? anchor : anchor.querySelector(".hex-value");
+      if (field_) field_.value = shown;
       if (commit) save();
     };
 
@@ -354,12 +368,6 @@
       paint(false);
     });
     hue.addEventListener("change", () => paint(true));
-    hex.addEventListener("change", () => {
-      if (!validHex(hex.value)) return;
-      hsv = hexToHsv(hex.value);
-      hue.value = String(Math.round(hsv.h * 360));
-      paint(true);
-    });
 
     place(picker, anchor);
     paint(false);
@@ -395,7 +403,7 @@
     const label = () => {
       const choice = current();
       const children = [];
-      if (swatchFor) children.push(el("span", { class: "dot", style: `background:${swatchFor(choice)}` }));
+      if (swatchFor && swatchFor(choice)) children.push(el("span", { class: "colour-dot", style: `background:${swatchFor(choice)}` }));
       children.push(el("span", { text: choice.label }));
       children.push(el("span", { html: icons.chevron }));
       node.textContent = "";
@@ -424,7 +432,7 @@
               if (after) after();
             },
           }, [
-            swatchFor ? el("span", { class: "dot", style: `background:${swatchFor(option)}` }) : null,
+            swatchFor && swatchFor(option) ? el("span", { class: "colour-dot", style: `background:${swatchFor(option)}` }) : null,
             el("span", { text: option.label }),
           ]),
         );
@@ -498,32 +506,26 @@
     for (const session of pinned) {
       list.append(el("button", { class: "side-item", text: session.title, onclick: nextStep }));
     }
-    if (!pinned.length) list.append(el("div", { class: "side-empty", text: t("emptyPinned") }));
+    if (!pinned.length) list.append(el("div", { class: "side-label", text: t("pinned") }), el("div", { class: "side-empty", text: t("emptyPinned") }));
     list.append(el("div", { class: "side-label", text: t("projects") }));
     list.append(el("div", { class: "side-empty", text: t("emptyProjects") }));
     list.append(el("div", { class: "side-label", text: t("recent") }));
     if (!sessions.length) list.append(el("div", { class: "side-empty", text: t("emptyRecent") }));
-    for (const session of sessions) {
-      list.append(el("button", { class: "side-item", text: session.title, title: session.when, onclick: nextStep }));
-    }
 
     return [
       el("div", { class: "side-top" }, [
-        el("div", { class: "brand" }, [
-          el("span", { class: "brand-mark", text: ">_" }),
-          el("span", { text: "exp-1" }),
-        ]),
+        el("div", { class: "brand" }, [el("span", { class: "brand-name", text: "exp-1" })]),
         el("div", { class: "side-icons" }, [
           el("button", { class: "icon-btn", html: icons.search, title: t("search"), onclick: nextStep }),
           el("button", { class: "icon-btn", html: icons.panel, title: t("settings"), onclick: () => go("/settings/general") }),
         ]),
       ]),
-      el("button", { class: "side-row primary", onclick: () => go("/") }, [
+      el("button", { class: "side-row primary" + (route() === "/" ? " active" : ""), onclick: () => go("/") }, [
         el("span", { html: icons.pencil }),
         el("span", { text: t("newChat") }),
       ]),
-      sideRow(icons.clock, t("scheduled"), "/scheduled", String(boot.scheduled ?? 0)),
-      sideRow(icons.grid, t("plugins"), "/plugins", String(boot.plugins ?? 0)),
+      sideRow(icons.clock, t("scheduled"), "/scheduled"),
+      sideRow(icons.puzzle, t("plugins"), "/plugins"),
       list,
       el("div", { class: "side-foot" }, [
         el("div", { class: "profile", onclick: () => go("/settings/personalization") }, [
@@ -570,12 +572,21 @@
           el("button", { class: "voice", html: icons.wave, title: t("voice"), onclick: nextStep }),
         ]),
       ]),
-      el("div", { class: "chat-under", text: t("disclaimer") }),
     ]);
     if (web.suggested_prompts) {
-      const box = el("div", { class: "chat-chips" });
-      for (const text of ["/schedule", "/web-models", t("settings")]) {
-        box.append(el("button", { class: "chip", text, onclick: text === t("settings") ? () => go("/settings/general") : nextStep }));
+      const box = el("div", { class: "chat-suggestions" });
+      const suggestions = [
+        { glyph: icons.clock, text: t("suggestSchedule"), at: "/scheduled" },
+        { glyph: icons.sliders, text: t("suggestSettings"), at: "/settings/appearance" },
+        { glyph: icons.sparkle, text: t("suggestModels"), at: "/settings/personalization" },
+      ];
+      for (const item of suggestions) {
+        box.append(
+          el("button", { class: "suggestion", onclick: () => go(item.at) }, [
+            el("span", { html: item.glyph }),
+            el("span", { text: item.text }),
+          ]),
+        );
       }
       view.append(box);
     }
@@ -625,6 +636,9 @@
     filter.addEventListener("input", paint);
     paint();
     return el("div", { class: "set-nav" }, [
+      el("div", { class: "set-top" }, [
+        el("button", { class: "icon-btn", html: icons.panel, onclick: () => go("/") }),
+      ]),
       el("button", { class: "set-back", onclick: () => go("/") }, [
         el("span", { html: icons.back }),
         el("span", { text: t("back") }),
@@ -648,42 +662,79 @@
 
   function appearanceScreen(body) {
     const paletteName = (value) => `accent${value.charAt(0).toUpperCase()}${value.slice(1)}`;
+    const custom = validHex(web.accent) ? web.accent.toLowerCase() : "";
     const accentOptions = () => {
       const items = [{ value: "", label: t("accentDefault") }];
       for (const colour of boot.palette || []) {
         items.push({ value: colour.name, label: t(paletteName(colour.name)) });
       }
       items.push({
-        value: "__custom",
-        label: t("accentCustom"),
+        value: custom || "__custom",
+        label: custom ? custom.toUpperCase() : t("accentCustom"),
         action: (anchor) => openColourPicker(anchor, "accent"),
       });
       return items;
     };
     const accentSwatch = (option) => {
-      if (option.value === "" || option.value === "__custom") return accentValue();
+      if (option.value === "") return "#ffffff";
+      if (option.value === "__custom") return undefined;
+      if (/^#[0-9a-f]{6}$/i.test(option.value)) return option.value;
       const named = (boot.palette || []).find((colour) => colour.name === option.value);
       return named ? named.hex : accentValue();
     };
 
     const modes = [
-      { label: t("modeLight"), cls: "mode light" },
-      { label: t("modeDark"), cls: "mode dark on" },
-      { label: t("modeAuto"), cls: "mode auto" },
-    ].map((mode) =>
-      el("button", { class: mode.cls, title: mode.label, onclick: nextStep }, [
+      { value: "system", label: t("modeAuto"), cls: "mode auto" },
+      { value: "light", label: t("modeLight"), cls: "mode light" },
+      { value: "dark", label: t("modeDark"), cls: "mode dark" },
+    ].map((mode) => {
+      const tile = el("button", {
+        class: mode.cls + ((web.mode || "system") === mode.value ? " on" : ""),
+        title: mode.label,
+        onclick: () => {
+          web.mode = mode.value;
+          applyTheme();
+          for (const sibling of tile.parentElement.children) sibling.classList.remove("on");
+          tile.classList.add("on");
+          save();
+        },
+      }, [
         el("span", { class: "mode-bar" }),
         el("span", { class: "mode-line" }),
         el("span", { class: "mode-line short" }),
         el("span", { class: "mode-dot" }),
-      ]),
-    );
+      ]);
+      return tile;
+    });
 
     const colourRow = (key, name) => {
-      const swatch = el("span", { class: "dot", style: `background:${validHex(web[key]) ? web[key] : (key === "--bg" ? "#212121" : "#ececec")}` });
-      const value = el("span", { text: web[key] || (key === "background" ? "#212121" : "#ececec") });
-      const pill = el("button", { class: "select static" }, [swatch, value]);
-      pill.addEventListener("click", () => openColourPicker(pill, key));
+      const fallback = key === "background" ? "#212121" : "#ececec";
+      const dot = el("span", { class: "colour-dot" });
+      const input = el("input", { class: "hex-value", spellcheck: "false" });
+      const pill = el("span", { class: "select static editable" }, [dot, input]);
+      const sync = () => {
+        const colour = validHex(web[key]) ? web[key].trim().toLowerCase() : fallback;
+        dot.style.background = colour;
+        input.value = colour.toUpperCase();
+      };
+      sync();
+      input.addEventListener("focus", () => openColourPicker(pill, key));
+      input.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return;
+        if (!validHex(input.value)) {
+          sync();
+          return;
+        }
+        web[key] = input.value.trim().toLowerCase();
+        sync();
+        applyTheme();
+        save();
+      });
+      pill.addEventListener("pointerdown", (event) => {
+        if (event.target === input) return;
+        event.preventDefault();
+        openColourPicker(pill, key);
+      });
       return row(name, null, pill);
     };
 
@@ -706,8 +757,10 @@
         return el("span", {}, [field, el("span", { class: "unit", text: "px" })]);
       };
       const slider = el("input", { type: "range", class: "slider", min: "0", max: "140", value: String(web.contrast ?? 60) });
+      const contrastValue = el("span", { class: "unit", text: String(web.contrast ?? 60) });
       slider.addEventListener("input", () => {
         web.contrast = Number(slider.value);
+        contrastValue.textContent = slider.value;
         applyTheme();
       });
       slider.addEventListener("change", () => save());
@@ -725,7 +778,7 @@
           row(t("separateThemes"), t("separateThemesDesc"), toggle("separate_themes")),
         ]),
         rows([
-          row(t("contrastName"), null, el("span", {}, [slider, el("span", { class: "unit", text: String(web.contrast ?? 60) })])),
+          row(t("contrastName"), null, el("span", {}, [slider, contrastValue])),
           row(t("diffName"), t("diffDesc"), segmented("diff_markers", [
             { value: "color", label: t("diffColor") },
             { value: "signs", label: t("diffSigns") },
@@ -751,10 +804,17 @@
         ]),
         el("div", { class: "set-section spacer-line" }),
         rows([
-          row(t("themeName"), t("themeDesc"), el("span", { class: "select static" }, [
-            el("span", { class: "aa", text: "Aa" }),
-            el("span", { text: boot.theme || "default" }),
-          ])),
+          el("div", { class: "row" }, [
+            el("div", { class: "text" }, [el("div", { class: "name", text: t("themeName") })]),
+            el("div", { class: "control theme-control" }, [
+              el("button", { class: "icon-btn", html: icons.download, title: t("themeName"), onclick: nextStep }),
+              el("button", { class: "icon-btn", html: icons.copy, title: t("themeName"), onclick: nextStep }),
+              el("span", { class: "select static" }, [
+                el("span", { class: "aa", text: "Aa" }),
+                el("span", { text: boot.theme || "default" }),
+              ]),
+            ]),
+          ]),
           row(t("accentName"), null, select("accent", accentOptions, null, accentSwatch)),
           colourRow("background", t("bgName")),
           colourRow("foreground", t("fgName")),
@@ -788,6 +848,7 @@
       el("div", { class: "set-page" }, [
         el("h1", { class: "set-title", text: t("personalization") }),
         section(t("memorySection")),
+        note(t("memoryIntro")),
         rows([
           row(t("memoryName"), t("memoryDesc"), toggle("memory")),
           el("div", { class: "row link", onclick: focus }, [
@@ -796,6 +857,9 @@
               el("div", { class: "desc", text: t("memorySummaryDesc") }),
             ]),
             el("div", { class: "control" }, [el("span", { class: "button", text: t("manage") })]),
+          ]),
+          el("div", { class: "row footnote" }, [
+            el("div", { class: "text" }, [el("div", { class: "desc", text: t("memoryFoot") })]),
           ]),
         ]),
         section(t("styleSection")),
@@ -852,7 +916,13 @@
       }
       const list = el("div", { class: "card" });
       for (const job of jobs) {
-        const state = job.done ? "done" : job.paused ? t("pause") : job.every ? `every ${job.every}` : job.when;
+        const state = job.done
+          ? t("jobDone")
+          : job.paused
+            ? t("jobPaused")
+            : job.every
+              ? `${t("jobEvery")} ${job.every}`
+              : `${t("jobDue")} ${job.when}`;
         const actions = el("div", { class: "acts" });
         const act = async (action, method) => {
           try {
@@ -942,15 +1012,19 @@
     applyTheme();
     const sidebar = document.getElementById("sidebar");
     const main = document.getElementById("main");
+    const withNav = current.startsWith("/settings/");
     sidebar.textContent = "";
-    sidebar.append(...sidebarNodes());
+    if (withNav) sidebar.hidden = true;
+    else {
+      sidebar.hidden = false;
+      sidebar.append(...sidebarNodes());
+    }
     main.textContent = "";
     if (current === "/") {
       main.append(chatView());
       return;
     }
-    const withNav = current.startsWith("/settings/");
-    const body = el("div", { class: withNav ? "set-body" : "set-body" });
+    const body = el("div", { class: "set-body" });
     main.append(el("div", { class: "settings" }, [withNav ? settingsNav(current) : el("div", { class: "set-nav" }, [el("button", { class: "set-back", onclick: () => go("/") }, [el("span", { html: icons.back }), el("span", { text: t("back") })])]), body]));
     SCREENS[current](body);
   }
