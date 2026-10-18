@@ -6,7 +6,7 @@
 //! occurrence can be noticed the next time the server starts.
 
 use anyhow::{Context, Result};
-use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+use chrono::{DateTime, Local, NaiveDateTime, NaiveTime, TimeZone};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -88,45 +88,83 @@ pub fn save(schedules: &Schedules) -> Result<()> {
 
 // ------------------------------------------------------------------ parsing
 
-/// Reads a time the model wrote. Accepted shapes, in order: RFC3339, a local
-/// `YYYY-MM-DD HH:MM[:SS]` (with `T` or a space), a bare `HH:MM` (today, or
-/// tomorrow when that moment has passed), a bare date (09:00 that day), and a
-/// relative `in 5m` / `+90m`.
-pub fn parse_when(text: &str, now: DateTime<Local>) -> Result<DateTime<Local>, String> {
-    let raw = text.trim();
-    if raw.is_empty() {
-        return Err("a time is required".to_string());
+/// How long until something happens. The model is never shown a clock: it
+/// passes the wait the user asked for, and the server turns that into a time.
+/// Accepted shapes: `5m`, `90s`, `3m12s`, `1h30m`, `1.5h`, `2 days`, a bare
+/// number of minutes, a bare unit (`day`), and `now`.
+pub fn parse_wait(text: &str) -> Result<u64, String> {
+    let lowered = text.trim().to_ascii_lowercase();
+    let body = lowered
+        .strip_prefix("in ")
+        .or_else(|| lowered.strip_prefix("after "))
+        .or_else(|| lowered.strip_prefix('+'))
+        .unwrap_or(&lowered)
+        .trim();
+    let body = body
+        .strip_prefix("a ")
+        .or_else(|| body.strip_prefix("an "))
+        .unwrap_or(body)
+        .trim();
+    if body.is_empty() {
+        return Err("a wait is required".to_string());
     }
-    if let Ok(stamp) = DateTime::parse_from_rfc3339(raw) {
-        return Ok(stamp.with_timezone(&Local));
+    if matches!(body, "now" | "immediately") {
+        return Ok(0);
     }
-    let lowered = raw.to_ascii_lowercase();
-    for prefix in ["in ", "after ", "+"] {
-        if let Some(rest) = lowered.strip_prefix(prefix) {
-            let seconds = parse_duration(rest)?;
-            return Ok(now + chrono::Duration::seconds(seconds as i64));
+    let mut total = 0f64;
+    let mut rest = body;
+    while !rest.is_empty() {
+        let digits: String = rest
+            .chars()
+            .take_while(|ch| ch.is_ascii_digit() || *ch == '.')
+            .collect();
+        if digits.is_empty() {
+            // A bare unit: "day", "week".
+            let unit = unit_seconds(rest)
+                .ok_or_else(|| format!("'{text}' is not a wait this understands"))?;
+            total += unit;
+            break;
         }
+        let value: f64 = digits
+            .parse()
+            .map_err(|_| format!("'{text}' is not a wait this understands"))?;
+        rest = rest[digits.len()..].trim_start();
+        // Everything up to the next number is the unit, words included.
+        let raw: String = rest
+            .chars()
+            .take_while(|ch| ch.is_alphabetic() || ch.is_whitespace())
+            .collect();
+        let unit = raw.trim();
+        let seconds = if unit.is_empty() {
+            // A bare number is minutes, the unit people schedule in.
+            60.0
+        } else {
+            unit_seconds(unit).ok_or_else(|| {
+                format!("'{text}': unknown unit '{unit}' — use s, m, h, d or w")
+            })?
+        };
+        total += value * seconds;
+        rest = rest[raw.len()..].trim_start();
     }
-    let body = raw.replace('T', " ");
-    for format in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"] {
-        if let Ok(naive) = NaiveDateTime::parse_from_str(&body, format) {
-            return Ok(local(naive, now));
+    Ok(total.round().max(0.0) as u64)
+}
+
+/// A time of day; the next occurrence of it is when a job first runs. `every
+/// day at nine` is `at: "09:00"` plus `every: 1d`, and the server works out
+/// which nine o'clock that is.
+pub fn parse_time_of_day(text: &str, now: DateTime<Local>) -> Result<DateTime<Local>, String> {
+    let body = text.trim();
+    for format in ["%H:%M:%S", "%H:%M"] {
+        if let Ok(time) = NaiveTime::parse_from_str(body, format) {
+            let mut at = local(now.date_naive().and_time(time), now);
+            if at <= now {
+                at += chrono::Duration::days(1);
+            }
+            return Ok(at);
         }
-    }
-    if let Ok(time) = NaiveTime::parse_from_str(&body, "%H:%M") {
-        let mut candidate = local(now.date_naive().and_time(time), now);
-        if candidate <= now {
-            candidate += chrono::Duration::days(1);
-        }
-        return Ok(candidate);
-    }
-    if let Ok(date) = NaiveDate::parse_from_str(&body, "%Y-%m-%d") {
-        // A date without a time means the start of that working day.
-        let time = NaiveTime::from_hms_opt(9, 0, 0).unwrap_or_default();
-        return Ok(local(date.and_time(time), now));
     }
     Err(format!(
-        "'{text}' is not a time this understands — use a local timestamp like 2026-10-18T09:00"
+        "'{text}' is not a time of day — use HH:MM, like 09:00"
     ))
 }
 
@@ -148,52 +186,27 @@ fn local(naive: NaiveDateTime, now: DateTime<Local>) -> DateTime<Local> {
 /// same in words (`every day`, `2 hours`). Returns seconds, never below a
 /// minute: a job that fires every few seconds is a runaway, not a schedule.
 pub fn parse_every(text: &str) -> Result<u64, String> {
-    let seconds = parse_duration(text)?;
+    let lowered = text.trim().to_ascii_lowercase();
+    let body = lowered.strip_prefix("every ").unwrap_or(&lowered);
+    let seconds = parse_wait(body)?;
     if seconds < 60 {
         return Ok(60);
     }
     Ok(seconds)
 }
 
-/// The same grammar without the floor, for waits such as `in 90s`.
-fn parse_duration(text: &str) -> Result<u64, String> {
-    let lowered = text.trim().to_ascii_lowercase();
-    let lowered = lowered.strip_prefix("every ").unwrap_or(&lowered).trim();
-    let lowered = lowered
-        .trim_start_matches("a ")
-        .trim_start_matches("an ")
-        .trim();
-    let digits: String = lowered
-        .chars()
-        .take_while(|ch| ch.is_ascii_digit() || *ch == '.')
-        .collect();
-    let rest = lowered[digits.len()..].trim();
-    if digits.is_empty() {
-        // A word without a number: "day", "week", "hour".
-        let unit = unit_seconds(rest).or_else(|| unit_seconds(lowered));
-        return unit.ok_or_else(|| format!("'{text}' is not an interval this understands"));
-    }
-    let value: f64 = digits
-        .parse()
-        .map_err(|_| format!("'{text}' is not an interval this understands"))?;
-    let unit = if rest.is_empty() {
-        // A bare number is minutes, the unit people schedule in.
-        60.0
-    } else {
-        unit_seconds(rest).ok_or_else(|| {
-            format!("'{text}': unknown unit '{rest}' — use s, m, h, d or w")
-        })? as f64
-    };
-    Ok((value * unit).round().max(1.0) as u64)
-}
-
-fn unit_seconds(text: &str) -> Option<u64> {
+/// One unit as seconds. Sub-second units are here because a model asked to set
+/// "3 minutes, 12 seconds and 53 milliseconds" will pass exactly that.
+fn unit_seconds(text: &str) -> Option<f64> {
     match text.trim() {
-        "s" | "sec" | "secs" | "second" | "seconds" => Some(1),
-        "m" | "min" | "mins" | "minute" | "minutes" => Some(60),
-        "h" | "hr" | "hrs" | "hour" | "hours" => Some(3_600),
-        "d" | "day" | "days" => Some(86_400),
-        "w" | "week" | "weeks" => Some(604_800),
+        "ms" | "msec" | "millisecond" | "milliseconds" | "мс" => Some(0.001),
+        "s" | "sec" | "secs" | "second" | "seconds" | "сек" | "секунда" | "секунды"
+        | "секунд" => Some(1.0),
+        "m" | "min" | "mins" | "minute" | "minutes" | "мин" | "минута" | "минуты"
+        | "минут" => Some(60.0),
+        "h" | "hr" | "hrs" | "hour" | "hours" | "ч" | "час" | "часа" | "часов" => Some(3_600.0),
+        "d" | "day" | "days" | "д" | "день" | "дня" | "дней" => Some(86_400.0),
+        "w" | "week" | "weeks" | "нед" | "неделя" | "недели" | "недель" => Some(604_800.0),
         _ => None,
     }
 }
@@ -341,38 +354,36 @@ mod tests {
     }
 
     #[test]
-    fn a_time_can_be_written_in_several_shapes() {
+    fn a_wait_can_be_written_in_several_shapes() {
+        assert_eq!(parse_wait("5m").unwrap(), 300);
+        assert_eq!(parse_wait("90s").unwrap(), 90);
+        assert_eq!(parse_wait("3m12s").unwrap(), 192);
+        // The model passes what the user said: milliseconds and language included.
+        assert_eq!(parse_wait("3m12s53ms").unwrap(), 192);
+        assert_eq!(parse_wait("3 минуты 12 секунд").unwrap(), 192);
+        assert_eq!(parse_wait("1h30m").unwrap(), 5_400);
+        assert_eq!(parse_wait("1.5h").unwrap(), 5_400);
+        assert_eq!(parse_wait("2 days").unwrap(), 172_800);
+        assert_eq!(parse_wait("day").unwrap(), 86_400);
+        assert_eq!(parse_wait("in 5 minutes").unwrap(), 300);
+        // A bare number is minutes.
+        assert_eq!(parse_wait("+90").unwrap(), 5_400);
+        assert_eq!(parse_wait("now").unwrap(), 0);
+        assert!(parse_wait("soon").is_err());
+    }
+
+    #[test]
+    fn a_time_of_day_means_its_next_occurrence() {
         let now = at("2026-10-18T14:03:00+03:00");
-        // RFC3339 keeps its own offset.
+        let evening = parse_time_of_day("23:30", now).unwrap();
+        assert_eq!(evening.date_naive(), now.date_naive());
+        assert_eq!(evening.format("%H:%M").to_string(), "23:30");
+        let morning = parse_time_of_day("09:00", now).unwrap();
         assert_eq!(
-            parse_when("2026-10-18T09:00:00+03:00", now).unwrap().timestamp(),
-            at("2026-10-18T09:00:00+03:00").timestamp()
-        );
-        // A local stamp is read as local.
-        assert_eq!(
-            parse_when("2026-10-18T09:00", now).unwrap().timestamp(),
-            at("2026-10-18T09:00:00+03:00").timestamp()
-        );
-        assert_eq!(
-            parse_when("2026-10-18 09:00", now).unwrap().timestamp(),
-            at("2026-10-18T09:00:00+03:00").timestamp()
-        );
-        // A bare time is today, or tomorrow once it has passed.
-        assert_eq!(
-            parse_when("23:30", now).unwrap().date_naive(),
-            now.date_naive()
-        );
-        assert_eq!(
-            parse_when("09:00", now).unwrap().date_naive(),
+            morning.date_naive(),
             now.date_naive() + chrono::Duration::days(1)
         );
-        // A relative wait.
-        assert_eq!(parse_when("in 5m", now).unwrap().timestamp(), now.timestamp() + 300);
-        assert_eq!(parse_when("+90m", now).unwrap().timestamp(), now.timestamp() + 5_400);
-        // A bare date means the start of that working day.
-        let day = parse_when("2026-12-01", now).unwrap();
-        assert_eq!(day.format("%H:%M").to_string(), "09:00");
-        assert!(parse_when("whenever", now).is_err());
+        assert!(parse_time_of_day("tomorrow", now).is_err());
     }
 
     #[test]

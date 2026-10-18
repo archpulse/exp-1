@@ -402,16 +402,20 @@ pub(crate) async fn schedule_tool(
             let Some(request) = text("request") else {
                 return outcome("schedule: 'request' is required".to_string());
             };
-            let Some(when) = text("at") else {
-                return outcome(
-                    "schedule: 'at' is required — a local timestamp like 2026-10-18T09:00"
-                        .to_string(),
-                );
-            };
             let now = Local::now();
-            let at = match schedule::parse_when(&when, now) {
-                Ok(at) => at,
-                Err(message) => return outcome(format!("schedule: {message}")),
+            let wait = match text("in") {
+                Some(wait) => match schedule::parse_wait(&wait) {
+                    Ok(seconds) => Some(seconds),
+                    Err(message) => return outcome(format!("schedule: {message}")),
+                },
+                None => None,
+            };
+            let at_time = match text("at") {
+                Some(at) => match schedule::parse_time_of_day(&at, now) {
+                    Ok(at) => Some(at),
+                    Err(message) => return outcome(format!("schedule: {message}")),
+                },
+                None => None,
             };
             let every = match text("every") {
                 Some(interval) => match schedule::parse_every(&interval) {
@@ -419,6 +423,20 @@ pub(crate) async fn schedule_tool(
                     Err(message) => return outcome(format!("schedule: {message}")),
                 },
                 None => None,
+            };
+            // The wait is relative on purpose: the model has no clock, and the
+            // server does. A wall-clock time of day is the one other shape.
+            let at = match (wait, at_time) {
+                (Some(seconds), _) => now + chrono::Duration::seconds(seconds as i64),
+                (None, Some(at)) => at,
+                (None, None) if every.is_some() => now,
+                (None, None) => {
+                    return outcome(
+                        "schedule: say how long to wait with 'in' (5m, 2h, 3m12s), or a time of \
+                         day with 'at' (09:00)"
+                            .to_string(),
+                    )
+                }
             };
             let name = text("name").unwrap_or_else(|| {
                 let first = request.lines().next().unwrap_or(&request).trim();
@@ -433,6 +451,26 @@ pub(crate) async fn schedule_tool(
             let Ok(mut state) = shared.scheduler.state.lock() else {
                 return outcome("schedule: the schedule lock is poisoned".to_string());
             };
+            // The model sometimes sends the same call twice in one message; two
+            // jobs of the same name seconds apart are one job.
+            let duplicate = state
+                .jobs
+                .iter()
+                .find(|job| {
+                    !job.done
+                        && !job.paused
+                        && job.name == name
+                        && job
+                            .due_at()
+                            .is_some_and(|due| (due - at).num_seconds().abs() <= 5)
+                })
+                .map(|job| (job.id.clone(), job.at.clone()));
+            if let Some((id, due)) = duplicate {
+                return outcome(format!(
+                    "already scheduled: «{name}» #{id} at {} — not created again",
+                    schedule::when_text(&due)
+                ));
+            }
             let id = state.fresh_id();
             state.jobs.push(schedule::Job {
                 id: id.clone(),

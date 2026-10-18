@@ -221,15 +221,6 @@ pub(crate) async fn run_turn(
             text.push_str("\n\n");
             text.push_str(&store::prompt("plan", PLAN_NOTE));
         }
-        // The model has no clock of its own. One line is cheaper than every
-        // dated question coming back wrong, and without it `/schedule` cannot
-        // turn "every day at nine" into a time.
-        let now = chrono::Local::now();
-        text.push_str(&format!(
-            "\n\nCurrent local time: {} ({}).",
-            now.format("%Y-%m-%d %H:%M"),
-            now.format("%A")
-        ));
         text
     };
 

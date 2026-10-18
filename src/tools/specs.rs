@@ -229,20 +229,21 @@ pub fn specs() -> Vec<Value> {
         json!({
             "type": "function",
             "name": "schedule",
-            "description": "Schedule a request to run later without the user: one job is one \
-                            request plus a time. Use it when the user asks for something to \
-                            happen on a schedule — a `/schedule …` message, \"every day\", \
-                            \"every Monday at nine\", \"in 5 minutes\", \"remind me tomorrow\". \
-                            Compute `at` from the current local time in your instructions and \
-                            pass a local timestamp like 2026-10-18T09:00; `every` repeats the \
-                            job. A run happens in its own session, unattended, so write \
-                            `request` as a complete instruction to yourself.",
+            "description": "Schedule a request to run later without the user. Pass the wait, not a \
+                            date: `in` is how long until the first run (5m, 90s, 1h30m, 3m12s, \
+                            now), and `at` is a time of day (09:00) whose next occurrence is \
+                            used. Use `every` to repeat (30m, 2h, 1d, 1w). You are not given a \
+                            clock and need none: never run a date or clock command to work a \
+                            schedule out, the server turns the wait into a time. A run happens \
+                            in its own session, unattended, so write `request` as a complete \
+                            instruction to yourself.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "action": { "type": "string", "enum": ["create", "list", "cancel", "pause", "resume"], "description": "What to do; create is the default." },
                     "request": { "type": "string", "description": "What to do when it fires, as a complete instruction to yourself (create)." },
-                    "at": { "type": "string", "description": "The first or only run: a local timestamp like 2026-10-18T09:00, or a wait like `in 5m` (create)." },
+                    "in": { "type": "string", "description": "How long to wait before the first run: 30m, 90s, 1h30m, 3m12s, 2 days, or now. This is what a timer is (create)." },
+                    "at": { "type": "string", "description": "A time of day whose next occurrence is the first run, like 09:00 (create)." },
                     "every": { "type": "string", "description": "Repeat interval: 30m, 2h, 1d, 1w. Omit for a one-shot." },
                     "name": { "type": "string", "description": "Short name for the list and for notifications." },
                     "id": { "type": "string", "description": "Which job: its id or its exact name (cancel, pause, resume, run)." },
